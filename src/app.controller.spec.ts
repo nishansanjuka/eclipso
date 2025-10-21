@@ -31,7 +31,8 @@ describe('AppController', () => {
         },
       } as unknown as express.Request;
 
-      expect(await appController.getHello(mockReq)).toBe('Hello World!');
+      const result = await appController.getHello(mockReq);
+      expect(result).toBe('Hello World!');
       expect(mockReq.user.getToken).toHaveBeenCalled();
     });
   });
