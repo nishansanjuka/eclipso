@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { configuration } from './shared/config';
-import { ConfigService } from './shared/services/config.service';
+import express from 'express';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -11,7 +11,7 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService, ConfigService],
+      providers: [AppService],
       imports: [
         NestConfigModule.forRoot({
           isGlobal: true,
@@ -24,8 +24,15 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return "Hello World!"', async () => {
+      const mockReq: express.Request = {
+        user: {
+          getToken: jest.fn().mockResolvedValue('mock-token'),
+        },
+      } as unknown as express.Request;
+
+      expect(await appController.getHello(mockReq)).toBe('Hello World!');
+      expect(mockReq.user.getToken).toHaveBeenCalled();
     });
   });
 });
