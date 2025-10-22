@@ -13,4 +13,8 @@ export class ConfigService {
   getDatabaseConfig(): Configuration['database'] {
     return this.get('database');
   }
+
+  getAuthConfig(): Configuration['auth'] {
+    return this.get('auth');
+  }
 }

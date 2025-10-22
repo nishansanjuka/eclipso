@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { configuration } from './shared/config';
 import express from 'express';
+import { AuthModule } from './modules/auth/auth.module';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -17,6 +18,7 @@ describe('AppController', () => {
           isGlobal: true,
           load: [configuration],
         }),
+        AuthModule,
       ],
     }).compile();
 

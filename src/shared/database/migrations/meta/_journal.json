@@ -8,6 +8,20 @@
       "when": 1761069380718,
       "tag": "0000_hot_gunslinger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1761157520772,
+      "tag": "0001_minor_shooting_star",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1761159484610,
+      "tag": "0002_workable_argent",
+      "breakpoints": true
     }
   ]
 }
