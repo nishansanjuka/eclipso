@@ -1,31 +1,29 @@
-export class UserEntity {
-  public readonly id: string;
+import z from 'zod';
+import { BaseModel } from '../../../shared/zod/base.model';
+import { Z } from '../../../shared/decorators/zod.validation';
+import { UserCreateDto } from '../dto/user.dto';
+
+export class UserEntity extends BaseModel {
+  @Z(z.string().nullable().optional())
+  public readonly id?: string | null;
+  @Z(
+    z
+      .string({ error: 'Invalid Business ID' })
+      .min(1, 'Business ID is required'),
+  )
   public readonly businessId: string;
+
+  @Z(z.string({ error: 'Invalid Clerk ID' }).min(1, 'Clerk ID is required'))
   public readonly clerkId: string;
+
+  @Z(z.string({ error: 'Invalid Name' }).min(1, 'Name is required'))
   public readonly name: string;
 
-  constructor(params: {
-    id: string;
-    businessId: string;
-    clerkId: string;
-    name: string;
-  }) {
-    const { businessId, clerkId, name } = params;
-
-    if (!businessId || businessId.trim().length === 0) {
-      throw new Error('Business ID is required');
-    }
-
-    if (!clerkId || clerkId.trim().length === 0) {
-      throw new Error('Clerk ID is required');
-    }
-
-    if (!name || name.trim().length === 0) {
-      throw new Error('Name is required');
-    }
-
-    this.businessId = businessId;
-    this.name = name;
-    this.clerkId = clerkId;
+  constructor(params: UserCreateDto) {
+    super(params);
+    this.id = params.id;
+    this.businessId = params.businessId;
+    this.clerkId = params.clerkId;
+    this.name = params.name;
   }
 }

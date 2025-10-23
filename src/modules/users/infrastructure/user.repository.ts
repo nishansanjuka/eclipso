@@ -56,6 +56,7 @@ export class UserRepository {
     clerkId: string,
     updateData: Partial<Omit<UserEntity, 'id'>>,
   ) {
+    console.log('updating...', clerkId, updateData);
     const res = await this.db
       .update(users)
       .set(updateData)

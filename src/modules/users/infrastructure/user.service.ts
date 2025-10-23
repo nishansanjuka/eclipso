@@ -25,6 +25,13 @@ export class UserService {
     return this.userRepository.updateUserById(id, updateData);
   }
 
+  async updateUserByClerkId(
+    id: string,
+    updateData: Partial<Omit<UserEntity, 'id'>>,
+  ) {
+    return this.userRepository.updateUserByClerkId(id, updateData);
+  }
+
   async deleteUserById(id: string) {
     return this.userRepository.deleteUserById(id);
   }

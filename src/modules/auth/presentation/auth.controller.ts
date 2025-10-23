@@ -2,7 +2,7 @@ import { Controller, Get, Req } from '@nestjs/common';
 import { AuthUseCase } from '../application/auth-use-case';
 import express from 'express';
 
-@Controller('auth')
+@Controller('auth/users')
 export class AuthController {
   constructor(private readonly authUseCase: AuthUseCase) {}
 

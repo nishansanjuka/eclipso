@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Param } from '@nestjs/common';
-import { UserEntity } from '../domain/user.entity';
 import { UserService } from '../infrastructure/user.service';
-import { CatchEntityErrors } from '../../../shared/decorators/exception.validator';
+import { CatchEntityErrors } from 'src/shared/decorators/exception.catcher';
+import { UserCreateDto } from '../dto/user.dto';
 
 @Controller('users')
 export class UserController {
@@ -17,7 +17,7 @@ export class UserController {
   // }
   @Get(':id')
   @CatchEntityErrors()
-  async getUserById(@Param('id') id: string): Promise<UserEntity> {
+  async getUserById(@Param('id') id: string): Promise<UserCreateDto> {
     return this.userService.getUserById(id);
   }
 
@@ -25,7 +25,7 @@ export class UserController {
   @CatchEntityErrors()
   async getUserByBusinessId(
     @Param('businessId') businessId: string,
-  ): Promise<UserEntity> {
+  ): Promise<UserCreateDto> {
     return this.userService.getUserByBusinessId(businessId);
   }
 }

@@ -13,6 +13,8 @@ import { UserService } from '../users/infrastructure/user.service';
 import { UserRepository } from '../users/infrastructure/user.repository';
 import { DatabaseModule } from '../../shared/database/drizzle.module';
 import { ClerkWebhookController } from './presentation/webhook.controller';
+import { WebhookSignatureMiddleware } from '../../shared/middleware/auth.webhook-middleware';
+import { ConfigService } from '../../shared/services/config.service';
 
 @Module({
   imports: [DatabaseModule],
@@ -23,12 +25,18 @@ import { ClerkWebhookController } from './presentation/webhook.controller';
     ClerkClientProvider,
     UserService,
     UserRepository,
+    ConfigService,
   ],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(AuthMiddleware).forRoutes({
-      path: '*',
+      path: '/auth/users',
+      method: RequestMethod.ALL,
+    });
+
+    consumer.apply(WebhookSignatureMiddleware).forRoutes({
+      path: '/auth/webhook',
       method: RequestMethod.ALL,
     });
   }
