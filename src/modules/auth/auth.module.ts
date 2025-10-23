@@ -15,6 +15,8 @@ import { DatabaseModule } from '../../shared/database/drizzle.module';
 import { ClerkWebhookController } from './presentation/webhook.controller';
 import { WebhookSignatureMiddleware } from '../../shared/middleware/auth.webhook-middleware';
 import { ConfigService } from '../../shared/services/config.service';
+import { ClerkWebhookService } from './infrastructure/webhook.service';
+import { ClerkWebhookUseCase } from './application/webhook.use-case';
 
 @Module({
   imports: [DatabaseModule],
@@ -26,6 +28,8 @@ import { ConfigService } from '../../shared/services/config.service';
     UserService,
     UserRepository,
     ConfigService,
+    ClerkWebhookService,
+    ClerkWebhookUseCase,
   ],
 })
 export class AuthModule implements NestModule {

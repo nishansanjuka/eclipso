@@ -3,3 +3,6 @@ export type UserPermissions =
   | 'permission:create_inventory'
   | 'permission:delete_inventory'
   | 'permission:view_reports';
+export type OwnerPublicMetadata = {
+  businessName: string;
+};

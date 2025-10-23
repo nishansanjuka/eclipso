@@ -28,4 +28,12 @@ export class ClerkAuthService {
 
     return new AuthUserEntity(res.id, email, role, permissions, isActive);
   }
+
+  async createOrganization(name: string, userId: string) {
+    return await this.clerkClient.organizations.createOrganization({
+      name,
+      slug: name.toLowerCase().replace(/\s+/g, '-'),
+      createdBy: userId,
+    });
+  }
 }
