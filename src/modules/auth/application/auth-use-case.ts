@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ClerkAuthService } from '../infrastructure/auth.service';
+import { BusinessType } from '../../../types/auth';
 
 @Injectable()
 export class AuthUseCase {
@@ -7,5 +8,13 @@ export class AuthUseCase {
 
   async getProfile(userId: string) {
     return this.clerkAuthService.getUser(userId);
+  }
+
+  async createOrganization(
+    name: string,
+    userId: string,
+    businessType: BusinessType,
+  ) {
+    return this.clerkAuthService.createOrganization(name, userId, businessType);
   }
 }

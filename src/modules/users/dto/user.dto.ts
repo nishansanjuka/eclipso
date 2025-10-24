@@ -1,6 +1,4 @@
 export class UserCreateDto {
-  id?: string | null;
-  businessId: string;
   clerkId: string;
   name: string;
 }

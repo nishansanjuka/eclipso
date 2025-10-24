@@ -1,6 +1,11 @@
 import { type ClerkClient } from '@clerk/express';
 import { Inject, Injectable } from '@nestjs/common';
-import { UserPermissions, UserRole } from '../../../types/auth';
+import {
+  BusinessPublicMetadata,
+  BusinessType,
+  UserPermissions,
+  UserRole,
+} from '../../../types/auth';
 import { AuthUserEntity } from '../domain/user.entity';
 
 @Injectable()
@@ -29,11 +34,18 @@ export class ClerkAuthService {
     return new AuthUserEntity(res.id, email, role, permissions, isActive);
   }
 
-  async createOrganization(name: string, userId: string) {
+  async createOrganization(
+    name: string,
+    userId: string,
+    businessType: BusinessType,
+  ) {
     return await this.clerkClient.organizations.createOrganization({
       name,
       slug: name.toLowerCase().replace(/\s+/g, '-'),
       createdBy: userId,
+      publicMetadata: {
+        businessType,
+      } as BusinessPublicMetadata,
     });
   }
 }

@@ -13,6 +13,9 @@ export class ClerkWebhookUseCase {
       case 'user.created':
         await this.webhookService.handleUserCreated(event);
         break;
+      case 'organization.created':
+        await this.webhookService.handleOrganizationCreated(event);
+        break;
     }
     return { received: true };
   }
