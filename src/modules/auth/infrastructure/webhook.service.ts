@@ -40,4 +40,26 @@ export class ClerkWebhookService {
       name,
     });
   }
+
+  async handleOrganizationUpdated(event: OrganizationWebhookEvent) {
+    const { id, name, public_metadata } = event.data as OrganizationJSON & {
+      id: string;
+      created_by: string;
+      public_metadata: BusinessPublicMetadata;
+    };
+
+    await this.businessService.updateBusiness({
+      businessType: public_metadata.businessType,
+      orgId: id,
+      name,
+    });
+  }
+
+  async handleOrganizationDeleted(event: OrganizationWebhookEvent) {
+    const { id } = event.data as OrganizationJSON & {
+      id: string;
+    };
+
+    await this.businessService.deleteBusiness(id);
+  }
 }

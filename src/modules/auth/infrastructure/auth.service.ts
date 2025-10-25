@@ -48,4 +48,22 @@ export class ClerkAuthService {
       } as BusinessPublicMetadata,
     });
   }
+
+  async updateOrganization(
+    name: string | null | undefined,
+    orgId: string,
+    businessType: BusinessType | null | undefined,
+  ) {
+    return await this.clerkClient.organizations.updateOrganization(orgId, {
+      name: name ?? undefined,
+      publicMetadata: {
+        businessType: businessType ?? undefined,
+      } as BusinessPublicMetadata,
+      slug: name ? name.toLowerCase().replace(/\s+/g, '-') : undefined,
+    });
+  }
+
+  async deleteOrganization(orgId: string) {
+    return await this.clerkClient.organizations.deleteOrganization(orgId);
+  }
 }

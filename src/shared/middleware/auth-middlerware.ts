@@ -19,8 +19,6 @@ class AuthMiddleware implements NestMiddleware {
       const auth = getAuth(req);
       req.user = auth;
 
-      console.log(auth);
-
       // Check if user is authenticated
       if (!auth.userId) {
         throw new UnauthorizedException('Unauthorized');

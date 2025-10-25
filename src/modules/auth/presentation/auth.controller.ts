@@ -1,9 +1,13 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Post, Put } from '@nestjs/common';
 import { AuthUseCase } from '../application/auth-use-case';
-import { CreateOrganizationDto } from '../dto/auth.dto';
+import { CreateOrganizationDto, UpdateOrganizationDto } from '../dto/auth.dto';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../types/globals';
-import { CreateOrganizationEntity } from '../domain/organization.entity';
+import {
+  CreateOrganizationEntity,
+  DeleteOrganizationEntity,
+  UpdateOrganizationEntity,
+} from '../domain/organization.entity';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
 
 @Controller('/auth/clerk')
@@ -22,5 +26,25 @@ export class AuthController {
       user.userId!,
       businessType,
     );
+  }
+
+  @Put('organization')
+  @CatchEntityErrors()
+  async updateOrganization(
+    @User() user: AuthUserObject,
+    @Body() body: UpdateOrganizationDto,
+  ) {
+    const { businessType, name, orgId } = new UpdateOrganizationEntity({
+      ...body,
+      orgId: user.orgId,
+    });
+    return this.authUseCase.updateOrganization(name, businessType, orgId);
+  }
+
+  @Delete('organization')
+  @CatchEntityErrors()
+  async deleteOrganization(@User() user: AuthUserObject) {
+    const { orgId } = new DeleteOrganizationEntity({ orgId: user.orgId! });
+    return this.authUseCase.deleteOrganization(orgId);
   }
 }

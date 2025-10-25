@@ -43,6 +43,11 @@ export class AuthModule implements NestModule {
       method: RequestMethod.ALL,
     });
 
+    consumer.apply(AuthMiddleware).forRoutes({
+      path: '/',
+      method: RequestMethod.ALL,
+    });
+
     consumer.apply(WebhookSignatureMiddleware).forRoutes({
       path: '/auth/webhook',
       method: RequestMethod.ALL,

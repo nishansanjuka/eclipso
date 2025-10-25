@@ -1,6 +1,6 @@
 import { BusinessType } from '../../../types/auth';
 
-export class BusinessCreateDto {
+export class BusinessDto {
   name: string;
   orgId: string;
   businessType: BusinessType;
