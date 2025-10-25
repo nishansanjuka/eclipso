@@ -6,10 +6,6 @@ import { BusinessType, UserRole } from '../../../types/auth';
 export class AuthUseCase {
   constructor(private readonly clerkAuthService: ClerkAuthService) {}
 
-  async getProfile(userId: string) {
-    return this.clerkAuthService.getUser(userId);
-  }
-
   // as business owner, create business organization with business type
   async createOrganization(
     name: string,

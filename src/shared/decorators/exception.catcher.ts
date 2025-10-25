@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { DrizzleQueryError } from 'drizzle-orm';
+import { logDebug } from '../utils/logdebug';
 
 export function CatchEntityErrors(): MethodDecorator {
   return (
@@ -18,11 +19,11 @@ export function CatchEntityErrors(): MethodDecorator {
         return await originalMethod.apply(this, args);
       } catch (err: any) {
         if (err instanceof DrizzleQueryError) {
-          console.log(err);
+          logDebug('DrizzleQueryError:', err);
           throw new BadRequestException(`${err.cause}`);
         }
         if (err instanceof Error) {
-          console.log(err);
+          logDebug('Error:', err);
 
           if ('status' in err && err.status === 404) {
             throw new NotFoundException(err.message);

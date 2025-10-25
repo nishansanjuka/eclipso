@@ -1,6 +1,7 @@
 import { Controller, Get, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import express from 'express';
+import { logDebug } from './shared/utils/logdebug';
 
 @Controller()
 export class AppController {
@@ -8,7 +9,7 @@ export class AppController {
 
   @Get()
   getHello(@Req() req: express.Request): string {
-    console.log(req.user);
+    logDebug('Request user:', req.user);
     return this.appService.getHello();
   }
 }
