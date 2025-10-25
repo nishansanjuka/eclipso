@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ClerkAuthService } from '../infrastructure/auth.service';
-import { BusinessType } from '../../../types/auth';
+import { BusinessType, UserRole } from '../../../types/auth';
 
 @Injectable()
 export class AuthUseCase {
@@ -31,5 +31,46 @@ export class AuthUseCase {
   // as business owner, delete business organization
   async deleteOrganization(orgId: string) {
     return this.clerkAuthService.deleteOrganization(orgId);
+  }
+
+  // as business admin, invite user to organization
+  async inviteUserToOrganization(
+    emails: string[],
+    orgId: string,
+    role: UserRole,
+    inviterUserId: string,
+  ) {
+    return this.clerkAuthService.inviteUserToOrganization(
+      emails,
+      orgId,
+      role,
+      inviterUserId,
+    );
+  }
+
+  // as business admin, resend invite to user
+  async resendInviteToUser(email: string, orgId: string, userId: string) {
+    return await this.clerkAuthService.resendInviteToUser(email, orgId, userId);
+  }
+
+  // as business admin, revoke invite to user
+  async revokeInviteToUser(
+    invitationId: string,
+    orgId: string,
+    userId: string,
+  ) {
+    return await this.clerkAuthService.revokeInviteToUser(
+      invitationId,
+      orgId,
+      userId,
+    );
+  }
+
+  // as business admin, remove user from business organization
+  async removeUserFromOrganization(userId: string, orgId: string) {
+    return await this.clerkAuthService.removeUserFromOrganization(
+      userId,
+      orgId,
+    );
   }
 }

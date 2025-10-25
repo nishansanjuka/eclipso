@@ -9,4 +9,8 @@ export class UserService {
   async createUser(userData: UserCreateDto) {
     return this.userRepository.createUser(userData);
   }
+
+  async deleteUser(clerkId: string) {
+    return await this.userRepository.deleteUserByClerkId(clerkId);
+  }
 }

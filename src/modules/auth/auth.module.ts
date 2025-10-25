@@ -38,10 +38,7 @@ import { BusinessRepository } from '../business/infrastructure/business.reposito
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthMiddleware).forRoutes({
-      path: '/auth/clerk/organization',
-      method: RequestMethod.ALL,
-    });
+    consumer.apply(AuthMiddleware).forRoutes(AuthController);
 
     consumer.apply(AuthMiddleware).forRoutes({
       path: '/',

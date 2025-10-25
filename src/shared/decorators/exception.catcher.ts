@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { DrizzleQueryError } from 'drizzle-orm';
 
 export function CatchEntityErrors(): MethodDecorator {
@@ -23,7 +23,12 @@ export function CatchEntityErrors(): MethodDecorator {
         }
         if (err instanceof Error) {
           console.log(err);
-          throw new BadRequestException(err.message);
+
+          if ('status' in err && err.status === 404) {
+            throw new NotFoundException(err.message);
+          } else {
+            throw new BadRequestException(err.message);
+          }
         }
         throw err;
       }

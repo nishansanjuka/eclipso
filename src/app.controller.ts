@@ -7,8 +7,8 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  async getHello(@Req() req: express.Request): Promise<string> {
-    console.log(await req.user.getToken());
+  getHello(@Req() req: express.Request): string {
+    console.log(req.user);
     return this.appService.getHello();
   }
 }

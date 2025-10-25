@@ -4,9 +4,16 @@ import { Z } from '../../../shared/decorators/zod.validation';
 import {
   CreateOrganizationDto,
   DeleteOrganizationDto,
+  InviteUserDto,
   UpdateOrganizationDto,
 } from '../dto/auth.dto';
-import { BusinessTypeObject, type BusinessType } from '../../../types/auth';
+import {
+  BusinessTypeObject,
+  type UserRole,
+  type BusinessType,
+  UserRoleObject,
+} from '../../../types/auth';
+import { validatedEmail } from '../../../shared/validators/email.validator';
 
 export class CreateOrganizationEntity extends BaseModel {
   @Z(
@@ -77,6 +84,48 @@ export class DeleteOrganizationEntity extends BaseModel {
 
   constructor(params: DeleteOrganizationDto) {
     super(params);
+    this.orgId = params.orgId;
+  }
+}
+
+export class InviteUserEntity extends BaseModel {
+  @Z(
+    z
+      .array(validatedEmail, { error: 'Emails are required' })
+      .min(1, 'Atleast one email is required'),
+  )
+  public readonly emails: string[];
+
+  @Z(
+    z
+      .enum(Object.values(UserRoleObject) as [string, ...string[]], {
+        message: `User role must be one of the following: ${Object.values(
+          UserRoleObject,
+        ).join(', ')}`,
+      })
+      .optional(),
+  )
+  public readonly role?: UserRole | null;
+
+  @Z(
+    z.string({ error: 'Inviter User ID is required' }).startsWith('user_', {
+      error: 'Invalid Inviter User ID format',
+    }),
+  )
+  public readonly inviterUserId?: string;
+
+  @Z(
+    z.string({ error: 'Organization ID is required' }).startsWith('org_', {
+      error: 'Invalid Organization ID format',
+    }),
+  )
+  public readonly orgId?: string;
+
+  constructor(params: InviteUserDto) {
+    super(params);
+    this.emails = params.emails;
+    this.role = params.role;
+    this.inviterUserId = params.inviterUserId;
     this.orgId = params.orgId;
   }
 }

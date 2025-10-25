@@ -1,4 +1,4 @@
-import { BusinessType } from '../../../types/auth';
+import { BusinessType, UserRole } from '../../../types/auth';
 
 export class CreateOrganizationDto {
   name: string;
@@ -12,5 +12,12 @@ export class UpdateOrganizationDto {
 }
 
 export class DeleteOrganizationDto {
+  orgId: string;
+}
+
+export class InviteUserDto {
+  emails: string[];
+  role?: UserRole;
+  inviterUserId: string;
   orgId: string;
 }

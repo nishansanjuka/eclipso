@@ -28,6 +28,10 @@ export class ClerkWebhookUseCase {
         // as business owner, I want to delete the corresponding business in my system when an organization is deleted in Clerk
         await this.webhookService.handleOrganizationDeleted(event);
         break;
+      case 'organizationMembership.deleted':
+        // as business owner, I want to delete the corresponding user from my system when a user is removed from an organization in Clerk
+        await this.webhookService.handleOrganizationMembershipDeleted(event);
+        break;
     }
     return { received: true };
   }

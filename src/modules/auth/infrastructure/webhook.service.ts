@@ -1,5 +1,6 @@
 import {
   OrganizationJSON,
+  OrganizationMembershipWebhookEvent,
   OrganizationWebhookEvent,
   UserJSON,
   UserWebhookEvent,
@@ -61,5 +62,15 @@ export class ClerkWebhookService {
     };
 
     await this.businessService.deleteBusiness(id);
+  }
+
+  async handleOrganizationMembershipDeleted(
+    event: OrganizationMembershipWebhookEvent,
+  ) {
+    const {
+      public_user_data: { user_id },
+    } = event.data;
+
+    await this.userService.deleteUser(user_id);
   }
 }
