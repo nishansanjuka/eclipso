@@ -22,11 +22,14 @@ import {
   UpdateOrganizationEntity,
 } from '../domain/organization.entity';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
+import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 @Controller('/auth/clerk')
 export class AuthController {
   constructor(private readonly authUseCase: AuthUseCase) {}
 
+  @ApiOperation({ operationId: 'createOrganization' })
+  @ApiBody({ type: CreateOrganizationDto })
   @Post('organization')
   @CatchEntityErrors()
   async createOrganization(
@@ -41,6 +44,8 @@ export class AuthController {
     );
   }
 
+  @ApiOperation({ operationId: 'updateOrganization' })
+  @ApiBody({ type: UpdateOrganizationDto })
   @Put('organization')
   @CatchEntityErrors()
   async updateOrganization(
@@ -54,6 +59,7 @@ export class AuthController {
     return this.authUseCase.updateOrganization(name, businessType, orgId);
   }
 
+  @ApiOperation({ operationId: 'deleteOrganization' })
   @Delete('organization')
   @CatchEntityErrors()
   async deleteOrganization(@User() user: AuthUserObject) {
@@ -61,6 +67,8 @@ export class AuthController {
     return this.authUseCase.deleteOrganization(orgId);
   }
 
+  @ApiOperation({ operationId: 'dt1' })
+  @ApiBody({ type: InviteUserDto })
   @Post('organization/invite')
   @CatchEntityErrors()
   async inviteUserToOrganization(
@@ -80,6 +88,7 @@ export class AuthController {
     );
   }
 
+  @ApiParam({ name: 'email', type: String, required: true })
   @Patch('organization/invite/resend/:email')
   @CatchEntityErrors()
   async checkInvitationsExistence(
@@ -99,6 +108,8 @@ export class AuthController {
     );
   }
 
+  @ApiOperation({ operationId: 'revokeInviteToUser' })
+  @ApiParam({ name: 'invitationId', type: String, required: true })
   @Delete('organization/invite/revoke/:invitationId')
   @CatchEntityErrors()
   async revokeInviteToUser(
@@ -112,6 +123,8 @@ export class AuthController {
     );
   }
 
+  @ApiOperation({ operationId: 'deleteUserFromOrganization' })
+  @ApiParam({ name: 'userId', type: String, required: true })
   @Delete('organization/user/:userId')
   @CatchEntityErrors()
   async removeUserFromOrganization(
