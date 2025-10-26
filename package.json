@@ -24,7 +24,9 @@
     "predb:migrate": "pnpm db:init",
     "db:migrate": "drizzle-kit migrate --config=./src/shared/database/drizzle.config.ts",
     "predb:push": "pnpm db:init",
-    "db:push": "drizzle-kit push --config=./src/shared/database/drizzle.config.ts"
+    "db:push": "drizzle-kit push --config=./src/shared/database/drizzle.config.ts",
+    "generate:ts": "openapi-generator-cli generate -i http://localhost:3000/api-json -g typescript-fetch -o packages/api-client-ts --global-property=models --additional-properties=api=false && node ./scripts/clean-runtime-import.mjs",
+    "generate:dart": "openapi-generator-cli generate -i http://localhost:3000/api-json -g dart -o packages/api-client-dart --global-property=models --additional-properties=api=false"
   },
   "dependencies": {
     "@clerk/express": "^1.7.41",
@@ -32,6 +34,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.1",
     "add": "^2.0.6",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.5",

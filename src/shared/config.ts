@@ -16,6 +16,7 @@ export const configSchema = z.object({
   CLERK_PUBLISHABLE_KEY: z.string(),
   CLERK_SECRET_KEY: z.string(),
   CLERK_WEBHOOK_SIGNING_SECRET: z.string(),
+  CLERK_ORG_INVITE_REDIRECT_URL: z.string().url(),
 });
 
 export type EnvConfig = z.infer<typeof configSchema>;

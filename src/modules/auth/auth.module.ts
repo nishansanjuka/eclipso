@@ -17,6 +17,8 @@ import { WebhookSignatureMiddleware } from '../../shared/middleware/auth.webhook
 import { ConfigService } from '../../shared/services/config.service';
 import { ClerkWebhookService } from './infrastructure/webhook.service';
 import { ClerkWebhookUseCase } from './application/webhook.use-case';
+import { BusinessService } from '../business/infrastructure/business.service';
+import { BusinessRepository } from '../business/infrastructure/business.repository';
 
 @Module({
   imports: [DatabaseModule],
@@ -25,17 +27,21 @@ import { ClerkWebhookUseCase } from './application/webhook.use-case';
     AuthUseCase,
     ClerkAuthService,
     ClerkClientProvider,
-    UserService,
-    UserRepository,
     ConfigService,
     ClerkWebhookService,
     ClerkWebhookUseCase,
+    UserService,
+    UserRepository,
+    BusinessService,
+    BusinessRepository,
   ],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes(AuthController);
+
     consumer.apply(AuthMiddleware).forRoutes({
-      path: '/auth/users',
+      path: '/',
       method: RequestMethod.ALL,
     });
 

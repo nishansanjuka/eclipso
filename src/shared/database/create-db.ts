@@ -2,6 +2,7 @@ import { Client } from 'pg';
 import { ConnectionOptions, parse } from 'pg-connection-string';
 import { loadConfig } from '../config';
 import * as dotenv from 'dotenv';
+import { logDebug } from '../utils/logdebug';
 dotenv.config();
 
 async function ensureDatabase() {
@@ -28,14 +29,14 @@ async function ensureDatabase() {
     );
 
     if (res.rowCount === 0) {
-      console.log(`⚙️ Database "${dbName}" does not exist. Creating...`);
+      logDebug(`⚙️ Database "${dbName}" does not exist. Creating...`);
       await client.query(`CREATE DATABASE "${dbName}";`);
-      console.log(`✅ Database "${dbName}" created successfully.`);
+      logDebug(`✅ Database "${dbName}" created successfully.`);
     } else {
-      console.log(`✅ Database "${dbName}" already exists.`);
+      logDebug(`✅ Database "${dbName}" already exists.`);
     }
   } catch (error) {
-    console.error('❌ Error checking/creating database:', error);
+    logDebug('❌ Error checking/creating database:', error);
   } finally {
     await client.end();
   }

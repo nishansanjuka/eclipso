@@ -26,16 +26,15 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', async () => {
+    it('should return "Hello World!"', () => {
       const mockReq: express.Request = {
         user: {
           getToken: jest.fn().mockResolvedValue('mock-token'),
         },
       } as unknown as express.Request;
 
-      const result = await appController.getHello(mockReq);
-      expect(result).toBe('Hello World!');
-      expect(mockReq.user.getToken).toHaveBeenCalled();
+      const result = appController.getHello(mockReq);
+      expect(result).toEqual('Hello World!');
     });
   });
 });

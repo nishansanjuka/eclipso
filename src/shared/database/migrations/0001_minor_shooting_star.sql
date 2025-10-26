@@ -1,1 +1,0 @@
-ALTER TABLE "users" ALTER COLUMN "business_id" SET DATA TYPE text;

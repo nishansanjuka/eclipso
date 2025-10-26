@@ -21,8 +21,6 @@ export class UserEntity extends BaseModel {
 
   constructor(params: UserCreateDto) {
     super(params);
-    this.id = params.id;
-    this.businessId = params.businessId;
     this.clerkId = params.clerkId;
     this.name = params.name;
   }
