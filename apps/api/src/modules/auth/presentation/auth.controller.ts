@@ -14,7 +14,7 @@ import {
   UpdateOrganizationDto,
 } from '../dto/auth.dto';
 import { User } from '../../../shared/decorators/auth.decorator';
-import { type AuthUserObject } from '../../../types/globals';
+import { type AuthUserObject } from '../../../../globals';
 import {
   CreateOrganizationEntity,
   DeleteOrganizationEntity,

@@ -1,5 +1,5 @@
 {
-  "name": "eclipso",
+  "name": "api",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -9,7 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "nest start --watch",
+    "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -24,12 +24,13 @@
     "predb:migrate": "pnpm db:init",
     "db:migrate": "drizzle-kit migrate --config=./src/shared/database/drizzle.config.ts",
     "predb:push": "pnpm db:init",
-    "db:push": "drizzle-kit push --config=./src/shared/database/drizzle.config.ts",
-    "generate:ts": "openapi-generator-cli generate -i http://localhost:3000/api-json -g typescript-fetch -o packages/api-client-ts --global-property=models --additional-properties=api=false && node ./scripts/clean-runtime-import.mjs",
-    "generate:dart": "openapi-generator-cli generate -i http://localhost:3000/api-json -g dart -o packages/api-client-dart --global-property=models --additional-properties=api=false"
+    "db:push": "drizzle-kit push --config=./src/shared/database/drizzle.config.ts"
   },
   "dependencies": {
     "@clerk/express": "^1.7.41",
+    "@eclipso/api-client-ts": "workspace:^",
+    "@eclipso/types": "workspace:^",
+    "@eclipso/utils": "workspace:^",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",

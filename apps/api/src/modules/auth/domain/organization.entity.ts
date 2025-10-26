@@ -7,13 +7,9 @@ import {
   InviteUserDto,
   UpdateOrganizationDto,
 } from '../dto/auth.dto';
-import {
-  BusinessTypeObject,
-  type UserRole,
-  type BusinessType,
-  UserRoleObject,
-} from '../../../types/auth';
 import { validatedEmail } from '../../../shared/validators/email.validator';
+import { BusinessType } from '../enums/business-type.enum';
+import { UserRole } from '../enums/auth-role.enum';
 
 export class CreateOrganizationEntity extends BaseModel {
   @Z(
@@ -24,9 +20,9 @@ export class CreateOrganizationEntity extends BaseModel {
   public readonly name: string;
 
   @Z(
-    z.enum(Object.values(BusinessTypeObject) as [string, ...string[]], {
+    z.enum(BusinessType, {
       message: `Business type must be one of the following: ${Object.values(
-        BusinessTypeObject,
+        BusinessType,
       ).join(', ')}`,
     }),
   )
@@ -50,9 +46,9 @@ export class UpdateOrganizationEntity extends BaseModel {
 
   @Z(
     z
-      .enum(Object.values(BusinessTypeObject) as [string, ...string[]], {
+      .enum(BusinessType, {
         message: `Business type must be one of the following: ${Object.values(
-          BusinessTypeObject,
+          BusinessType,
         ).join(', ')}`,
       })
       .optional(),
@@ -98,9 +94,9 @@ export class InviteUserEntity extends BaseModel {
 
   @Z(
     z
-      .enum(Object.values(UserRoleObject) as [string, ...string[]], {
+      .enum(UserRole, {
         message: `User role must be one of the following: ${Object.values(
-          UserRoleObject,
+          UserRole,
         ).join(', ')}`,
       })
       .optional(),

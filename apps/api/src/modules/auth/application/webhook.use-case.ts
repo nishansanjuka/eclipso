@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { WebhookEvent } from '@clerk/express';
 import { ClerkWebhookService } from '../infrastructure/webhook.service';
-import { logDebug } from '../../../shared/utils/logdebug';
+import { logDebug } from '@eclipso/utils/logdebug';
 
 @Injectable()
 export class ClerkWebhookUseCase {

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ClerkAuthService } from '../infrastructure/auth.service';
-import { BusinessType, UserRole } from '../../../types/auth';
+import { BusinessType } from '../enums/business-type.enum';
+import { UserRole } from '../enums/auth-role.enum';
 
 @Injectable()
 export class AuthUseCase {

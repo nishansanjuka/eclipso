@@ -1,7 +1,7 @@
 import { AuthObject, WebhookEvent } from '@clerk/express';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import * as express from 'express';
-import { AuthUserObject } from '../../types/globals';
+import { AuthUserObject } from '../../../globals';
 
 export const Auth = createParamDecorator(
   (

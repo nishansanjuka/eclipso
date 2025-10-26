@@ -7,8 +7,9 @@ import {
 } from '@clerk/express';
 import { Injectable } from '@nestjs/common';
 import { UserService } from '../../users/infrastructure/user.service';
-import { BusinessPublicMetadata } from '../../../types/auth';
 import { BusinessService } from '../../business/infrastructure/business.service';
+import { BusinessPublicMetadata } from '@eclipso/types/auth';
+import { BusinessType } from '../enums/business-type.enum';
 
 @Injectable()
 export class ClerkWebhookService {
@@ -31,7 +32,7 @@ export class ClerkWebhookService {
       event.data as OrganizationJSON & {
         id: string;
         created_by: string;
-        public_metadata: BusinessPublicMetadata;
+        public_metadata: BusinessPublicMetadata<BusinessType>;
       };
 
     await this.businessService.createBusiness({
@@ -46,7 +47,7 @@ export class ClerkWebhookService {
     const { id, name, public_metadata } = event.data as OrganizationJSON & {
       id: string;
       created_by: string;
-      public_metadata: BusinessPublicMetadata;
+      public_metadata: BusinessPublicMetadata<BusinessType>;
     };
 
     await this.businessService.updateBusiness({

@@ -1,13 +1,10 @@
 import { timestamp } from 'drizzle-orm/pg-core';
 import { text } from 'drizzle-orm/pg-core';
 import { pgTable, uuid } from 'drizzle-orm/pg-core';
-import { BusinessTypeObject } from '../../../../types/auth';
 import { pgEnum } from 'drizzle-orm/pg-core';
+import { BusinessType } from '../../../auth/enums/business-type.enum';
 
-export const businessTypeEnum = pgEnum(
-  'business_type',
-  Object.values(BusinessTypeObject) as [string, ...string[]],
-);
+export const businessTypeEnum = pgEnum('business_type', BusinessType);
 
 export const businesses = pgTable('businesses', {
   id: uuid('id').defaultRandom().unique().notNull(),

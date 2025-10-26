@@ -1,13 +1,11 @@
 import { type ClerkClient } from '@clerk/express';
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  BusinessPublicMetadata,
-  BusinessType,
-  UserPermissions,
-  UserRole,
-} from '../../../types/auth';
 import { AuthUserEntity } from '../domain/user.entity';
 import { mapEmailsToInvitations } from '../../../shared/utils/email-to-invitation.mapper';
+import { UserRole } from '../enums/auth-role.enum';
+import { PermissionType } from '../enums/auth-permissions.enum';
+import { BusinessType } from '../enums/business-type.enum';
+import { BusinessPublicMetadata } from '@eclipso/types/auth';
 
 @Injectable()
 export class ClerkAuthService {
@@ -27,7 +25,7 @@ export class ClerkAuthService {
       ('org:member' as UserRole);
 
     const permissions = Array.isArray(res.publicMetadata?.permissions)
-      ? (res.publicMetadata?.permissions as UserPermissions[])
+      ? (res.publicMetadata?.permissions as PermissionType[])
       : [];
 
     const isActive = res.locked !== true;
@@ -46,7 +44,7 @@ export class ClerkAuthService {
       createdBy: userId,
       publicMetadata: {
         businessType,
-      } as BusinessPublicMetadata,
+      } as BusinessPublicMetadata<BusinessType>,
     });
   }
 
@@ -59,7 +57,7 @@ export class ClerkAuthService {
       name: name ?? undefined,
       publicMetadata: {
         businessType: businessType ?? undefined,
-      } as BusinessPublicMetadata,
+      } as BusinessPublicMetadata<BusinessType>,
       slug: name ? name.toLowerCase().replace(/\s+/g, '-') : undefined,
     });
   }
