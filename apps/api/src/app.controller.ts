@@ -1,7 +1,7 @@
 import { Controller, Get, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import express from 'express';
-import { logDebug } from '@eclipso/utils/logdebug';
+import { logDebug } from './shared/utils/logdebug';
 
 @Controller()
 export class AppController {

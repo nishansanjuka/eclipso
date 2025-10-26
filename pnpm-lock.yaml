@@ -32,9 +32,6 @@ importers:
       '@eclipso/types':
         specifier: workspace:^
         version: link:../../packages/types
-      '@eclipso/utils':
-        specifier: workspace:^
-        version: link:../../packages/utils
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.7(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -210,18 +207,6 @@ importers:
   packages/types: {}
 
   packages/typescript-config: {}
-
-  packages/utils:
-    devDependencies:
-      '@eclipso/eslint-config':
-        specifier: workspace:^
-        version: link:../eslint-config
-      '@eclipso/typescript-config':
-        specifier: workspace:^
-        version: link:../typescript-config
-      '@types/node':
-        specifier: ^22.10.7
-        version: 22.18.12
 
 packages:
 

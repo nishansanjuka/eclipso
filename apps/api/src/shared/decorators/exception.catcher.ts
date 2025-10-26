@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { logDebug } from '@eclipso/utils/logdebug';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { DrizzleQueryError } from 'drizzle-orm';
+import { logDebug } from '../utils/logdebug';
 
 export function CatchEntityErrors(): MethodDecorator {
   return (

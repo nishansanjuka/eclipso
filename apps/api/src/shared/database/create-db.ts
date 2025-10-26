@@ -2,7 +2,7 @@ import { Client } from 'pg';
 import { ConnectionOptions, parse } from 'pg-connection-string';
 import { loadConfig } from '../config';
 import * as dotenv from 'dotenv';
-import { logDebug } from '@eclipso/utils/logdebug';
+import { logDebug } from '../utils/logdebug';
 dotenv.config();
 
 async function ensureDatabase() {
