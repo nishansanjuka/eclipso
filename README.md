@@ -1,135 +1,314 @@
-# Turborepo starter
+# Eclipso - Point of Sale System
 
-This Turborepo starter is maintained by the Turborepo core team.
+Eclipso is a lightweight, extensible Point-of-Sale (POS) system built for retail and hospitality environments. It provides core POS features and a well-documented API for third-party integrations.
 
-## Using this example
+## 🏗️ Architecture
 
-Run the following command:
-
-```sh
-npx create-turbo@latest
-```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+This is a monorepo built with **Turborepo** containing multiple applications and shared packages:
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+eclipso/
+├── apps/
+│   ├── api/          # NestJS backend API
+│   ├── mobile/       # Mobile application
+│   └── web/          # Web frontend
+└── packages/
+    ├── api-client-ts/    # TypeScript API client
+    ├── eslint-config/    # Shared ESLint configurations
+    ├── types/           # Shared TypeScript types
+    ├── typescript-config/ # Shared TypeScript configs
+    └── utils/           # Shared utilities
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 🚀 Quick Start
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+### Prerequisites
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+- Node.js 18+
+- pnpm 8+
+- PostgreSQL 14+
 
-### Develop
+### Installation
 
-To develop all apps and packages, run the following command:
+```bash
+# Clone the repository
+git clone <repository-url>
+cd eclipso
 
-```
-cd my-turborepo
+# Install dependencies
+pnpm install
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+# Set up environment variables
+cp apps/api/.env.example apps/api/.env
+# Edit apps/api/.env with your configuration
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+# Create database
+pnpm db:create
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+# Run database migrations
+pnpm db:migrate
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+# Start development servers
+pnpm dev
 ```
 
-### Remote Caching
+## 📱 Applications
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+### API (NestJS Backend)
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+Located in [`apps/api/`](apps/api) - Core backend service providing RESTful APIs for authentication, organization management, and business operations.
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+**Key Features:**
+- Authentication & Authorization via Clerk
+- Multi-tenant organization management
+- Role-based access control
+- Real-time webhook integration
+- PostgreSQL with Drizzle ORM
 
+📖 **[View API Documentation](apps/api/README.md)**
+
+### Mobile App
+
+Located in [`apps/mobile/`](apps/mobile) - React Native mobile application for on-the-go POS operations.
+
+### Web App
+
+Located in [`apps/web/`](apps/web) - React web frontend providing the main POS interface.
+
+## 📦 Packages
+
+### API Client TypeScript
+
+Located in [`packages/api-client-ts/`](packages/api-client-ts)
+
+Type-safe TypeScript client for consuming the Eclipso API.
+
+```typescript
+import { ApiClient } from '@eclipso/api-client-ts';
+
+const client = new ApiClient({
+  baseUrl: 'http://localhost:3000',
+  token: 'your-auth-token'
+});
 ```
-cd my-turborepo
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+### Shared Types
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+Located in [`packages/types/`](packages/types)
+
+Common TypeScript types and interfaces used across all applications.
+
+```typescript
+import { BusinessType, UserRole } from '@eclipso/types';
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### ESLint Config
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Located in [`packages/eslint-config/`](packages/eslint-config)
 
+Shared ESLint configurations ensuring consistent code style across the monorepo.
+
+Available configs:
+- `@eclipso/eslint-config/base` - Base ESLint rules
+- `@eclipso/eslint-config/next` - Next.js specific rules
+- `@eclipso/eslint-config/react-internal` - Internal React component rules
+
+### TypeScript Config
+
+Located in [`packages/typescript-config/`](packages/typescript-config)
+
+Shared TypeScript configurations for different application types.
+
+Available configs:
+- `@eclipso/typescript-config/base.json` - Base TypeScript configuration
+- `@eclipso/typescript-config/nextjs.json` - Next.js optimized config
+- `@eclipso/typescript-config/react-library.json` - React library config
+
+### Utils
+
+Located in [`packages/utils/`](packages/utils)
+
+Shared utility functions and helpers.
+
+```typescript
+import { logDebug } from '@eclipso/utils';
+
+logDebug('Debug message', { data: 'example' });
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+## 🛠️ Development
+
+### Available Scripts
+
+```bash
+# Development
+pnpm dev              # Start all apps in development mode
+pnpm dev:api          # Start only the API server
+pnpm dev:web          # Start only the web app
+pnpm dev:mobile       # Start only the mobile app
+
+# Building
+pnpm build            # Build all applications
+pnpm build:api        # Build only the API
+pnpm build:web        # Build only the web app
+
+# Testing
+pnpm test             # Run all tests
+pnpm test:api         # Run API tests
+pnpm test:e2e         # Run end-to-end tests
+
+# Database
+pnpm db:generate      # Generate database migrations
+pnpm db:migrate       # Run database migrations
+pnpm db:reset         # Reset database
+
+# Linting & Formatting
+pnpm lint             # Lint all packages
+pnpm format           # Format all code
 ```
 
-## Useful Links
+### Workspace Structure
 
-Learn more about the power of Turborepo:
+Each application and package has its own:
+- `package.json` with specific dependencies
+- Build configuration
+- Test setup
+- Environment configuration
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+Shared configurations are inherited from the packages to maintain consistency.
+
+## 🧪 Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests for specific workspace
+pnpm test:api
+pnpm test:web
+
+# Run tests in watch mode
+pnpm test:watch
+```
+
+### E2E Tests
+
+```bash
+# Run end-to-end tests
+pnpm test:e2e
+```
+
+### Test Coverage
+
+```bash
+# Generate coverage report
+pnpm test:coverage
+```
+
+## 🚀 Deployment
+
+### Build for Production
+
+```bash
+# Build all applications
+pnpm build
+
+# Build specific application
+pnpm build:api
+pnpm build:web
+```
+
+### Environment Setup
+
+1. **Database**: Set up PostgreSQL instance
+2. **Authentication**: Configure Clerk application
+3. **Environment Variables**: Set required environment variables for each app
+4. **Migrations**: Run database migrations
+5. **Build**: Build applications for production
+
+### Deployment Scripts
+
+Each application includes deployment-ready configurations:
+- Docker support (coming soon)
+- CI/CD pipeline configurations
+- Environment-specific builds
+
+## 🤝 Contributing
+
+### Getting Started
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass (`pnpm test`)
+6. Lint your code (`pnpm lint`)
+7. Commit your changes (`git commit -m 'Add some amazing feature'`)
+8. Push to the branch (`git push origin feature/amazing-feature`)
+9. Open a Pull Request
+
+### Development Guidelines
+
+- **Code Style**: Follow the existing code style enforced by ESLint and Prettier
+- **Testing**: Write tests for new features and bug fixes
+- **Documentation**: Update documentation for new features
+- **Commits**: Use conventional commit messages
+- **Types**: Maintain strong TypeScript typing
+
+### Workspace Guidelines
+
+- Keep shared code in `packages/`
+- Application-specific code stays in respective `apps/` directories
+- Update shared types when adding new interfaces
+- Follow the established architecture patterns
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📞 Support
+
+For support and questions:
+
+- 📚 Check the documentation in each app's README
+- 🐛 Create an issue on GitHub for bugs
+- 💡 Open a discussion for feature requests
+- 📧 Contact the development team
+
+## 🗺️ Roadmap
+
+### Current Phase - Core Infrastructure
+- [x] Authentication system with Clerk
+- [x] Multi-tenant organization management
+- [x] Database schema and migrations
+- [x] API foundation
+
+### Next Phase - POS Core Features
+- [ ] Inventory management system
+- [ ] Product catalog and pricing
+- [ ] Order processing and cart management
+- [ ] Payment processing integration
+- [ ] Customer management
+
+### Future Phases
+- [ ] Advanced reporting and analytics
+- [ ] Mobile app enhancements
+- [ ] Third-party integrations (payment processors, accounting)
+- [ ] Advanced inventory features (stock tracking, alerts)
+- [ ] Multi-location support
+- [ ] Offline mode capabilities
+
+## 📋 Project Status
+
+- **API**: ✅ Core authentication and organization management complete
+- **Web App**: 🚧 In development
+- **Mobile App**: 📋 Planned
+- **Documentation**: ✅ Comprehensive API docs available
+- **Testing**: ✅ Unit tests implemented
+- **CI/CD**: 📋 Planned
+
+---
+
+**Getting Started?** Head to the [API Documentation](apps/api/README.md) to explore the available endpoints and start building with Eclipso.
