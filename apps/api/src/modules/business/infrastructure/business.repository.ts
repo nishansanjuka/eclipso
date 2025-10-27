@@ -31,4 +31,30 @@ export class BusinessRepository {
   async deleteBusiness(businessId: string) {
     await this.db.delete(businesses).where(eq(businesses.orgId, businessId));
   }
+
+  async getBusinessWithUserByOrgId(orgId: string) {
+    const business = await this.db.query.BusinessTable.findFirst({
+      where: eq(businesses.orgId, orgId),
+      with: {
+        userLinks: {
+          columns: {
+            userClerkId: false,
+            businessId: false,
+          },
+          with: {
+            user: {
+              columns: {
+                clerkId: false,
+              },
+            },
+          },
+        },
+      },
+      columns: {
+        orgId: false,
+      },
+    });
+
+    return business;
+  }
 }
