@@ -1,11 +1,314 @@
-# Eclipso
+# Eclipso - Point of Sale System
 
-Eclipso is a lightweight, extensible Point-of-Sale (POS) system built for retail and hospitality environments. It provides core POS features (orders, payments, inventory, customers, and reporting) and a small, well-documented API to integrate with third-party services.
+Eclipso is a lightweight, extensible Point-of-Sale (POS) system built for retail and hospitality environments. It provides core POS features and a well-documented API for third-party integrations.
 
-## API
+## 🏗️ Architecture
 
-The Eclipso API exposes RESTful endpoints for integrating with the POS core — including orders, payments, inventory, customers, and reports. All endpoints are versioned under `/api/v1` and use JSON for requests and responses. Authenticate requests with a Bearer token (JWT) provided in the `Authorization` header. Responses follow a simple envelope pattern: `success` (boolean), `data` (object or array), and `error` (object with `code` and `message`) when applicable. Use standard HTTP status codes for errors, and include pagination and filtering via query parameters where supported.
+This is a monorepo built with **Turborepo** containing multiple applications and shared packages:
 
-Base URL (placeholder): `https://api.eclipso.example.com`
+```
+eclipso/
+├── apps/
+│   ├── api/          # NestJS backend API
+│   ├── mobile/       # Mobile application
+│   └── web/          # Web frontend
+└── packages/
+    ├── api-client-ts/    # TypeScript API client
+    ├── eslint-config/    # Shared ESLint configurations
+    ├── types/           # Shared TypeScript types
+    ├── typescript-config/ # Shared TypeScript configs
+    └── utils/           # Shared utilities
+```
 
-For full endpoint details, examples, and SDKs see the API reference (to be added).
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm 8+
+- PostgreSQL 14+
+
+### Installation
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd eclipso
+
+# Install dependencies
+pnpm install
+
+# Set up environment variables
+cp apps/api/.env.example apps/api/.env
+# Edit apps/api/.env with your configuration
+
+# Create database
+pnpm db:create
+
+# Run database migrations
+pnpm db:migrate
+
+# Start development servers
+pnpm dev
+```
+
+## 📱 Applications
+
+### API (NestJS Backend)
+
+Located in [`apps/api/`](apps/api) - Core backend service providing RESTful APIs for authentication, organization management, and business operations.
+
+**Key Features:**
+- Authentication & Authorization via Clerk
+- Multi-tenant organization management
+- Role-based access control
+- Real-time webhook integration
+- PostgreSQL with Drizzle ORM
+
+📖 **[View API Documentation](apps/api/README.md)**
+
+### Mobile App
+
+Located in [`apps/mobile/`](apps/mobile) - React Native mobile application for on-the-go POS operations.
+
+### Web App
+
+Located in [`apps/web/`](apps/web) - React web frontend providing the main POS interface.
+
+## 📦 Packages
+
+### API Client TypeScript
+
+Located in [`packages/api-client-ts/`](packages/api-client-ts)
+
+Type-safe TypeScript client for consuming the Eclipso API.
+
+```typescript
+import { ApiClient } from '@eclipso/api-client-ts';
+
+const client = new ApiClient({
+  baseUrl: 'http://localhost:3000',
+  token: 'your-auth-token'
+});
+```
+
+### Shared Types
+
+Located in [`packages/types/`](packages/types)
+
+Common TypeScript types and interfaces used across all applications.
+
+```typescript
+import { BusinessType, UserRole } from '@eclipso/types';
+```
+
+### ESLint Config
+
+Located in [`packages/eslint-config/`](packages/eslint-config)
+
+Shared ESLint configurations ensuring consistent code style across the monorepo.
+
+Available configs:
+- `@eclipso/eslint-config/base` - Base ESLint rules
+- `@eclipso/eslint-config/next` - Next.js specific rules
+- `@eclipso/eslint-config/react-internal` - Internal React component rules
+
+### TypeScript Config
+
+Located in [`packages/typescript-config/`](packages/typescript-config)
+
+Shared TypeScript configurations for different application types.
+
+Available configs:
+- `@eclipso/typescript-config/base.json` - Base TypeScript configuration
+- `@eclipso/typescript-config/nextjs.json` - Next.js optimized config
+- `@eclipso/typescript-config/react-library.json` - React library config
+
+### Utils
+
+Located in [`packages/utils/`](packages/utils)
+
+Shared utility functions and helpers.
+
+```typescript
+import { logDebug } from '@eclipso/utils';
+
+logDebug('Debug message', { data: 'example' });
+```
+
+## 🛠️ Development
+
+### Available Scripts
+
+```bash
+# Development
+pnpm dev              # Start all apps in development mode
+pnpm dev:api          # Start only the API server
+pnpm dev:web          # Start only the web app
+pnpm dev:mobile       # Start only the mobile app
+
+# Building
+pnpm build            # Build all applications
+pnpm build:api        # Build only the API
+pnpm build:web        # Build only the web app
+
+# Testing
+pnpm test             # Run all tests
+pnpm test:api         # Run API tests
+pnpm test:e2e         # Run end-to-end tests
+
+# Database
+pnpm db:generate      # Generate database migrations
+pnpm db:migrate       # Run database migrations
+pnpm db:reset         # Reset database
+
+# Linting & Formatting
+pnpm lint             # Lint all packages
+pnpm format           # Format all code
+```
+
+### Workspace Structure
+
+Each application and package has its own:
+- `package.json` with specific dependencies
+- Build configuration
+- Test setup
+- Environment configuration
+
+Shared configurations are inherited from the packages to maintain consistency.
+
+## 🧪 Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests for specific workspace
+pnpm test:api
+pnpm test:web
+
+# Run tests in watch mode
+pnpm test:watch
+```
+
+### E2E Tests
+
+```bash
+# Run end-to-end tests
+pnpm test:e2e
+```
+
+### Test Coverage
+
+```bash
+# Generate coverage report
+pnpm test:coverage
+```
+
+## 🚀 Deployment
+
+### Build for Production
+
+```bash
+# Build all applications
+pnpm build
+
+# Build specific application
+pnpm build:api
+pnpm build:web
+```
+
+### Environment Setup
+
+1. **Database**: Set up PostgreSQL instance
+2. **Authentication**: Configure Clerk application
+3. **Environment Variables**: Set required environment variables for each app
+4. **Migrations**: Run database migrations
+5. **Build**: Build applications for production
+
+### Deployment Scripts
+
+Each application includes deployment-ready configurations:
+- Docker support (coming soon)
+- CI/CD pipeline configurations
+- Environment-specific builds
+
+## 🤝 Contributing
+
+### Getting Started
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass (`pnpm test`)
+6. Lint your code (`pnpm lint`)
+7. Commit your changes (`git commit -m 'Add some amazing feature'`)
+8. Push to the branch (`git push origin feature/amazing-feature`)
+9. Open a Pull Request
+
+### Development Guidelines
+
+- **Code Style**: Follow the existing code style enforced by ESLint and Prettier
+- **Testing**: Write tests for new features and bug fixes
+- **Documentation**: Update documentation for new features
+- **Commits**: Use conventional commit messages
+- **Types**: Maintain strong TypeScript typing
+
+### Workspace Guidelines
+
+- Keep shared code in `packages/`
+- Application-specific code stays in respective `apps/` directories
+- Update shared types when adding new interfaces
+- Follow the established architecture patterns
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📞 Support
+
+For support and questions:
+
+- 📚 Check the documentation in each app's README
+- 🐛 Create an issue on GitHub for bugs
+- 💡 Open a discussion for feature requests
+- 📧 Contact the development team
+
+## 🗺️ Roadmap
+
+### Current Phase - Core Infrastructure
+- [x] Authentication system with Clerk
+- [x] Multi-tenant organization management
+- [x] Database schema and migrations
+- [x] API foundation
+
+### Next Phase - POS Core Features
+- [ ] Inventory management system
+- [ ] Product catalog and pricing
+- [ ] Order processing and cart management
+- [ ] Payment processing integration
+- [ ] Customer management
+
+### Future Phases
+- [ ] Advanced reporting and analytics
+- [ ] Mobile app enhancements
+- [ ] Third-party integrations (payment processors, accounting)
+- [ ] Advanced inventory features (stock tracking, alerts)
+- [ ] Multi-location support
+- [ ] Offline mode capabilities
+
+## 📋 Project Status
+
+- **API**: ✅ Core authentication and organization management complete
+- **Web App**: 🚧 In development
+- **Mobile App**: 📋 Planned
+- **Documentation**: ✅ Comprehensive API docs available
+- **Testing**: ✅ Unit tests implemented
+- **CI/CD**: 📋 Planned
+
+---
+
+**Getting Started?** Head to the [API Documentation](apps/api/README.md) to explore the available endpoints and start building with Eclipso.
