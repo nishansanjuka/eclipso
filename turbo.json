@@ -9,7 +9,7 @@
     "dev": {
       "cache": true,
       "persistent": true,
-      "dependsOn": ["^dev"]
+      "dependsOn": ["^build"]
     },
     "generate:ts": {
       "persistent": true,
