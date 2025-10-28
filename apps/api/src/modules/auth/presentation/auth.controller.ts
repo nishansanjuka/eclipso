@@ -23,12 +23,16 @@ import {
 } from '../domain/organization.entity';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
 import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { AUTH_API_OPERATIONS } from '../constants/api-operations';
 
 @Controller('/auth/clerk')
 export class AuthController {
   constructor(private readonly authUseCase: AuthUseCase) {}
 
-  @ApiOperation({ operationId: 'createOrganization' })
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.CREATE_ORGANIZATION.operationId,
+    description: AUTH_API_OPERATIONS.CREATE_ORGANIZATION.description,
+  })
   @ApiBody({ type: CreateOrganizationDto })
   @Post('organization')
   @CatchEntityErrors()
@@ -44,7 +48,10 @@ export class AuthController {
     );
   }
 
-  @ApiOperation({ operationId: 'updateOrganization' })
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.UPDATE_ORGANIZATION.operationId,
+    description: AUTH_API_OPERATIONS.UPDATE_ORGANIZATION.description,
+  })
   @ApiBody({ type: UpdateOrganizationDto })
   @Put('organization')
   @CatchEntityErrors()
@@ -59,7 +66,10 @@ export class AuthController {
     return this.authUseCase.updateOrganization(name, businessType, orgId);
   }
 
-  @ApiOperation({ operationId: 'deleteOrganization' })
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.DELETE_ORGANIZATION.operationId,
+    description: AUTH_API_OPERATIONS.DELETE_ORGANIZATION.description,
+  })
   @Delete('organization')
   @CatchEntityErrors()
   async deleteOrganization(@User() user: AuthUserObject) {
@@ -67,7 +77,10 @@ export class AuthController {
     return this.authUseCase.deleteOrganization(orgId);
   }
 
-  @ApiOperation({ operationId: 'dt1' })
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.INVITE_USER.operationId,
+    description: AUTH_API_OPERATIONS.INVITE_USER.description,
+  })
   @ApiBody({ type: InviteUserDto })
   @Post('organization/invite')
   @CatchEntityErrors()
@@ -88,10 +101,14 @@ export class AuthController {
     );
   }
 
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.RESEND_INVITATION.operationId,
+    description: AUTH_API_OPERATIONS.RESEND_INVITATION.description,
+  })
   @ApiParam({ name: 'email', type: String, required: true })
   @Patch('organization/invite/resend/:email')
   @CatchEntityErrors()
-  async checkInvitationsExistence(
+  async resendInvitation(
     @Param('email') email: string,
     @User() user: AuthUserObject,
   ) {
@@ -108,7 +125,10 @@ export class AuthController {
     );
   }
 
-  @ApiOperation({ operationId: 'revokeInviteToUser' })
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.REVOKE_INVITATION.operationId,
+    description: AUTH_API_OPERATIONS.REVOKE_INVITATION.description,
+  })
   @ApiParam({ name: 'invitationId', type: String, required: true })
   @Delete('organization/invite/revoke/:invitationId')
   @CatchEntityErrors()
@@ -123,7 +143,10 @@ export class AuthController {
     );
   }
 
-  @ApiOperation({ operationId: 'deleteUserFromOrganization' })
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.REMOVE_USER.operationId,
+    description: AUTH_API_OPERATIONS.REMOVE_USER.description,
+  })
   @ApiParam({ name: 'userId', type: String, required: true })
   @Delete('organization/user/:userId')
   @CatchEntityErrors()
