@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { SupplierCreateDto } from '../dto/supplier.dto';
 import { SupplierService } from '../infrastructure/supplier.service';
 import { BusinessService } from '../../business/infrastructure/business.service';
+import { SupplierUpdateEntity } from '../domain/supplier.entity';
 
 @Injectable()
 // as a business admin I can update
@@ -22,7 +23,11 @@ export class SupplierUpdateUseCase {
       throw new NotFoundException(`Business not found`);
     } else {
       const { id: businessId } = res;
-      return this.supplierService.updateSupplier(id, businessId, supplierData);
+      const data = new SupplierUpdateEntity({
+        ...supplierData,
+        businessId,
+      });
+      return this.supplierService.updateSupplier(id, businessId, data);
     }
   }
 }

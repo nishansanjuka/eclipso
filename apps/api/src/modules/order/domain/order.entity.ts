@@ -1,0 +1,55 @@
+import z from 'zod';
+import { Z } from '../../../shared/decorators/zod.validation';
+import { BaseModel } from '../../../shared/zod/base.model';
+import { OrderStatus } from '../infrastructure/enums/order.enum';
+
+export class OrderCreateEntity extends BaseModel {
+  @Z(z.string().nullable().optional())
+  public readonly id?: string;
+
+  @Z(
+    z
+      .date({ error: 'Invalid expire date' })
+      .min(new Date(), 'Expire date must be in the future'),
+  )
+  public readonly expireDate: Date;
+
+  @Z(
+    z.enum(OrderStatus, {
+      message: `Order status must be one of the following: ${Object.values(
+        OrderStatus,
+      ).join(', ')}`,
+    }),
+  )
+  public readonly status: OrderStatus;
+
+  @Z(
+    z
+      .number({ error: 'Invalid Total Amount' })
+      .min(0, 'Total Amount must be positive'),
+  )
+  public readonly totalAmount: number;
+
+  @Z(
+    z
+      .string({ error: 'Invalid Business Id' })
+      .min(1, 'Business Id is required'),
+  )
+  public readonly businessId: string;
+
+  @Z(
+    z
+      .string({ error: 'Invalid Supplier Id' })
+      .min(1, 'Supplier Id is required'),
+  )
+  public readonly supplierId: string;
+
+  constructor(params: OrderCreateEntity) {
+    super(params);
+    this.businessId = params.businessId;
+    this.supplierId = params.supplierId;
+    this.expireDate = params.expireDate;
+    this.status = params.status;
+    this.totalAmount = params.totalAmount;
+  }
+}
