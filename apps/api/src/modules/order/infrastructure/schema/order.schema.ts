@@ -6,7 +6,7 @@ import { pgEnum } from 'drizzle-orm/pg-core';
 import { integer } from 'drizzle-orm/pg-core';
 import { OrderStatus } from '../enums/order.enum';
 
-export const OrderStatusEnum = pgEnum('order_status', OrderStatus);
+export const orderStatusEnum = pgEnum('order_status', OrderStatus);
 
 export const orders = pgTable('orders', {
   id: uuid('id').defaultRandom().unique().notNull(),
@@ -21,7 +21,7 @@ export const orders = pgTable('orders', {
     })
     .notNull(),
   expireDate: timestamp('expire_date').notNull(),
-  status: OrderStatusEnum().notNull().default(OrderStatus.DRAFT),
+  status: orderStatusEnum().notNull().default(OrderStatus.DRAFT),
   totalAmount: integer('total_amount').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

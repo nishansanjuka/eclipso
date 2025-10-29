@@ -4,7 +4,7 @@ import { type AuthUserObject } from '../../../../globals';
 import { SupplierCreateUseCase } from '../application/supplier-create.usecase';
 import { SupplierCreateDto } from '../dto/supplier.dto';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
-import { ApiBody, ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { SupplierUpdateUseCase } from '../application/supplier-update.usecase';
 import { SupplierDeleteUseCase } from '../application/supplier-delete.usecase';
 import { SUPPLIER_API_OPERATIONS } from '../constants/api-operations';
@@ -35,6 +35,7 @@ export class SupplierController {
     operationId: SUPPLIER_API_OPERATIONS.UPDATE.operationId,
     description: SUPPLIER_API_OPERATIONS.UPDATE.description,
   })
+  @ApiParam({ name: 'id', type: 'string', description: 'Supplier ID' })
   @ApiBody({ type: SupplierCreateDto })
   @Put('update/:id')
   @CatchEntityErrors()
@@ -50,6 +51,7 @@ export class SupplierController {
     operationId: SUPPLIER_API_OPERATIONS.DELETE.operationId,
     description: SUPPLIER_API_OPERATIONS.DELETE.description,
   })
+  @ApiParam({ name: 'id', type: 'string', description: 'Supplier ID' })
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteSupplier(@Param('id') id: string, @User() user: AuthUserObject) {

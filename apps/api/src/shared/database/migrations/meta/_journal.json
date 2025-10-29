@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1761587421452,
-      "tag": "0000_conscious_moondragon",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1761591973795,
-      "tag": "0001_naive_molecule_man",
+      "when": 1761775311317,
+      "tag": "0000_light_diamondback",
       "breakpoints": true
     }
   ]
