@@ -7,6 +7,8 @@ export class OrderCreateDto {
   @ApiProperty()
   supplierId: string;
   @ApiProperty()
+  invoiceId: string;
+  @ApiProperty()
   expireDate: Date;
   @ApiProperty()
   status: OrderStatus;
