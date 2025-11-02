@@ -1,10 +1,10 @@
 import { pgTable, uuid } from 'drizzle-orm/pg-core';
-import { businesses } from '../../../business/infrastructure/schema/business.schema';
 import { timestamp } from 'drizzle-orm/pg-core';
 import { suppliers } from '../../../suppliers/infrastructure/schema/supplier.schema';
 import { pgEnum } from 'drizzle-orm/pg-core';
 import { integer } from 'drizzle-orm/pg-core';
 import { OrderStatus } from '../enums/order.enum';
+import { businesses } from '../../../business/infrastructure/schema/business.schema.js';
 
 export const orderStatusEnum = pgEnum('order_status', OrderStatus);
 

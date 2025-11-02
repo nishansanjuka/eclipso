@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { type DrizzleClient } from '../../../shared/database/drizzle.module';
 import { and, eq } from 'drizzle-orm';
 import { CategoryCreateDto } from '../dto/category.dto';
 import { categories } from './schema/category.schema';
+import { type DrizzleClient } from '../../../shared/database/drizzle.module';
 
 @Injectable()
 export class CategoryRepository {

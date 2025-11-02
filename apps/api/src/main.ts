@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as express from 'express';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -27,14 +28,27 @@ async function bootstrap() {
   });
   document.security = [{ Authorization: [] }];
 
-  SwaggerModule.setup('api', app, document);
-
+  // ✅ Expose the JSON (like Swagger did)
   app
     .getHttpAdapter()
     .get('/api-json', (req: express.Request, res: express.Response) => {
       res.json(document);
     });
 
+  // ✅ Dynamically import Scalar to avoid ESM require() issues
+  const { apiReference } = await import('@scalar/nestjs-api-reference');
+
+  app.use(
+    '/api-reference',
+    apiReference({
+      darkMode: true,
+      theme: 'deepSpace',
+      title: 'Eclipso POS API Reference',
+      content: document,
+    }),
+  );
+
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();
