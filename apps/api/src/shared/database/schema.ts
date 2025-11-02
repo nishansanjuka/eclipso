@@ -22,7 +22,12 @@ import {
   businessUsersRelations,
   usersRelations,
 } from './relations/business.user.schema';
-import { productRelations } from './relations/product.category.schema';
+import {
+  categoryRelations,
+  productCategory,
+  productCategoryRelations,
+  productRelations,
+} from './relations/product.category.schema';
 
 export const UsersTable = users;
 export const BusinessTable = businesses;
@@ -34,12 +39,15 @@ export const OrderItemsTable = orderItems;
 export const CategoriesTable = categories;
 export const InventoryMovementsTable = inventoryMovements;
 export const InvoiceTable = invoices;
+export const ProductCategoryTable = productCategory;
 
 // relations for tables
 export const UsersRelations = usersRelations;
 export const BusinessesRelations = businessesRelations;
 export const BusinessUserRelations = businessUsersRelations;
 export const ProductRelations = productRelations;
+export const CategoryRelations = categoryRelations;
+export const ProductCategoryRelations = productCategoryRelations;
 
 // ENUM for Business Types
 export const BusinessTypeEnum = businessTypeEnum;
