@@ -38,6 +38,20 @@ CREATE TABLE "inventory_movements" (
 	CONSTRAINT "inventory_movements_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
+CREATE TABLE "invoice" (
+	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"invoice_number" uuid NOT NULL,
+	"total_tax" integer DEFAULT 0 NOT NULL,
+	"total_discount" integer DEFAULT 0 NOT NULL,
+	"sub_total" integer DEFAULT 0 NOT NULL,
+	"grand_total" integer DEFAULT 0 NOT NULL,
+	"pdf_url" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "invoice_id_unique" UNIQUE("id"),
+	CONSTRAINT "invoice_invoice_number_unique" UNIQUE("invoice_number")
+);
+--> statement-breakpoint
 CREATE TABLE "order_items" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"order_id" uuid NOT NULL,
@@ -55,6 +69,7 @@ CREATE TABLE "orders" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"business_id" uuid NOT NULL,
 	"supplier_id" uuid NOT NULL,
+	"invoice_id" uuid NOT NULL,
 	"expire_date" timestamp NOT NULL,
 	"status" "order_status" DEFAULT 'draft' NOT NULL,
 	"total_amount" integer DEFAULT 0 NOT NULL,
@@ -107,6 +122,7 @@ ALTER TABLE "order_items" ADD CONSTRAINT "order_items_order_id_businesses_id_fk"
 ALTER TABLE "order_items" ADD CONSTRAINT "order_items_product_id_suppliers_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."suppliers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "orders" ADD CONSTRAINT "orders_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "orders" ADD CONSTRAINT "orders_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "orders" ADD CONSTRAINT "orders_invoice_id_invoice_id_fk" FOREIGN KEY ("invoice_id") REFERENCES "public"."invoice"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "products" ADD CONSTRAINT "products_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "products" ADD CONSTRAINT "products_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "suppliers" ADD CONSTRAINT "suppliers_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;

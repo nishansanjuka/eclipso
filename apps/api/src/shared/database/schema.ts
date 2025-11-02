@@ -22,10 +22,6 @@ import {
   businessUsersRelations,
   usersRelations,
 } from './relations/business.user.schema';
-import {
-  invoiceOrder,
-  invoiceOrderRelations,
-} from './relations/order.invoice.schema';
 import { productRelations } from './relations/product.category.schema';
 
 export const UsersTable = users;
@@ -38,14 +34,12 @@ export const OrderItemsTable = orderItems;
 export const CategoriesTable = categories;
 export const InventoryMovementsTable = inventoryMovements;
 export const InvoiceTable = invoices;
-export const InvoiceOrder = invoiceOrder;
 
 // relations for tables
 export const UsersRelations = usersRelations;
 export const BusinessesRelations = businessesRelations;
 export const BusinessUserRelations = businessUsersRelations;
 export const ProductRelations = productRelations;
-export const OrderInvoiceRelations = invoiceOrderRelations;
 
 // ENUM for Business Types
 export const BusinessTypeEnum = businessTypeEnum;

@@ -4,7 +4,8 @@ import { suppliers } from '../../../suppliers/infrastructure/schema/supplier.sch
 import { pgEnum } from 'drizzle-orm/pg-core';
 import { integer } from 'drizzle-orm/pg-core';
 import { OrderStatus } from '../enums/order.enum';
-import { businesses } from '../../../business/infrastructure/schema/business.schema.js';
+import { businesses } from '../../../business/infrastructure/schema/business.schema';
+import { invoices } from '../../../invoice/infrastructure/schema/invoice.schema';
 
 export const orderStatusEnum = pgEnum('order_status', OrderStatus);
 
@@ -20,6 +21,9 @@ export const orders = pgTable('orders', {
       onDelete: 'cascade',
     })
     .notNull(),
+  invoiceId: uuid('invoice_id')
+    .notNull()
+    .references(() => invoices.id),
   expireDate: timestamp('expire_date').notNull(),
   status: orderStatusEnum().notNull().default(OrderStatus.DRAFT),
   totalAmount: integer('total_amount').notNull().default(0),
