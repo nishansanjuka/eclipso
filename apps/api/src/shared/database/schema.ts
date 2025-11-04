@@ -1,7 +1,9 @@
+import { brands } from '../../modules/brand/infrastructure/schema/brand.schema';
 import {
   businesses,
   businessTypeEnum,
 } from '../../modules/business/infrastructure/schema/business.schema';
+import { discounts } from '../../modules/discount/infrastructure/schema/discount.schema';
 import {
   inventoryMovements,
   movementEnum,
@@ -15,6 +17,7 @@ import {
 import { categories } from '../../modules/product/infrastructure/schema/category.schema';
 import { products } from '../../modules/product/infrastructure/schema/product.schema';
 import { suppliers } from '../../modules/suppliers/infrastructure/schema/supplier.schema';
+import { taxes } from '../../modules/tax/infrastructure/schema/tax.schema';
 import { users } from '../../modules/users/infrastructure/schema/user.schema';
 import {
   businessesRelations,
@@ -40,6 +43,9 @@ export const CategoriesTable = categories;
 export const InventoryMovementsTable = inventoryMovements;
 export const InvoiceTable = invoices;
 export const ProductCategoryTable = productCategory;
+export const BrandTable = brands;
+export const TaxTable = taxes;
+export const DiscountTable = discounts;
 
 // relations for tables
 export const UsersRelations = usersRelations;

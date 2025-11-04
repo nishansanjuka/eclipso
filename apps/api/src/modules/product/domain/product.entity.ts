@@ -52,6 +52,9 @@ export class ProductCreateEntity extends BaseModel {
   @Z(z.object({}).optional())
   public readonly metadata?: object;
 
+  @Z(z.string().nullable().optional())
+  public readonly brandId?: string;
+
   constructor(params: CreateProductDto) {
     super(params);
     this.businessId = params.businessId;
@@ -61,6 +64,7 @@ export class ProductCreateEntity extends BaseModel {
     this.sku = params.sku;
     this.stockQty = params.stockQty;
     this.metadata = params.metadata;
+    this.brandId = params.brandId;
   }
 }
 
@@ -110,6 +114,9 @@ export class ProductUpdateEntity extends BaseModel {
   @Z(z.object({}).optional())
   public readonly metadata?: object;
 
+  @Z(z.string().nullable().optional())
+  public readonly brandId?: string;
+
   constructor(params: UpdateProductDto) {
     super(params);
     this.businessId = params.businessId;
@@ -118,5 +125,6 @@ export class ProductUpdateEntity extends BaseModel {
     this.sku = params.sku;
     this.stockQty = params.stockQty;
     this.metadata = params.metadata;
+    this.brandId = params.brandId;
   }
 }

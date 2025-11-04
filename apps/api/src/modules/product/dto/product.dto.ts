@@ -14,6 +14,8 @@ export class CreateProductDto {
   @ApiProperty()
   stockQty: number;
   @ApiProperty({ required: false })
+  brandId?: string;
+  @ApiProperty({ required: false })
   metadata?: object;
 }
 
@@ -28,6 +30,8 @@ export class UpdateProductDto {
   price?: number;
   @ApiProperty({ required: false })
   stockQty?: number;
+  @ApiProperty({ required: false })
+  brandId?: string;
   @ApiProperty({ required: false })
   metadata?: object;
 }
