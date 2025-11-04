@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CategoryService } from '../infrastructure/category.service';
-import { CategoryCreateDto } from '../dto/category.dto';
+import { CreateCategoryDto } from '../dto/category.dto';
 import { BusinessService } from '../../business/infrastructure/business.service';
 import { CategoryCreateEntity } from '../domain/category.entity';
 
@@ -12,7 +12,7 @@ export class CategoryCreateUseCase {
   ) {}
 
   // as business owner, create product category
-  async execute(orgId: string, categoryData: CategoryCreateDto) {
+  async execute(orgId: string, categoryData: CreateCategoryDto) {
     const res = await this.businessService.getBusinessWithUserByOrgId(orgId);
 
     if (!res) {

@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { ProductRepository } from './product.repository';
-import { ProductCreateDto } from '../dto/product.dto';
+import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
 
 @Injectable()
 export class ProductService {
   constructor(private readonly productRepository: ProductRepository) {}
 
-  async createProduct(productData: ProductCreateDto) {
+  async createProduct(productData: CreateProductDto) {
     return await this.productRepository.createProduct(productData);
   }
 
   async updateProduct(
     id: string,
     businessId: string,
-    productData: Partial<ProductCreateDto>,
+    productData: UpdateProductDto,
   ) {
     return await this.productRepository.updateProductWithBusinessId(
       id,

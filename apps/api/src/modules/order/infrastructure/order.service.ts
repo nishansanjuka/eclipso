@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { OrderRepository } from './order.repository';
-import { OrderCreateDto, OrderUpdateDto } from '../dto/order.dto';
+import { CreateOrderDto, UpdateOrderDto } from '../dto/order.dto';
 
 @Injectable()
 export class OrderService {
   constructor(private readonly orderRepository: OrderRepository) {}
 
-  async createOrder(orderData: OrderCreateDto) {
+  async createOrder(orderData: CreateOrderDto) {
     return await this.orderRepository.createOrder(orderData);
   }
 
-  async updateOrder(orderId: string, orderData: OrderUpdateDto) {
+  async updateOrder(orderId: string, orderData: UpdateOrderDto) {
     return await this.orderRepository.updateOrderById(orderId, orderData);
   }
 

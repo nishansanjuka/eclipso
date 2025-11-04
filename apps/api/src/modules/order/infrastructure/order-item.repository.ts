@@ -1,14 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { type DrizzleClient } from 'src/shared/database/drizzle.module';
 import { eq } from 'drizzle-orm';
-import { OrderItemCreateDto } from '../dto/order-item.dto';
+import { CreateOrderItemDto } from '../dto/order-item.dto';
 import { orderItems } from './schema/order.item.schema';
 
 @Injectable()
 export class OrderItemRepository {
   constructor(@Inject('DRIZZLE_CLIENT') private readonly db: DrizzleClient) {}
 
-  async createOrderItem(orderItemData: OrderItemCreateDto) {
+  async createOrderItem(orderItemData: CreateOrderItemDto) {
     const result = await this.db
       .insert(orderItems)
       .values(orderItemData)
@@ -18,7 +18,7 @@ export class OrderItemRepository {
 
   async updateOrderItemById(
     orderItemId: string,
-    orderItemData: OrderItemCreateDto,
+    orderItemData: CreateOrderItemDto,
   ) {
     const result = await this.db
       .update(orderItems)

@@ -2,7 +2,7 @@ import z from 'zod';
 import { Z } from '../../../shared/decorators/zod.validation';
 import { BaseModel } from '../../../shared/zod/base.model';
 import { OrderStatus } from '../infrastructure/enums/order.enum';
-import { OrderCreateDto, OrderUpdateDto } from '../dto/order.dto';
+import { CreateOrderDto, UpdateOrderDto } from '../dto/order.dto';
 
 export class OrderCreateEntity extends BaseModel {
   @Z(z.string().nullable().optional())
@@ -48,7 +48,7 @@ export class OrderCreateEntity extends BaseModel {
   @Z(z.string({ error: 'Invalid Invoice Id' }).min(1, 'Invoice Id is required'))
   public readonly invoiceId: string;
 
-  constructor(params: OrderCreateDto) {
+  constructor(params: CreateOrderDto) {
     super(params);
     this.businessId = params.businessId;
     this.supplierId = params.supplierId;
@@ -93,7 +93,7 @@ export class OrderUpdateEntity extends BaseModel {
   @Z(z.string({ error: 'Invalid Invoice Id' }).min(1, 'Invoice Id is required'))
   public readonly invoiceId?: string;
 
-  constructor(params: OrderUpdateDto) {
+  constructor(params: UpdateOrderDto) {
     super(params);
     this.businessId = params.businessId;
     this.expectedDate = params.expectedDate;

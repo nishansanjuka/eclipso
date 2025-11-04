@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { type DrizzleClient } from '../../../shared/database/drizzle.module';
-import { ProductCreateDto } from '../dto/product.dto';
+import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
 import { products } from './schema/product.schema';
 import { and, eq } from 'drizzle-orm';
 
@@ -8,14 +8,14 @@ import { and, eq } from 'drizzle-orm';
 export class ProductRepository {
   constructor(@Inject('DRIZZLE_CLIENT') private readonly db: DrizzleClient) {}
 
-  async createProduct(productData: ProductCreateDto) {
+  async createProduct(productData: CreateProductDto) {
     return await this.db.insert(products).values(productData).returning();
   }
 
   async updateProductWithBusinessId(
     id: string,
     businessId: string,
-    productData: Partial<ProductCreateDto>,
+    productData: UpdateProductDto,
   ) {
     return await this.db
       .update(products)

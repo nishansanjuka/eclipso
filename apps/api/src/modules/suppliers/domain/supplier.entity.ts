@@ -1,7 +1,7 @@
 import z from 'zod';
 import { BaseModel } from '../../../shared/zod/base.model';
 import { Z } from '../../../shared/decorators/zod.validation';
-import { SupplierCreateDto } from '../dto/supplier.dto';
+import { CreateSupplierDto } from '../dto/supplier.dto';
 
 export class SuppplierCreateEntity extends BaseModel {
   @Z(z.string().nullable().optional())
@@ -27,7 +27,7 @@ export class SuppplierCreateEntity extends BaseModel {
   )
   public readonly businessId: string;
 
-  constructor(params: SupplierCreateDto) {
+  constructor(params: CreateSupplierDto) {
     super(params);
     this.description = params.description;
     this.contact = params.contact;
@@ -72,7 +72,7 @@ export class SupplierUpdateEntity extends BaseModel {
   )
   public readonly businessId?: string;
 
-  constructor(params: Partial<SupplierCreateDto>) {
+  constructor(params: Partial<CreateSupplierDto>) {
     super(params);
     this.id = params.id;
     this.name = params.name;

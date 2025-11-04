@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { BusinessService } from '../../business/infrastructure/business.service';
 import { ProductService } from '../infrastructure/product.service';
 import { ProductCreateEntity } from '../domain/product.entity';
-import { ProductCreateDto } from '../dto/product.dto';
+import { CreateProductDto } from '../dto/product.dto';
 
 @Injectable()
 export class ProductCreateUseCase {
@@ -12,7 +12,7 @@ export class ProductCreateUseCase {
   ) {}
 
   // as business owner, create product category
-  async execute(orgId: string, productData: ProductCreateDto) {
+  async execute(orgId: string, productData: CreateProductDto) {
     const res = await this.businessService.getBusinessWithUserByOrgId(orgId);
 
     if (!res) {

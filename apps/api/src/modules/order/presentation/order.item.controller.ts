@@ -4,7 +4,7 @@ import { type AuthUserObject } from '../../../../globals';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
 import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { ORDER_API_OPERATIONS } from '../contants/api-operations';
-import { OrderCreateDto, OrderUpdateDto } from '../dto/order.dto';
+import { CreateOrderDto, UpdateOrderDto } from '../dto/order.dto';
 import { OrderCreateUsecase } from '../application/order.create.usecase';
 import { OrderUpdateUsecase } from '../application/order.update.usecase';
 import { OrderDeleteUsecase } from '../application/order.delete.usecase';
@@ -21,10 +21,10 @@ export class OrderController {
     operationId: ORDER_API_OPERATIONS.CREATE.operationId,
     description: ORDER_API_OPERATIONS.CREATE.description,
   })
-  @ApiBody({ type: OrderCreateDto })
+  @ApiBody({ type: CreateOrderDto })
   @Post('create')
   @CatchEntityErrors()
-  createOrder(@Body() orderData: OrderCreateDto, @User() user: AuthUserObject) {
+  createOrder(@Body() orderData: CreateOrderDto, @User() user: AuthUserObject) {
     return this.orderCreateUsecase.execute(user.orgId!, orderData);
   }
 
@@ -33,12 +33,12 @@ export class OrderController {
     description: ORDER_API_OPERATIONS.UPDATE.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Supplier ID' })
-  @ApiBody({ type: OrderUpdateDto })
+  @ApiBody({ type: UpdateOrderDto })
   @Put('update/:id')
   @CatchEntityErrors()
   updateOrder(
     @Param('id') id: string,
-    @Body() orderData: OrderUpdateDto,
+    @Body() orderData: UpdateOrderDto,
     @User() user: AuthUserObject,
   ) {
     return this.orderUpdateUseCase.execute(id, user.orgId!, orderData);

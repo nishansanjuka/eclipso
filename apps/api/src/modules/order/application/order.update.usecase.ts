@@ -3,7 +3,7 @@ import { BusinessService } from '../../business/infrastructure/business.service'
 import { OrderService } from '../infrastructure/order.service';
 import { NotFoundException } from '@nestjs/common';
 import { OrderUpdateEntity } from '../domain/order.entity';
-import { OrderUpdateDto } from '../dto/order.dto';
+import { UpdateOrderDto } from '../dto/order.dto';
 
 // as an business owner, I want to update an existing order
 @Injectable()
@@ -13,7 +13,7 @@ export class OrderUpdateUsecase {
     private readonly orderService: OrderService,
   ) {}
 
-  async execute(id: string, orgId: string, orderData: OrderUpdateDto) {
+  async execute(id: string, orgId: string, orderData: UpdateOrderDto) {
     {
       const res = await this.businessService.getBusinessWithUserByOrgId(orgId);
 

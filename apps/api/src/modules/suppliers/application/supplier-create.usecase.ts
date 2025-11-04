@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { SupplierCreateDto } from '../dto/supplier.dto';
+import { CreateSupplierDto } from '../dto/supplier.dto';
 import { SupplierService } from '../infrastructure/supplier.service';
 import { BusinessService } from '../../business/infrastructure/business.service';
 import { SuppplierCreateEntity } from '../domain/supplier.entity';
@@ -14,7 +14,7 @@ export class SupplierCreateUseCase {
 
   async execute(
     orgId: string,
-    supplierData: Omit<SupplierCreateDto, 'businessId'>,
+    supplierData: Omit<CreateSupplierDto, 'businessId'>,
   ) {
     const res = await this.businessService.getBusinessWithUserByOrgId(orgId);
 

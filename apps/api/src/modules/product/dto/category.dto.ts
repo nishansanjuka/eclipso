@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CategoryCreateDto {
+export class CreateCategoryDto {
   id?: string;
   businessId: string;
   @ApiProperty()
@@ -9,7 +9,7 @@ export class CategoryCreateDto {
   parentId?: string;
 }
 
-export class CategoryUpdateDto {
+export class UpdateCategoryDto {
   id: string;
   businessId: string;
   @ApiProperty({ required: false })

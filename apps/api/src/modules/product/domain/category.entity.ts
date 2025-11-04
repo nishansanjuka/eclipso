@@ -1,7 +1,7 @@
 import z from 'zod';
 import { Z } from '../../../shared/decorators/zod.validation';
 import { BaseModel } from '../../../shared/zod/base.model';
-import { CategoryCreateDto, CategoryUpdateDto } from '../dto/category.dto';
+import { CreateCategoryDto, UpdateCategoryDto } from '../dto/category.dto';
 
 export class CategoryCreateEntity extends BaseModel {
   @Z(z.string().nullable().optional())
@@ -24,7 +24,7 @@ export class CategoryCreateEntity extends BaseModel {
   @Z(z.string({ error: 'Invalid Parent Id' }).optional())
   public readonly parentId?: string;
 
-  constructor(params: CategoryCreateDto) {
+  constructor(params: CreateCategoryDto) {
     super(params);
     this.id = params.id;
     this.businessId = params.businessId;
@@ -50,7 +50,7 @@ export class CategoryUpdateEntity extends BaseModel {
   @Z(z.string({ error: 'Invalid Parent Id' }).optional())
   public readonly parentId?: string;
 
-  constructor(params: CategoryUpdateDto) {
+  constructor(params: UpdateCategoryDto) {
     super(params);
     this.id = params.id;
     this.businessId = params.businessId;

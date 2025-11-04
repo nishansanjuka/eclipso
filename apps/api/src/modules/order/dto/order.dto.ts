@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { OrderStatus } from '../infrastructure/enums/order.enum';
 
-export class OrderCreateDto {
+export class CreateOrderDto {
   id?: string;
   businessId: string;
   @ApiProperty()
@@ -15,7 +15,7 @@ export class OrderCreateDto {
   totalAmount: number;
 }
 
-export class OrderUpdateDto {
+export class UpdateOrderDto {
   id?: string;
   businessId?: string;
   @ApiProperty()

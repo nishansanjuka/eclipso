@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ProductCreateDto {
+export class CreateProductDto {
   id?: string;
   businessId: string;
   @ApiProperty()
@@ -17,7 +17,7 @@ export class ProductCreateDto {
   metadata?: object;
 }
 
-export class ProductUpdateDto {
+export class UpdateProductDto {
   id?: string;
   businessId: string;
   @ApiProperty({ required: false })

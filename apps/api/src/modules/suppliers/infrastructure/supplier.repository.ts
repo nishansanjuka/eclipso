@@ -1,21 +1,21 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { type DrizzleClient } from 'src/shared/database/drizzle.module';
 import { suppliers } from './schema/supplier.schema';
-import { SupplierCreateDto } from '../dto/supplier.dto';
+import { CreateSupplierDto } from '../dto/supplier.dto';
 import { and, eq } from 'drizzle-orm';
 
 @Injectable()
 export class SupplierRepository {
   constructor(@Inject('DRIZZLE_CLIENT') private readonly db: DrizzleClient) {}
 
-  async createSupplier(supplierData: SupplierCreateDto) {
+  async createSupplier(supplierData: CreateSupplierDto) {
     return await this.db.insert(suppliers).values(supplierData).returning();
   }
 
   async updateSupplierWithBusinessId(
     id: string,
     businessId: string,
-    supplierData: Partial<SupplierCreateDto>,
+    supplierData: Partial<CreateSupplierDto>,
   ) {
     return await this.db
       .update(suppliers)

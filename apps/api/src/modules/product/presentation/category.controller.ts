@@ -4,7 +4,7 @@ import { type AuthUserObject } from '../../../../globals';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
 import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CATEGORY_API_OPERATIONS } from '../constant/api-operations.category';
-import { CategoryCreateDto, CategoryUpdateDto } from '../dto/category.dto';
+import { CreateCategoryDto, UpdateCategoryDto } from '../dto/category.dto';
 import { CategoryCreateUseCase } from '../application/category-create.usecase';
 import { CategoryUpdateUseCase } from '../application/category-update.usecase';
 import { CategoryDeleteUseCase } from '../application/category-delete.usecase';
@@ -22,11 +22,11 @@ export class CategoriesController {
     operationId: CATEGORY_API_OPERATIONS.CREATE_CATEGORY.operationId,
     description: CATEGORY_API_OPERATIONS.CREATE_CATEGORY.description,
   })
-  @ApiBody({ type: CategoryCreateDto })
+  @ApiBody({ type: CreateCategoryDto })
   @Post('create')
   @CatchEntityErrors()
   createCategory(
-    @Body() categoryData: CategoryCreateDto,
+    @Body() categoryData: CreateCategoryDto,
     @User() user: AuthUserObject,
   ) {
     return this.categoryCreateUseCase.execute(user.orgId!, categoryData);
@@ -36,13 +36,13 @@ export class CategoriesController {
     operationId: CATEGORY_API_OPERATIONS.UPDATE_CATEGORY.operationId,
     description: CATEGORY_API_OPERATIONS.UPDATE_CATEGORY.description,
   })
-  @ApiBody({ type: CategoryUpdateDto })
+  @ApiBody({ type: UpdateCategoryDto })
   @ApiParam({ name: 'id', type: 'string', description: 'Category ID' })
   @Put('update/:id')
   @CatchEntityErrors()
   updateCategory(
     @Param('id') id: string,
-    @Body() categoryData: CategoryUpdateDto,
+    @Body() categoryData: UpdateCategoryDto,
     @User() user: AuthUserObject,
   ) {
     return this.categoryUpdateUseCase.execute(id, user.orgId!, categoryData);

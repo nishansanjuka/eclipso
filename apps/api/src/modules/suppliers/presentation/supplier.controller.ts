@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
 import { SupplierCreateUseCase } from '../application/supplier-create.usecase';
-import { SupplierCreateDto } from '../dto/supplier.dto';
+import { CreateSupplierDto } from '../dto/supplier.dto';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
 import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { SupplierUpdateUseCase } from '../application/supplier-update.usecase';
@@ -21,11 +21,11 @@ export class SupplierController {
     operationId: SUPPLIER_API_OPERATIONS.CREATE.operationId,
     description: SUPPLIER_API_OPERATIONS.CREATE.description,
   })
-  @ApiBody({ type: SupplierCreateDto })
+  @ApiBody({ type: CreateSupplierDto })
   @Post('create')
   @CatchEntityErrors()
   createSupplier(
-    @Body() supplierData: SupplierCreateDto,
+    @Body() supplierData: CreateSupplierDto,
     @User() user: AuthUserObject,
   ) {
     return this.supplierCreateUseCase.execute(user.orgId!, supplierData);
@@ -36,12 +36,12 @@ export class SupplierController {
     description: SUPPLIER_API_OPERATIONS.UPDATE.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Supplier ID' })
-  @ApiBody({ type: SupplierCreateDto })
+  @ApiBody({ type: CreateSupplierDto })
   @Put('update/:id')
   @CatchEntityErrors()
   updateSupplier(
     @Param('id') id: string,
-    @Body() supplierData: SupplierCreateDto,
+    @Body() supplierData: CreateSupplierDto,
     @User() user: AuthUserObject,
   ) {
     return this.supplierUpdateUseCase.execute(id, user.orgId!, supplierData);

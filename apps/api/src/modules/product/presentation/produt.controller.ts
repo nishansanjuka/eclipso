@@ -6,7 +6,7 @@ import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ProductCreateUseCase } from '../application/product-create.usecase';
 import { ProductUpdateUseCase } from '../application/product-update.usecase';
 import { ProductDeleteUseCase } from '../application/product-delete.usecase';
-import { ProductCreateDto, ProductUpdateDto } from '../dto/product.dto';
+import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
 import { PRODUCT_API_OPERATIONS } from '../constant/api-operations.product';
 
 @ApiTags('Product')
@@ -22,11 +22,11 @@ export class ProductsController {
     operationId: PRODUCT_API_OPERATIONS.CREATE_PRODUCT.operationId,
     description: PRODUCT_API_OPERATIONS.CREATE_PRODUCT.description,
   })
-  @ApiBody({ type: ProductCreateDto })
+  @ApiBody({ type: CreateProductDto })
   @Post('create')
   @CatchEntityErrors()
   createProduct(
-    @Body() productData: ProductCreateDto,
+    @Body() productData: CreateProductDto,
     @User() user: AuthUserObject,
   ) {
     return this.productCreateUseCase.execute(user.orgId!, productData);
@@ -36,13 +36,13 @@ export class ProductsController {
     operationId: PRODUCT_API_OPERATIONS.UPDATE_PRODUCT.operationId,
     description: PRODUCT_API_OPERATIONS.UPDATE_PRODUCT.description,
   })
-  @ApiBody({ type: ProductUpdateDto })
+  @ApiBody({ type: UpdateProductDto })
   @ApiParam({ name: 'id', type: 'string', description: 'Product ID' })
   @Put('update/:id')
   @CatchEntityErrors()
   updateProduct(
     @Param('id') id: string,
-    @Body() productData: ProductUpdateDto,
+    @Body() productData: UpdateProductDto,
     @User() user: AuthUserObject,
   ) {
     return this.productUpdateUseCase.execute(id, user.orgId!, productData);

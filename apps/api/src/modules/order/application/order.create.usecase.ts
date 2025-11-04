@@ -5,7 +5,7 @@ import { OrderService } from '../infrastructure/order.service';
 import { NotFoundException } from '@nestjs/common';
 import { OrderCreateEntity } from '../domain/order.entity';
 import { InvoiceCreateEntity } from '../../invoice/domain/invoice.entity';
-import { OrderCreateDto } from '../dto/order.dto';
+import { CreateOrderDto } from '../dto/order.dto';
 
 // as an business owner, I want to create a new order
 @Injectable()
@@ -16,7 +16,7 @@ export class OrderCreateUsecase {
     private readonly orderService: OrderService,
   ) {}
 
-  async execute(orgId: string, orderData: OrderCreateDto) {
+  async execute(orgId: string, orderData: CreateOrderDto) {
     {
       const res = await this.businessService.getBusinessWithUserByOrgId(orgId);
 

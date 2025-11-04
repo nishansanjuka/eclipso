@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { SupplierRepository } from './supplier.repository';
-import { SupplierCreateDto } from '../dto/supplier.dto';
+import { CreateSupplierDto } from '../dto/supplier.dto';
 
 @Injectable()
 export class SupplierService {
   constructor(private readonly supplierRepository: SupplierRepository) {}
 
-  async createSupplier(supplierData: SupplierCreateDto) {
+  async createSupplier(supplierData: CreateSupplierDto) {
     return await this.supplierRepository.createSupplier(supplierData);
   }
 
   async updateSupplier(
     id: string,
     businessId: string,
-    supplierData: Partial<SupplierCreateDto>,
+    supplierData: Partial<CreateSupplierDto>,
   ) {
     return await this.supplierRepository.updateSupplierWithBusinessId(
       id,
