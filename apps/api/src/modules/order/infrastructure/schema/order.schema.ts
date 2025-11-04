@@ -24,7 +24,7 @@ export const orders = pgTable('orders', {
   invoiceId: uuid('invoice_id')
     .notNull()
     .references(() => invoices.id),
-  expireDate: timestamp('expire_date').notNull(),
+  expectedDate: timestamp('expected_date').notNull(),
   status: orderStatusEnum().notNull().default(OrderStatus.DRAFT),
   totalAmount: integer('total_amount').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),

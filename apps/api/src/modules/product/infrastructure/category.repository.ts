@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
-import { CategoryCreateDto } from '../dto/category.dto';
+import { CategoryCreateDto, CategoryUpdateDto } from '../dto/category.dto';
 import { categories } from './schema/category.schema';
 import { type DrizzleClient } from '../../../shared/database/drizzle.module';
 
@@ -15,7 +15,7 @@ export class CategoryRepository {
   async updateCategoryWithBusinessId(
     id: string,
     businessId: string,
-    categoryData: Partial<CategoryCreateDto>,
+    categoryData: CategoryUpdateDto,
   ) {
     return await this.db
       .update(categories)

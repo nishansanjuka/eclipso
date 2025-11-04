@@ -1,25 +1,26 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../shared/database/drizzle.module';
-import { CategoriesController } from './presentation/category.controller';
-import { CategoryRepository } from './infrastructure/category.repository';
-import { CategoryService } from './infrastructure/category.service';
-import { CategoryCreateUseCase } from './application/category-create.usecase';
-import { CategoryUpdateUseCase } from './application/update-category.usecase';
-import { CategoryDeleteUseCase } from './application/category-delete.usecase';
+import { ProductsController } from './presentation/produt.controller';
+import { ProductService } from './infrastructure/product.service';
+import { ProductRepository } from './infrastructure/product.repository';
+import { ProductCreateUseCase } from './application/product-create.usecase';
+import { ProductDeleteUseCase } from './application/product-delete.usecase';
+import { ProductUpdateUseCase } from './application/product-update.usecase';
 import { BusinessService } from '../business/infrastructure/business.service';
 import { BusinessRepository } from '../business/infrastructure/business.repository';
+import { CategoriesModule } from './product.category.module';
 
 @Module({
-  imports: [DatabaseModule],
-  controllers: [CategoriesController],
+  imports: [DatabaseModule, CategoriesModule],
+  controllers: [ProductsController],
   providers: [
-    CategoryService,
+    ProductService,
+    ProductRepository,
+    ProductCreateUseCase,
+    ProductDeleteUseCase,
+    ProductUpdateUseCase,
     BusinessService,
-    CategoryRepository,
     BusinessRepository,
-    CategoryCreateUseCase,
-    CategoryUpdateUseCase,
-    CategoryDeleteUseCase,
   ],
 })
-export class CategoriesModule {}
+export class ProductModule {}

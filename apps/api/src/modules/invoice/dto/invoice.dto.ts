@@ -3,17 +3,15 @@ import { ApiProperty } from '@nestjs/swagger';
 export class InvoiceCreateDto {
   id?: string;
   @ApiProperty()
-  invoiceNumber: string;
+  invoiceNumber?: string;
   @ApiProperty()
-  totalTax: number;
+  totalTax?: number;
   @ApiProperty()
-  totalDiscount: number;
+  totalDiscount?: number;
   @ApiProperty()
-  subTotal: number;
+  subTotal?: number;
   @ApiProperty()
-  grandTotal: number;
-  @ApiProperty()
-  pdfUrl: string;
+  grandTotal?: number;
 }
 
 export class InvoiceUpdateDto {

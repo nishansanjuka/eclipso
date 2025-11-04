@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CategoryRepository } from './category.repository';
-import { CategoryCreateDto } from '../dto/category.dto';
+import { CategoryCreateDto, CategoryUpdateDto } from '../dto/category.dto';
 
 @Injectable()
 export class CategoryService {
@@ -13,7 +13,7 @@ export class CategoryService {
   async updateCategory(
     id: string,
     businessId: string,
-    categoryData: Partial<CategoryCreateDto>,
+    categoryData: CategoryUpdateDto,
   ) {
     return await this.categoryRepository.updateCategoryWithBusinessId(
       id,

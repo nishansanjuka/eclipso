@@ -1,15 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CategoryService } from '../infrastructure/category.service';
 import { BusinessService } from '../../business/infrastructure/business.service';
+import { ProductService } from '../infrastructure/product.service';
 
 @Injectable()
-export class CategoryDeleteUseCase {
+export class ProductDeleteUseCase {
   constructor(
-    private readonly categoryService: CategoryService,
+    private readonly productService: ProductService,
     private readonly businessService: BusinessService,
   ) {}
 
-  // as business owner, delete product category
+  // as business owner, delete product
   async execute(id: string, orgId: string) {
     const res = await this.businessService.getBusinessWithUserByOrgId(orgId);
 
@@ -17,7 +17,7 @@ export class CategoryDeleteUseCase {
       throw new NotFoundException(`Business not found`);
     } else {
       const { id: businessId } = res;
-      return this.categoryService.deleteCategory(id, businessId);
+      return this.productService.deleteProduct(id, businessId);
     }
   }
 }

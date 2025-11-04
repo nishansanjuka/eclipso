@@ -5,21 +5,15 @@ export class CategoryCreateDto {
   businessId: string;
   @ApiProperty()
   name: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   parentId?: string;
 }
 
 export class CategoryUpdateDto {
   id: string;
   businessId: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   name?: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   parentId?: string;
-}
-
-export class CategoryDeleteDto {
-  id: string;
-  @ApiProperty()
-  businessId: string;
 }

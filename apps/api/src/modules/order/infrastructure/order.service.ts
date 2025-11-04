@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OrderRepository } from './order.repository';
-import { OrderCreateDto } from '../dto/order.dto';
+import { OrderCreateDto, OrderUpdateDto } from '../dto/order.dto';
 
 @Injectable()
 export class OrderService {
@@ -10,11 +10,15 @@ export class OrderService {
     return await this.orderRepository.createOrder(orderData);
   }
 
-  async updateOrder(orderId: string, orderData: OrderCreateDto) {
+  async updateOrder(orderId: string, orderData: OrderUpdateDto) {
     return await this.orderRepository.updateOrderById(orderId, orderData);
   }
 
-  async deleteOrder(orderId: string) {
-    return await this.orderRepository.deleteOrderById(orderId);
+  async deleteOrder(orderId: string, businessId: string) {
+    return await this.orderRepository.deleteOrderById(orderId, businessId);
+  }
+
+  async getOrder(orderId: string, businessId: string) {
+    return await this.orderRepository.getOrderById(orderId, businessId);
   }
 }

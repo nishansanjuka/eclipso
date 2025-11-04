@@ -6,12 +6,20 @@ export class OrderCreateDto {
   businessId: string;
   @ApiProperty()
   supplierId: string;
-  @ApiProperty()
   invoiceId: string;
   @ApiProperty()
-  expireDate: Date;
+  expectedDate: Date;
   @ApiProperty()
   status: OrderStatus;
   @ApiProperty()
   totalAmount: number;
+}
+
+export class OrderUpdateDto {
+  id?: string;
+  businessId?: string;
+  @ApiProperty()
+  expectedDate?: Date;
+  @ApiProperty()
+  status?: OrderStatus;
 }

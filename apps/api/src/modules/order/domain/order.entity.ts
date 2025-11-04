@@ -2,6 +2,7 @@ import z from 'zod';
 import { Z } from '../../../shared/decorators/zod.validation';
 import { BaseModel } from '../../../shared/zod/base.model';
 import { OrderStatus } from '../infrastructure/enums/order.enum';
+import { OrderCreateDto, OrderUpdateDto } from '../dto/order.dto';
 
 export class OrderCreateEntity extends BaseModel {
   @Z(z.string().nullable().optional())
@@ -12,7 +13,7 @@ export class OrderCreateEntity extends BaseModel {
       .date({ error: 'Invalid expire date' })
       .min(new Date(), 'Expire date must be in the future'),
   )
-  public readonly expireDate: Date;
+  public readonly expectedDate: Date;
 
   @Z(
     z.enum(OrderStatus, {
@@ -44,12 +45,58 @@ export class OrderCreateEntity extends BaseModel {
   )
   public readonly supplierId: string;
 
-  constructor(params: OrderCreateEntity) {
+  @Z(z.string({ error: 'Invalid Invoice Id' }).min(1, 'Invoice Id is required'))
+  public readonly invoiceId: string;
+
+  constructor(params: OrderCreateDto) {
     super(params);
     this.businessId = params.businessId;
     this.supplierId = params.supplierId;
-    this.expireDate = params.expireDate;
+    this.expectedDate = params.expectedDate;
     this.status = params.status;
     this.totalAmount = params.totalAmount;
+    this.invoiceId = params.invoiceId;
+  }
+}
+
+export class OrderUpdateEntity extends BaseModel {
+  @Z(
+    z
+      .date({ error: 'Invalid expire date' })
+      .min(new Date(), 'Expire date must be in the future'),
+  )
+  public readonly expectedDate?: Date;
+
+  @Z(
+    z.enum(OrderStatus, {
+      message: `Order status must be one of the following: ${Object.values(
+        OrderStatus,
+      ).join(', ')}`,
+    }),
+  )
+  public readonly status?: OrderStatus;
+
+  @Z(
+    z
+      .number({ error: 'Invalid Total Amount' })
+      .min(0, 'Total Amount must be positive'),
+  )
+  public readonly totalAmount?: number;
+
+  @Z(
+    z
+      .string({ error: 'Invalid Business Id' })
+      .min(1, 'Business Id is required'),
+  )
+  public readonly businessId?: string;
+
+  @Z(z.string({ error: 'Invalid Invoice Id' }).min(1, 'Invoice Id is required'))
+  public readonly invoiceId?: string;
+
+  constructor(params: OrderUpdateDto) {
+    super(params);
+    this.businessId = params.businessId;
+    this.expectedDate = params.expectedDate;
+    this.status = params.status;
   }
 }

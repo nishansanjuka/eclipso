@@ -9,7 +9,7 @@ export class InvoiceRepository {
   constructor(@Inject('DRIZZLE_CLIENT') private readonly db: DrizzleClient) {}
 
   async createInvoice(data: InvoiceCreateDto) {
-    const result = await this.db.insert(invoices).values(data).returning();
+    const [result] = await this.db.insert(invoices).values(data).returning();
     return result;
   }
 

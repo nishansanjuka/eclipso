@@ -2,14 +2,15 @@ import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
-import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CATEGORY_API_OPERATIONS } from '../constant/api-operations.category';
 import { CategoryCreateDto, CategoryUpdateDto } from '../dto/category.dto';
 import { CategoryCreateUseCase } from '../application/category-create.usecase';
-import { CategoryUpdateUseCase } from '../application/update-category.usecase';
+import { CategoryUpdateUseCase } from '../application/category-update.usecase';
 import { CategoryDeleteUseCase } from '../application/category-delete.usecase';
 
-@Controller('categories')
+@ApiTags('Product Category')
+@Controller('category')
 export class CategoriesController {
   constructor(
     private readonly categoryCreateUseCase: CategoryCreateUseCase,

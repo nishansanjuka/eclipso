@@ -6,9 +6,10 @@ import { Module } from '@nestjs/common';
 import { UsersModule } from './modules/users/user.module';
 import { BusinessModule } from './modules/business/business.module';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
-import { CategoriesModule } from './modules/product/product.module';
 import { TaxModule } from './modules/tax/tax.module';
 import { DiscountModule } from './modules/discount/discount.module';
+import { OrderModule } from './modules/order/order.module';
+import { ProductModule } from './modules/product/product.module';
 
 @Module({
   imports: [
@@ -21,8 +22,9 @@ import { DiscountModule } from './modules/discount/discount.module';
     AuthModule,
     BusinessModule,
     SuppliersModule,
-    CategoriesModule,
+    ProductModule,
     DiscountModule,
+    OrderModule,
   ],
   controllers: [],
   providers: [ConfigService],

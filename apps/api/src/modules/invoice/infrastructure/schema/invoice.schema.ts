@@ -14,7 +14,6 @@ export const invoices = pgTable('invoice', {
   totalDiscount: integer('total_discount').notNull().default(0),
   subTotal: integer('sub_total').notNull().default(0),
   grandTotal: integer('grand_total').notNull().default(0),
-  pdfUrl: text('pdf_url'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
