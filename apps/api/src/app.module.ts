@@ -10,6 +10,7 @@ import { TaxModule } from './modules/tax/tax.module';
 import { DiscountModule } from './modules/discount/discount.module';
 import { OrderModule } from './modules/order/order.module';
 import { ProductModule } from './modules/product/product.module';
+import { BrandModule } from './modules/brand/brand.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ProductModule } from './modules/product/product.module';
     ProductModule,
     DiscountModule,
     OrderModule,
+    BrandModule,
   ],
   controllers: [],
   providers: [ConfigService],

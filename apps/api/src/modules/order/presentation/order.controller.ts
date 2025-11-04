@@ -9,7 +9,7 @@ import { OrderCreateUsecase } from '../application/order.create.usecase';
 import { OrderUpdateUsecase } from '../application/order.update.usecase';
 import { OrderDeleteUsecase } from '../application/order.delete.usecase';
 
-@Controller('orders')
+@Controller('order')
 export class OrderController {
   constructor(
     private readonly orderCreateUsecase: OrderCreateUsecase,
