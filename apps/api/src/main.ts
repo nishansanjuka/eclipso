@@ -21,6 +21,7 @@ async function bootstrap() {
       },
       'Authorization',
     )
+    .addServer(process.env.API_URL || 'http://localhost:3000')
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {
