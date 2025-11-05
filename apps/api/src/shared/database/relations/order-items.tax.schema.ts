@@ -16,10 +16,6 @@ export const orderItemsTaxes = pgTable(
   (table) => [primaryKey({ columns: [table.orderItemId, table.taxId] })],
 );
 
-export const orderItemsRelations = relations(orderItems, ({ many }) => ({
-  taxLinks: many(orderItemsTaxes),
-}));
-
 export const taxesRelations = relations(taxes, ({ many }) => ({
   orderItemLinks: many(orderItemsTaxes),
 }));

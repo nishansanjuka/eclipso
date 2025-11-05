@@ -32,13 +32,16 @@ import {
   usersRelations,
 } from './relations/business.user.schema';
 import {
+  discountsRelations,
   orderItemsDiscounts,
   orderItemsDiscountsRelations,
 } from './relations/order-items.discount.schema';
 import {
-  orderItemsRelations,
   orderItemsTaxes,
+  orderItemsTaxesRelations,
+  taxesRelations,
 } from './relations/order-items.tax.schema';
+import { orderItemsRelations } from './relations/order-items.relations';
 import {
   categoryRelations,
   productCategory,
@@ -72,6 +75,9 @@ export const CategoryRelations = categoryRelations;
 export const ProductCategoryRelations = productCategoryRelations;
 export const OrderItemsRelations = orderItemsRelations;
 export const OrderItemsDiscountsRelations = orderItemsDiscountsRelations;
+export const OrderItemsTaxesRelations = orderItemsTaxesRelations;
+export const TaxesRelations = taxesRelations;
+export const DiscountsRelations = discountsRelations;
 
 // ENUM for Business Types
 export const BusinessTypeEnum = businessTypeEnum;
