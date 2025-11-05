@@ -1,4 +1,9 @@
 export const INVOICE_API_OPERATIONS = {
+  GET: {
+    operationId: 'getInvoice',
+    description:
+      'Retrieves detailed invoice information for a specific order by order ID. As a business owner, you can view complete invoice details including order information, all order items with their associated products, applied taxes, and discounts. This provides a comprehensive view of the transaction for billing and record-keeping purposes. Only invoices for orders belonging to your business can be accessed.',
+  },
   CALCULATE: {
     operationId: 'calculateInvoice',
     description:

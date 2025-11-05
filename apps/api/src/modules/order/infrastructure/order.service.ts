@@ -21,4 +21,8 @@ export class OrderService {
   async getOrder(orderId: string, businessId: string) {
     return await this.orderRepository.getOrderById(orderId, businessId);
   }
+
+  async getOrderByInvoiceId(invoiceId: string, orgId: string) {
+    return await this.orderRepository.getOrderByInvoiceId(invoiceId, orgId);
+  }
 }

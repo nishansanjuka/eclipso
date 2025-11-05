@@ -3,6 +3,7 @@ import { type DrizzleClient } from 'src/shared/database/drizzle.module';
 import { and, eq } from 'drizzle-orm';
 import { CreateOrderDto, UpdateOrderDto } from '../dto/order.dto';
 import { orders } from './schema/order.schema';
+import { businesses } from '../../business/infrastructure/schema/business.schema';
 
 @Injectable()
 export class OrderRepository {
@@ -36,5 +37,16 @@ export class OrderRepository {
       .from(orders)
       .where(and(eq(orders.id, orderId), eq(orders.businessId, businessId)));
     return result;
+  }
+
+  async getOrderByInvoiceId(invoiceId: string, orgId: string) {
+    const [result] = await this.db
+      .select({
+        order: orders,
+      })
+      .from(orders)
+      .innerJoin(businesses, eq(orders.businessId, businesses.id))
+      .where(and(eq(orders.invoiceId, invoiceId), eq(businesses.orgId, orgId)));
+    return result?.order;
   }
 }

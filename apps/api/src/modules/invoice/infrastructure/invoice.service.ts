@@ -25,4 +25,8 @@ export class InvoiceService {
   async deleteInvoice(id: string) {
     return this.invoiceRepository.deleteInvoice(id);
   }
+
+  async getInvoiceDataById(invoiceId: string) {
+    return await this.invoiceRepository.getInvoiceDataById(invoiceId);
+  }
 }

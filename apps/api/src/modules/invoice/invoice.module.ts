@@ -12,6 +12,7 @@ import { OrderItemRepository } from '../order/infrastructure/order-item.reposito
 import { OrderRepository } from '../order/infrastructure/order.repository';
 import { TaxRepository } from '../tax/infrastructure/tax.repository';
 import { DiscountRepository } from '../discount/infrastructure/discount.repository';
+import { InvoiceGetUsecase } from './application/invoice-get.usecase';
 
 @Module({
   imports: [DatabaseModule],
@@ -20,6 +21,7 @@ import { DiscountRepository } from '../discount/infrastructure/discount.reposito
     InvoiceService,
     InvoiceRepository,
     InvoiceCalculateUsecase,
+    InvoiceGetUsecase,
     OrderItemService,
     OrderItemRepository,
     OrderService,
