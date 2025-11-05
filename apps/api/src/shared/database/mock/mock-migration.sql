@@ -257,3 +257,100 @@ INNER JOIN "order_items" oi ON oi.order_id = o.id
 INNER JOIN "products" p ON oi.product_id = p.id
 WHERE o.status = 'cancel' AND o.business_id = '07ed003d-9a1f-44f0-bcf5-6c29ecb248c4'
 LIMIT 2;
+
+
+
+
+--> statement-breakpoint
+
+-- Insert Tax Records
+INSERT INTO "tax" ("business_id", "name", "rate", "type", "is_active", "created_at", "updated_at") VALUES
+('07ed003d-9a1f-44f0-bcf5-6c29ecb248c4', 'VAT Standard', 20, 'percentage', true, now(), now()),
+('07ed003d-9a1f-44f0-bcf5-6c29ecb248c4', 'VAT Reduced', 5, 'percentage', true, now(), now()),
+('07ed003d-9a1f-44f0-bcf5-6c29ecb248c4', 'Sales Tax', 8, 'percentage', true, now(), now()),
+('07ed003d-9a1f-44f0-bcf5-6c29ecb248c4', 'Import Duty', 150, 'fixed', true, now(), now()),
+('07ed003d-9a1f-44f0-bcf5-6c29ecb248c4', 'Service Charge', 50, 'fixed', false, now(), now());
+
+--> statement-breakpoint
+
+-- Insert Discount Records
+INSERT INTO "discount" ("business_id", "name", "value", "type", "start", "end", "is_active", "created_at", "updated_at") VALUES
+('07ed003d-9a1f-44f0-bcf5-6c29ecb248c4', 'Bulk Purchase 10%', 10, 'percentage', now() - interval '30 days', now() + interval '60 days', true, now(), now()),
+('07ed003d-9a1f-44f0-bcf5-6c29ecb248c4', 'Seasonal Sale 15%', 15, 'percentage', now() - interval '15 days', now() + interval '45 days', true, now(), now()),
+('07ed003d-9a1f-44f0-bcf5-6c29ecb248c4', 'Loyalty Discount 5%', 5, 'percentage', now() - interval '60 days', now() + interval '90 days', true, now(), now()),
+('07ed003d-9a1f-44f0-bcf5-6c29ecb248c4', 'Clearance $20 Off', 20, 'fixed', now() - interval '10 days', now() + interval '20 days', true, now(), now()),
+('07ed003d-9a1f-44f0-bcf5-6c29ecb248c4', 'New Customer $50 Off', 50, 'fixed', now() - interval '5 days', now() + interval '30 days', false, now(), now());
+
+--> statement-breakpoint
+
+-- Insert Order Items Taxes (assign taxes to all order items)
+INSERT INTO "order_items_taxes" ("order_item_id", "tax_id")
+SELECT 
+  oi.id as order_item_id,
+  t.id as tax_id
+FROM "order_items" oi
+CROSS JOIN (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) as tax_num
+  FROM "tax"
+  WHERE business_id = '07ed003d-9a1f-44f0-bcf5-6c29ecb248c4' AND is_active = true
+) t
+WHERE (hashtext(oi.id::text) + t.tax_num) % 3 = 0 -- Assign taxes pseudo-randomly
+  AND EXISTS (
+    SELECT 1 FROM "orders" o 
+    WHERE o.id = oi.order_id 
+    AND o.business_id = '07ed003d-9a1f-44f0-bcf5-6c29ecb248c4'
+  );
+
+--> statement-breakpoint
+
+-- Ensure every order item has at least one tax (VAT Standard)
+INSERT INTO "order_items_taxes" ("order_item_id", "tax_id")
+SELECT 
+  oi.id as order_item_id,
+  (SELECT id FROM "tax" WHERE business_id = '07ed003d-9a1f-44f0-bcf5-6c29ecb248c4' AND name = 'VAT Standard' LIMIT 1) as tax_id
+FROM "order_items" oi
+WHERE NOT EXISTS (
+  SELECT 1 FROM "order_items_taxes" oit WHERE oit.order_item_id = oi.id
+)
+AND EXISTS (
+  SELECT 1 FROM "orders" o 
+  WHERE o.id = oi.order_id 
+  AND o.business_id = '07ed003d-9a1f-44f0-bcf5-6c29ecb248c4'
+);
+
+--> statement-breakpoint
+
+-- Insert Order Items Discounts (assign discounts to order items)
+INSERT INTO "order_items_discounts" ("order_item_id", "discount_id")
+SELECT 
+  oi.id as order_item_id,
+  d.id as discount_id
+FROM "order_items" oi
+CROSS JOIN (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) as discount_num
+  FROM "discount"
+  WHERE business_id = '07ed003d-9a1f-44f0-bcf5-6c29ecb248c4' AND is_active = true
+) d
+WHERE (hashtext(oi.id::text) + d.discount_num) % 4 = 0 -- Assign discounts pseudo-randomly
+  AND EXISTS (
+    SELECT 1 FROM "orders" o 
+    WHERE o.id = oi.order_id 
+    AND o.business_id = '07ed003d-9a1f-44f0-bcf5-6c29ecb248c4'
+  );
+
+--> statement-breakpoint
+
+-- Add bulk purchase discount to high quantity items
+INSERT INTO "order_items_discounts" ("order_item_id", "discount_id")
+SELECT DISTINCT
+  oi.id as order_item_id,
+  (SELECT id FROM "discount" WHERE business_id = '07ed003d-9a1f-44f0-bcf5-6c29ecb248c4' AND name = 'Bulk Purchase 10%' LIMIT 1) as discount_id
+FROM "order_items" oi
+INNER JOIN "orders" o ON o.id = oi.order_id
+WHERE oi.qty >= 15 
+  AND o.business_id = '07ed003d-9a1f-44f0-bcf5-6c29ecb248c4'
+  AND NOT EXISTS (
+    SELECT 1 FROM "order_items_discounts" oid 
+    WHERE oid.order_item_id = oi.id 
+    AND oid.discount_id = (SELECT id FROM "discount" WHERE business_id = '07ed003d-9a1f-44f0-bcf5-6c29ecb248c4' AND name = 'Bulk Purchase 10%' LIMIT 1)
+  );
