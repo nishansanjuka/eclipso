@@ -3,6 +3,7 @@ import { type DrizzleClient } from '../../../shared/database/drizzle.module';
 import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
 import { products } from './schema/product.schema';
 import { and, eq } from 'drizzle-orm';
+import { businesses } from '../../business/infrastructure/schema/business.schema';
 
 @Injectable()
 export class ProductRepository {
@@ -27,5 +28,18 @@ export class ProductRepository {
     return await this.db
       .delete(products)
       .where(and(eq(products.id, id), eq(products.businessId, businessId)));
+  }
+
+  async getProductIdByIdAndOrgId(id: string, orgId: string) {
+    const [res] = await this.db
+      .select({
+        productId: products.id,
+        businessId: businesses.id,
+      })
+      .from(products)
+      .innerJoin(businesses, eq(products.businessId, businesses.id))
+      .where(and(eq(products.id, id), eq(businesses.orgId, orgId)));
+
+    return res;
   }
 }

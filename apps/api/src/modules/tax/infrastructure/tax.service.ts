@@ -25,4 +25,8 @@ export class TaxService {
   async deleteTax(id: string, businessId: string) {
     return this.taxRepository.deleteTax(id, businessId);
   }
+
+  async getTaxById(id: string) {
+    return this.taxRepository.findTaxById(id);
+  }
 }

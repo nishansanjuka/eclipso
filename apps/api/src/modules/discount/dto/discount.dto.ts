@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { DiscountType } from '../enums/discount.types.enum';
 
 export class CreateDiscountDto {
   id?: string;
@@ -8,7 +9,7 @@ export class CreateDiscountDto {
   @ApiProperty()
   value: number;
   @ApiProperty()
-  type: string;
+  type: DiscountType;
   @ApiProperty()
   start: Date;
   @ApiProperty()
@@ -25,7 +26,7 @@ export class UpdateDiscountDto {
   @ApiProperty({ required: false })
   value?: number;
   @ApiProperty({ required: false })
-  type?: string;
+  type?: DiscountType;
   @ApiProperty({ required: false })
   start?: Date;
   @ApiProperty({ required: false })

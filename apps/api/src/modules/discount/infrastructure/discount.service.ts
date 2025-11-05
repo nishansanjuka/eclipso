@@ -25,4 +25,8 @@ export class DiscountService {
   async deleteDiscount(id: string, businessId: string) {
     return this.discountRepository.deleteDiscount(id, businessId);
   }
+
+  async getDiscountById(id: string) {
+    return this.discountRepository.findDiscountById(id);
+  }
 }

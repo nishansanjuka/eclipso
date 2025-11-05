@@ -14,12 +14,21 @@ export class TaxRepository {
   }
 
   async findTaxById(id: string) {
-    const result = await this.db
+    const [result] = await this.db
       .select()
       .from(taxes)
       .where(eq(taxes.id, id))
       .limit(1)
       .execute();
+    return result;
+  }
+
+  async getTaxById(taxId: string) {
+    const [result] = await this.db
+      .select()
+      .from(taxes)
+      .where(eq(taxes.id, taxId))
+      .limit(1);
     return result;
   }
 

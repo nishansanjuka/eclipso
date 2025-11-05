@@ -2,6 +2,7 @@ import z from 'zod';
 import { BaseModel } from '../../../shared/zod/base.model.js';
 import { Z } from '../../../shared/decorators/zod.validation.js';
 import { CreateTaxDto, UpdateTaxDto } from '../dto/tax.dto.js';
+import { TaxType } from '../enums/tax.types.enum.js';
 
 export class TaxCreateEntity extends BaseModel {
   @Z(z.string().optional())
@@ -29,11 +30,13 @@ export class TaxCreateEntity extends BaseModel {
   public readonly rate: number;
 
   @Z(
-    z
-      .string({ error: 'Type is required' })
-      .min(1, { message: 'Type cannot be empty' }),
+    z.enum(TaxType, {
+      message: `Tax type must be one of the following: ${Object.values(
+        TaxType,
+      ).join(', ')}`,
+    }),
   )
-  public readonly type: string;
+  public readonly type: TaxType;
 
   @Z(z.boolean().optional())
   public readonly isActive?: boolean;
@@ -75,11 +78,13 @@ export class TaxUpdateEntity extends BaseModel {
   public readonly rate?: number;
 
   @Z(
-    z
-      .string({ error: 'Type is required' })
-      .min(1, { message: 'Type cannot be empty' }),
+    z.enum(TaxType, {
+      message: `Tax type must be one of the following: ${Object.values(
+        TaxType,
+      ).join(', ')}`,
+    }),
   )
-  public readonly type?: string;
+  public readonly type?: TaxType;
 
   @Z(z.boolean().optional())
   public readonly isActive?: boolean;

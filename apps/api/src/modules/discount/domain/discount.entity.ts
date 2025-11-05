@@ -2,6 +2,7 @@ import z from 'zod';
 import { Z } from '../../../shared/decorators/zod.validation';
 import { BaseModel } from '../../../shared/zod/base.model';
 import { CreateDiscountDto, UpdateDiscountDto } from '../dto/discount.dto';
+import { DiscountType } from '../enums/discount.types.enum';
 
 export class DiscountCreateEntity extends BaseModel {
   @Z(z.string().optional())
@@ -29,11 +30,13 @@ export class DiscountCreateEntity extends BaseModel {
   public readonly value: number;
 
   @Z(
-    z
-      .string({ error: 'Type is required' })
-      .min(1, { message: 'Type cannot be empty' }),
+    z.enum(DiscountType, {
+      message: `Discount type must be one of the following: ${Object.values(
+        DiscountType,
+      ).join(', ')}`,
+    }),
   )
-  public readonly type: string;
+  public readonly type: DiscountType;
 
   @Z(z.date({ error: 'Start date is required' }))
   public readonly start: Date;
@@ -78,8 +81,16 @@ export class DiscountUpdateEntity extends BaseModel {
   )
   public readonly value?: number;
 
-  @Z(z.string({ error: 'Type is required' }).optional())
-  public readonly type?: string;
+  @Z(
+    z
+      .enum(DiscountType, {
+        message: `Discount type must be one of the following: ${Object.values(
+          DiscountType,
+        ).join(', ')}`,
+      })
+      .optional(),
+  )
+  public readonly type?: DiscountType;
 
   @Z(z.date({ error: 'Start date is required' }).optional())
   public readonly start?: Date;

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { TaxType } from '../enums/tax.types.enum';
 
 export class CreateTaxDto {
   id?: string;
@@ -8,7 +9,7 @@ export class CreateTaxDto {
   @ApiProperty()
   rate: number;
   @ApiProperty()
-  type: string;
+  type: TaxType;
   @ApiProperty()
   isActive?: boolean;
 }
@@ -21,7 +22,7 @@ export class UpdateTaxDto {
   @ApiProperty({ required: false })
   rate?: number;
   @ApiProperty({ required: false })
-  type?: string;
+  type?: TaxType;
   @ApiProperty({ required: false })
   isActive?: boolean;
 }

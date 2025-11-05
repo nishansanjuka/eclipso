@@ -11,6 +11,7 @@ import { DiscountModule } from './modules/discount/discount.module';
 import { OrderModule } from './modules/order/order.module';
 import { ProductModule } from './modules/product/product.module';
 import { BrandModule } from './modules/brand/brand.module';
+import { InvoiceModule } from './modules/invoice/invoice.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { BrandModule } from './modules/brand/brand.module';
     DiscountModule,
     OrderModule,
     BrandModule,
+    InvoiceModule,
   ],
   controllers: [],
   providers: [ConfigService],

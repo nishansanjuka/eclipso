@@ -10,8 +10,12 @@ export class CreateOrderItemDto {
   qty: number;
   @ApiProperty()
   price: number;
-  @ApiProperty()
-  tax: number;
-  @ApiProperty()
-  discount: number;
+}
+
+export class UpdateOrderItemDto {
+  id?: string;
+  @ApiProperty({ required: false })
+  qty?: number;
+  @ApiProperty({ required: false })
+  price?: number;
 }

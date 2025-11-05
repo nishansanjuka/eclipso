@@ -35,19 +35,11 @@ export class ProductCreateEntity extends BaseModel {
   )
   public readonly sku: string;
 
-  @Z(
-    z
-      .number({ error: 'Invalid Product Sku' })
-      .min(1, 'Product Sku is required'),
-  )
-  public readonly price: number;
+  @Z(z.number({ error: 'Invalid Product Price' }).optional())
+  public readonly price?: number;
 
-  @Z(
-    z
-      .number({ error: 'Invalid Product Stock Quantity' })
-      .min(1, 'Product Stock Quantity is required'),
-  )
-  public readonly stockQty: number;
+  @Z(z.number({ error: 'Invalid Product Stock Quantity' }).optional())
+  public readonly stockQty?: number;
 
   @Z(z.object({}).optional())
   public readonly metadata?: object;

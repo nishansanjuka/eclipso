@@ -14,12 +14,21 @@ export class DiscountRepository {
   }
 
   async findDiscountById(id: string) {
-    const result = await this.db
+    const [result] = await this.db
       .select()
       .from(discounts)
       .where(eq(discounts.id, id))
       .limit(1)
       .execute();
+    return result;
+  }
+
+  async getDiscountById(discountId: string) {
+    const [result] = await this.db
+      .select()
+      .from(discounts)
+      .where(eq(discounts.id, discountId))
+      .limit(1);
     return result;
   }
 

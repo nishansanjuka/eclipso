@@ -28,4 +28,8 @@ export class ProductService {
       businessId,
     );
   }
+
+  async getProductIdByIdAndOrgId(id: string, orgId: string) {
+    return await this.productRepository.getProductIdByIdAndOrgId(id, orgId);
+  }
 }

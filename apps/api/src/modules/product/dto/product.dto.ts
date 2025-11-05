@@ -9,10 +9,10 @@ export class CreateProductDto {
   name: string;
   @ApiProperty()
   sku: string;
-  @ApiProperty()
-  price: number;
-  @ApiProperty()
-  stockQty: number;
+  @ApiProperty({ required: false })
+  price?: number;
+  @ApiProperty({ required: false })
+  stockQty?: number;
   @ApiProperty({ required: false })
   brandId?: string;
   @ApiProperty({ required: false })

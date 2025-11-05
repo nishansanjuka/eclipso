@@ -1,8 +1,9 @@
 import z from 'zod';
 import { Z } from '../../../shared/decorators/zod.validation';
 import { BaseModel } from '../../../shared/zod/base.model';
+import { CreateOrderItemDto, UpdateOrderItemDto } from '../dto/order-item.dto';
 
-export class OrderCreateEntity extends BaseModel {
+export class OrderItemCreateEntity extends BaseModel {
   @Z(z.string().nullable().optional())
   public readonly id?: string;
 
@@ -26,21 +27,28 @@ export class OrderCreateEntity extends BaseModel {
   @Z(z.number({ error: 'Invalid price' }).min(0, 'Price must be positive'))
   public readonly price: number;
 
-  @Z(z.number({ error: 'Invalid tax' }).min(0, 'Tax must be positive'))
-  public readonly tax: number;
-
-  @Z(
-    z.number({ error: 'Invalid discount' }).min(0, 'Discount must be positive'),
-  )
-  public readonly discount: number;
-
-  constructor(params: OrderCreateEntity) {
+  constructor(params: CreateOrderItemDto) {
     super(params);
     this.orderId = params.orderId;
     this.productId = params.productId;
     this.qty = params.qty;
     this.price = params.price;
-    this.tax = params.tax;
-    this.discount = params.discount;
+  }
+}
+
+export class OrderItemUpdateEntity extends BaseModel {
+  @Z(z.string().nullable().optional())
+  public readonly id?: string;
+
+  @Z(z.number({ error: 'Invalid quantity' }).optional())
+  public readonly qty?: number;
+
+  @Z(z.number({ error: 'Invalid price' }).optional())
+  public readonly price?: number;
+
+  constructor(params: UpdateOrderItemDto) {
+    super(params);
+    this.qty = params.qty;
+    this.price = params.price;
   }
 }
