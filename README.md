@@ -15,6 +15,7 @@ eclipso/
 └── packages/
     ├── api-client-ts/    # TypeScript API client
     ├── eslint-config/    # Shared ESLint configurations
+    ├── pdf/             # PDF generation utilities
     ├── types/           # Shared TypeScript types
     ├── typescript-config/ # Shared TypeScript configs
     └── utils/           # Shared utilities
@@ -81,16 +82,49 @@ Located in [`apps/web/`](apps/web) - React web frontend providing the main POS i
 
 Located in [`packages/api-client-ts/`](packages/api-client-ts)
 
-Type-safe TypeScript client for consuming the Eclipso API.
+Type-safe TypeScript client for consuming the Eclipso API with auto-generated DTOs.
 
 ```typescript
 import { ApiClient } from '@eclipso/api-client-ts';
+import { CreateProductDto, UpdateOrderDto } from '@eclipso/api-client-ts/models';
 
 const client = new ApiClient({
   baseUrl: 'http://localhost:3000',
   token: 'your-auth-token'
 });
 ```
+
+**Available Models:**
+- Brands: `CreateBrandDto`, `UpdateBrandDto`
+- Categories: `CreateCategoryDto`, `UpdateCategoryDto`
+- Products: `CreateProductDto`, `UpdateProductDto`
+- Suppliers: `CreateSupplierDto`
+- Taxes: `CreateTaxDto`, `UpdateTaxDto`
+- Discounts: `CreateDiscountDto`, `UpdateDiscountDto`
+- Orders: `CreateOrderDto`, `UpdateOrderDto`, `CreateOrderItemDto`, `UpdateOrderItemDto`
+- Organizations: `CreateOrganizationDto`, `UpdateOrganizationDto`
+- Users: `InviteUserDto`
+
+### PDF Generator
+
+Located in [`packages/pdf/`](packages/pdf)
+
+Utilities for generating PDF documents, including invoices and reports.
+
+```typescript
+import { generateInvoicePDF } from '@eclipso/pdf';
+
+const pdfBuffer = await generateInvoicePDF({
+  invoiceData: invoice,
+  businessInfo: business
+});
+```
+
+**Features:**
+- Invoice PDF generation
+- Custom fonts support
+- Branded templates
+- High-performance rendering
 
 ### Shared Types
 
@@ -99,8 +133,13 @@ Located in [`packages/types/`](packages/types)
 Common TypeScript types and interfaces used across all applications.
 
 ```typescript
-import { BusinessType, UserRole } from '@eclipso/types';
+import { BusinessType, UserRole, InvoiceData } from '@eclipso/types';
 ```
+
+**Available Types:**
+- Authentication types
+- Invoice types and interfaces
+- Shared domain types
 
 ### ESLint Config
 
@@ -286,9 +325,14 @@ For support and questions:
 - [x] API foundation
 
 ### Next Phase - POS Core Features
-- [ ] Inventory management system
-- [ ] Product catalog and pricing
-- [ ] Order processing and cart management
+- [x] Product catalog and pricing
+- [x] Brand management
+- [x] Supplier management
+- [x] Tax configuration
+- [x] Discount system
+- [x] Order processing and management
+- [x] Invoice generation with PDF export
+- [ ] Inventory tracking (in progress)
 - [ ] Payment processing integration
 - [ ] Customer management
 
@@ -302,10 +346,11 @@ For support and questions:
 
 ## 📋 Project Status
 
-- **API**: ✅ Core authentication and organization management complete
+- **API**: ✅ Core features complete (Auth, Products, Orders, Invoices, Inventory)
+- **Packages**: ✅ TypeScript client, PDF generator, shared utilities
 - **Web App**: 🚧 In development
 - **Mobile App**: 📋 Planned
-- **Documentation**: ✅ Comprehensive API docs available
+- **Documentation**: ✅ Comprehensive API docs with Postman sync
 - **Testing**: ✅ Unit tests implemented
 - **CI/CD**: 📋 Planned
 
