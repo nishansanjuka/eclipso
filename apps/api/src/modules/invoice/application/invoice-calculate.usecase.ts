@@ -99,10 +99,8 @@ export class InvoiceCalculateUsecase {
 
     const invoice = await generateInvoicePDF(data as InvoiceData, {
       currency: 'LKR',
-      locale: 'si-LK',
+      locale: 'en-LK',
     });
-
-    console.log(invoice);
 
     return invoice;
   }

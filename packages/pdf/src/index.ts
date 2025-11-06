@@ -212,47 +212,51 @@ async function generateInvoicePDF(
       doc.moveTo(50, yPos).lineTo(545, yPos).stroke();
       yPos += 20;
 
-      const summaryX = 400;
+      const summaryX = 350;
+      const summaryValueX = 480;
       doc.fontSize(10).font("Inter-Regular");
 
       doc
         .text("Subtotal:", summaryX, yPos)
         .text(
           formatCurrency(invoice.subTotal, currency, locale),
-          summaryX + 100,
+          summaryValueX,
           yPos,
           {
             align: "right",
+            width: 65,
           }
         );
-      yPos += 20;
+      yPos += 25;
 
       doc
         .text("Total Tax:", summaryX, yPos)
         .text(
           formatCurrency(invoice.totalTax, currency, locale),
-          summaryX + 100,
+          summaryValueX,
           yPos,
           {
             align: "right",
+            width: 65,
           }
         );
-      yPos += 20;
+      yPos += 25;
 
       doc
         .text("Total Discount:", summaryX, yPos)
         .text(
           formatCurrency(invoice.totalDiscount, currency, locale),
-          summaryX + 100,
+          summaryValueX,
           yPos,
           {
             align: "right",
+            width: 65,
           }
         );
-      yPos += 20;
+      yPos += 25;
 
       doc.moveTo(summaryX, yPos).lineTo(545, yPos).stroke();
-      yPos += 10;
+      yPos += 15;
 
       doc
         .fillColor(brandColor)
@@ -261,10 +265,11 @@ async function generateInvoicePDF(
         .text("Grand Total:", summaryX, yPos)
         .text(
           formatCurrency(invoice.grandTotal, currency, locale),
-          summaryX + 100,
+          summaryValueX,
           yPos,
           {
             align: "right",
+            width: 65,
           }
         )
         .fillColor("black");

@@ -20,11 +20,11 @@ export class InvoicesController {
     operationId: INVOICE_API_OPERATIONS.GET.operationId,
     description: INVOICE_API_OPERATIONS.GET.description,
   })
-  @ApiParam({ name: 'id', type: 'string', description: 'Order ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Invoice ID' })
   @Get(':id')
   @CatchEntityErrors()
-  getInvoice(@User() user: AuthUserObject, @Param('id') orderId: string) {
-    return this.invoiceGetUsecase.execute(orderId, user.orgId!);
+  getInvoice(@User() user: AuthUserObject, @Param('id') invoiceId: string) {
+    return this.invoiceGetUsecase.execute(invoiceId, user.orgId!);
   }
 
   @ApiOperation({
@@ -33,7 +33,7 @@ export class InvoicesController {
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Order ID' })
   @Get('calculate/:id')
-  // @CatchEntityErrors()
+  @CatchEntityErrors()
   async calculateInvoice(
     @User() user: AuthUserObject,
     @Param('id') orderId: string,
