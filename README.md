@@ -305,7 +305,11 @@ Each application includes deployment-ready configurations:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Copyright (c) 2025 nishansanjuka. All Rights Reserved.
+
+This software is proprietary and confidential. Unauthorized copying, modification, distribution, or use of this software, via any medium, is strictly prohibited without explicit written permission from the copyright holder.
+
+See the [LICENSE](LICENSE) file for full details.
 
 ## 📞 Support
 

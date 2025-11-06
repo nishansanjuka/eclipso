@@ -1,6 +1,9 @@
 {
   "name": "eclipso",
+  "version": "1.0.0",
   "private": true,
+  "license": "UNLICENSED",
+  "author": "nishansanjuka",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
