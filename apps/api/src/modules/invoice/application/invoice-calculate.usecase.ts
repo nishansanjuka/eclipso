@@ -5,6 +5,8 @@ import { OrderItemService } from '../../order/infrastructure/order-item.service'
 import { TaxService } from '../../tax/infrastructure/tax.service';
 import { DiscountService } from '../../discount/infrastructure/discount.service';
 import { DiscountType } from '../../discount/enums/discount.types.enum';
+import { generateInvoicePDF } from '@eclipso/pdf';
+import { InvoiceData } from '@eclipso/types';
 
 @Injectable()
 export class InvoiceCalculateUsecase {
@@ -25,7 +27,6 @@ export class InvoiceCalculateUsecase {
         'Order not found for the authorized organization',
       );
     }
-
     // Get all order items for this order
     const orderItemsData =
       await this.orderItemService.getOrderItemsByOrderId(orderId);
@@ -91,9 +92,17 @@ export class InvoiceCalculateUsecase {
       grandTotal,
     };
 
-    return await this.invoiceService.updateInvoice(
-      order.invoiceId,
-      invoiceData,
-    );
+    await this.invoiceService.updateInvoice(order.invoiceId, invoiceData);
+
+    const data = await this.invoiceService.getInvoiceDataById(order.invoiceId);
+
+    const invoice = await generateInvoicePDF(data as InvoiceData, {
+      currency: 'LKR',
+      locale: 'si-LK',
+    });
+
+    console.log(invoice);
+
+    return invoice;
   }
 }

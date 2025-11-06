@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Res } from '@nestjs/common';
+import { type Response } from 'express';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
@@ -33,7 +34,22 @@ export class InvoicesController {
   @ApiParam({ name: 'id', type: 'string', description: 'Order ID' })
   @Get('calculate/:id')
   @CatchEntityErrors()
-  calculateInvoice(@User() user: AuthUserObject, @Param('id') orderId: string) {
-    return this.invoiceCalculateUsecase.execute(orderId, user.orgId!);
+  async calculateInvoice(
+    @User() user: AuthUserObject,
+    @Param('id') orderId: string,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.invoiceCalculateUsecase.execute(
+      orderId,
+      user.orgId!,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="invoice-${orderId}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
   }
 }

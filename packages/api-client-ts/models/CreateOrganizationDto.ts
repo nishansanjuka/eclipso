@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Abc
- * aa
+ * Eclipso POS API
+ * A comprehensive RESTful API for the Eclipso Point-of-Sale system. This API provides secure endpoints for authentication, multi-tenant organization management, user administration, and core business operations. Built with NestJS and designed for retail and hospitality environments, it supports real-time synchronization, role-based access control, and seamless third-party integrations.
  *
  * The version of the OpenAPI document: 1.0
  * 

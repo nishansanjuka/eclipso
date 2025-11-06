@@ -18,8 +18,8 @@ export class OrderService {
     return await this.orderRepository.deleteOrderById(orderId, businessId);
   }
 
-  async getOrder(orderId: string, businessId: string) {
-    return await this.orderRepository.getOrderById(orderId, businessId);
+  async getOrder(orderId: string, orgId: string) {
+    return await this.orderRepository.getOrderById(orderId, orgId);
   }
 
   async getOrderByInvoiceId(invoiceId: string, orgId: string) {

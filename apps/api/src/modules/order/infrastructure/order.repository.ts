@@ -31,12 +31,16 @@ export class OrderRepository {
     return result;
   }
 
-  async getOrderById(orderId: string, businessId: string) {
+  async getOrderById(orderId: string, orgId: string) {
     const [result] = await this.db
-      .select()
+      .select({
+        order: orders,
+      })
       .from(orders)
-      .where(and(eq(orders.id, orderId), eq(orders.businessId, businessId)));
-    return result;
+      .innerJoin(businesses, eq(orders.businessId, businesses.id))
+      .where(and(eq(orders.id, orderId), eq(businesses.orgId, orgId)));
+
+    return result?.order;
   }
 
   async getOrderByInvoiceId(invoiceId: string, orgId: string) {
