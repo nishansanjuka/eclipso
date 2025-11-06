@@ -7,7 +7,7 @@ export class CreateDiscountDto {
   @ApiProperty()
   name: string;
   @ApiProperty()
-  value: number;
+  value: string;
   @ApiProperty()
   type: DiscountType;
   @ApiProperty()
@@ -24,7 +24,7 @@ export class UpdateDiscountDto {
   @ApiProperty({ required: false })
   name?: string;
   @ApiProperty({ required: false })
-  value?: number;
+  value?: string;
   @ApiProperty({ required: false })
   type?: DiscountType;
   @ApiProperty({ required: false })

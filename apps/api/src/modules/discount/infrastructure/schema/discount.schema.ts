@@ -1,7 +1,7 @@
 import { timestamp } from 'drizzle-orm/pg-core';
 import { text } from 'drizzle-orm/pg-core';
 import { pgTable, uuid } from 'drizzle-orm/pg-core';
-import { integer } from 'drizzle-orm/pg-core';
+import { numeric } from 'drizzle-orm/pg-core';
 import { businesses } from '../../../business/infrastructure/schema/business.schema';
 import { boolean } from 'drizzle-orm/pg-core';
 import { DiscountType } from '../../enums/discount.types.enum';
@@ -15,7 +15,7 @@ export const discounts = pgTable('discount', {
     .notNull()
     .references(() => businesses.id),
   name: text('name').notNull(),
-  value: integer('value').notNull().default(0),
+  value: numeric('value', { precision: 10, scale: 2 }).notNull().default('0'),
   type: discountTypeEnum('type').notNull(),
   start: timestamp('start').notNull(),
   end: timestamp('end').notNull(),

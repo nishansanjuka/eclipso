@@ -41,7 +41,7 @@ export class InvoiceCalculateUsecase {
 
     // Calculate for each order item
     for (const orderItem of orderItemsData) {
-      const itemSubtotal = orderItem.price * orderItem.qty;
+      const itemSubtotal = Number(orderItem.price) * Number(orderItem.qty);
       subTotal += itemSubtotal;
 
       // Get taxes for this order item
@@ -53,7 +53,7 @@ export class InvoiceCalculateUsecase {
         const tax = await this.taxService.getTaxById(taxRecord.taxId);
         if (tax && tax.isActive) {
           // Calculate tax amount (rate is stored as percentage)
-          const taxAmount = (itemSubtotal * tax.rate) / 100;
+          const taxAmount = (itemSubtotal * Number(tax.rate)) / 100;
           totalTax += taxAmount;
         }
       }
@@ -72,24 +72,25 @@ export class InvoiceCalculateUsecase {
           // Calculate discount amount based on type
           let discountAmount = 0;
           if (discount.type === DiscountType.PERCENTAGE) {
-            discountAmount = (itemSubtotal * discount.value) / 100;
+            discountAmount = (itemSubtotal * Number(discount.value)) / 100;
           } else if (discount.type === DiscountType.FIXED) {
-            discountAmount = discount.value;
+            discountAmount = Number(discount.value);
           }
           totalDiscount += discountAmount;
         }
       }
     }
 
-    // Calculate grand total
-    const grandTotal = subTotal + totalTax - totalDiscount;
+    // Calculate grand total and round to 2 decimal places
+    const grandTotal =
+      Math.round((subTotal + totalTax - totalDiscount) * 100) / 100;
 
-    // Update invoice with calculated values
+    // Update invoice with calculated values (converted to strings for numeric type)
     const invoiceData = {
-      subTotal,
-      totalTax,
-      totalDiscount,
-      grandTotal,
+      subTotal: (Math.round(subTotal * 100) / 100).toFixed(2),
+      totalTax: (Math.round(totalTax * 100) / 100).toFixed(2),
+      totalDiscount: (Math.round(totalDiscount * 100) / 100).toFixed(2),
+      grandTotal: grandTotal.toFixed(2),
     };
 
     await this.invoiceService.updateInvoice(order.invoiceId, invoiceData);

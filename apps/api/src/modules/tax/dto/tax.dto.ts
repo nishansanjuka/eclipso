@@ -7,7 +7,7 @@ export class CreateTaxDto {
   @ApiProperty()
   name: string;
   @ApiProperty()
-  rate: number;
+  rate: string;
   @ApiProperty()
   type: TaxType;
   @ApiProperty()
@@ -20,7 +20,7 @@ export class UpdateTaxDto {
   @ApiProperty({ required: false })
   name?: string;
   @ApiProperty({ required: false })
-  rate?: number;
+  rate?: string;
   @ApiProperty({ required: false })
   type?: TaxType;
   @ApiProperty({ required: false })

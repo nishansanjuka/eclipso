@@ -21,29 +21,51 @@ export class InvoiceCreateEntity extends BaseModel {
 
   @Z(
     z
-      .number({ error: 'Invalid Total Amount' })
-      .min(0, 'Total Amount must be positive'),
+      .string({ error: 'Invalid Total Tax' })
+      .regex(
+        /^\d+(\.\d{1,2})?$/,
+        'Total Tax must be a valid decimal number with up to 2 decimal places',
+      )
+      .refine((val) => parseFloat(val) >= 0, 'Total Tax must be positive')
+      .optional(),
   )
-  public readonly totalTax?: number;
+  public readonly totalTax?: string;
 
   @Z(
     z
-      .number({ error: 'Invalid Total Discount' })
-      .min(0, 'Total Discount must be positive'),
+      .string({ error: 'Invalid Total Discount' })
+      .regex(
+        /^\d+(\.\d{1,2})?$/,
+        'Total Discount must be a valid decimal number with up to 2 decimal places',
+      )
+      .refine((val) => parseFloat(val) >= 0, 'Total Discount must be positive')
+      .optional(),
   )
-  public readonly totalDiscount?: number;
-
-  @Z(
-    z.number({ error: 'Invalid Subtotal' }).min(0, 'Subtotal must be positive'),
-  )
-  public readonly subTotal?: number;
+  public readonly totalDiscount?: string;
 
   @Z(
     z
-      .number({ error: 'Invalid Grand Total' })
-      .min(0, 'Grand Total must be positive'),
+      .string({ error: 'Invalid Subtotal' })
+      .regex(
+        /^\d+(\.\d{1,2})?$/,
+        'Subtotal must be a valid decimal number with up to 2 decimal places',
+      )
+      .refine((val) => parseFloat(val) >= 0, 'Subtotal must be positive')
+      .optional(),
   )
-  public readonly grandTotal?: number;
+  public readonly subTotal?: string;
+
+  @Z(
+    z
+      .string({ error: 'Invalid Grand Total' })
+      .regex(
+        /^\d+(\.\d{1,2})?$/,
+        'Grand Total must be a valid decimal number with up to 2 decimal places',
+      )
+      .refine((val) => parseFloat(val) >= 0, 'Grand Total must be positive')
+      .optional(),
+  )
+  public readonly grandTotal?: string;
 
   constructor(params: InvoiceCreateDto) {
     super(params);

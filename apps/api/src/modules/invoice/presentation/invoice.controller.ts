@@ -33,7 +33,7 @@ export class InvoicesController {
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Order ID' })
   @Get('calculate/:id')
-  @CatchEntityErrors()
+  // @CatchEntityErrors()
   async calculateInvoice(
     @User() user: AuthUserObject,
     @Param('id') orderId: string,

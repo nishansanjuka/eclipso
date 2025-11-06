@@ -24,10 +24,14 @@ export class DiscountCreateEntity extends BaseModel {
 
   @Z(
     z
-      .number({ error: 'Value is required' })
-      .min(0, { message: 'Value must be non-negative' }),
+      .string({ error: 'Invalid Value' })
+      .regex(
+        /^\d+(\.\d{1,2})?$/,
+        'Value must be a valid decimal number with up to 2 decimal places',
+      )
+      .refine((val) => parseFloat(val) >= 0, 'Value must be non-negative'),
   )
-  public readonly value: number;
+  public readonly value: string;
 
   @Z(
     z.enum(DiscountType, {
@@ -76,10 +80,15 @@ export class DiscountUpdateEntity extends BaseModel {
 
   @Z(
     z
-      .number({ error: 'Value is required' })
-      .min(0, { message: 'Value must be non-negative' }),
+      .string({ error: 'Invalid Value' })
+      .regex(
+        /^\d+(\.\d{1,2})?$/,
+        'Value must be a valid decimal number with up to 2 decimal places',
+      )
+      .refine((val) => parseFloat(val) >= 0, 'Value must be non-negative')
+      .optional(),
   )
-  public readonly value?: number;
+  public readonly value?: string;
 
   @Z(
     z

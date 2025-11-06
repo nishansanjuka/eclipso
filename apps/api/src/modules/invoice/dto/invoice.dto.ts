@@ -5,13 +5,13 @@ export class InvoiceCreateDto {
   @ApiProperty()
   invoiceNumber?: string;
   @ApiProperty()
-  totalTax?: number;
+  totalTax?: string;
   @ApiProperty()
-  totalDiscount?: number;
+  totalDiscount?: string;
   @ApiProperty()
-  subTotal?: number;
+  subTotal?: string;
   @ApiProperty()
-  grandTotal?: number;
+  grandTotal?: string;
 }
 
 export class InvoiceUpdateDto {
@@ -19,13 +19,13 @@ export class InvoiceUpdateDto {
   @ApiProperty({ required: false })
   invoiceNumber?: string;
   @ApiProperty({ required: false })
-  totalTax?: number;
+  totalTax?: string;
   @ApiProperty({ required: false })
-  totalDiscount?: number;
+  totalDiscount?: string;
   @ApiProperty({ required: false })
-  subTotal?: number;
+  subTotal?: string;
   @ApiProperty({ required: false })
-  grandTotal?: number;
+  grandTotal?: string;
   @ApiProperty({ required: false })
   pdfUrl?: string;
 }

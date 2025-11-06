@@ -24,10 +24,15 @@ export class TaxCreateEntity extends BaseModel {
 
   @Z(
     z
-      .number({ error: 'Rate is required' })
-      .min(0, { message: 'Rate must be non-negative' }),
+      .string({ error: 'Invalid Rate' })
+      .regex(
+        /^\d+(\.\d{1,2})?$/,
+        'Rate must be a valid decimal number with up to 2 decimal places',
+      )
+      .refine((val) => parseFloat(val) >= 0, 'Rate must be non-negative')
+      .refine((val) => parseFloat(val) <= 100, 'Rate must not exceed 100'),
   )
-  public readonly rate: number;
+  public readonly rate: string;
 
   @Z(
     z.enum(TaxType, {
@@ -66,23 +71,32 @@ export class TaxUpdateEntity extends BaseModel {
   @Z(
     z
       .string({ error: 'Name is required' })
-      .min(1, { message: 'Name cannot be empty' }),
+      .min(1, { message: 'Name cannot be empty' })
+      .optional(),
   )
   public readonly name?: string;
 
   @Z(
     z
-      .number({ error: 'Rate is required' })
-      .min(0, { message: 'Rate must be non-negative' }),
+      .string({ error: 'Invalid Rate' })
+      .regex(
+        /^\d+(\.\d{1,2})?$/,
+        'Rate must be a valid decimal number with up to 2 decimal places',
+      )
+      .refine((val) => parseFloat(val) >= 0, 'Rate must be non-negative')
+      .refine((val) => parseFloat(val) <= 100, 'Rate must not exceed 100')
+      .optional(),
   )
-  public readonly rate?: number;
+  public readonly rate?: string;
 
   @Z(
-    z.enum(TaxType, {
-      message: `Tax type must be one of the following: ${Object.values(
-        TaxType,
-      ).join(', ')}`,
-    }),
+    z
+      .enum(TaxType, {
+        message: `Tax type must be one of the following: ${Object.values(
+          TaxType,
+        ).join(', ')}`,
+      })
+      .optional(),
   )
   public readonly type?: TaxType;
 
