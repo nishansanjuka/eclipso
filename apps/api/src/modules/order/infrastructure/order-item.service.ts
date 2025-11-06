@@ -83,4 +83,8 @@ export class OrderItemService {
   async getOrderItemsByOrderId(orderId: string) {
     return await this.orderItemRepository.getOrderItemsByOrderId(orderId);
   }
+
+  async getOrderItemsById(id: string) {
+    return await this.orderItemRepository.getOrderItemsById(id);
+  }
 }

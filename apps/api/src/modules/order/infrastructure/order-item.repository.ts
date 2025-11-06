@@ -149,4 +149,12 @@ export class OrderItemRepository {
       .where(eq(orderItemsDiscounts.orderItemId, orderItemId));
     return result;
   }
+
+  async getOrderItemsById(id: string) {
+    const [result] = await this.db
+      .select()
+      .from(orderItems)
+      .where(eq(orderItems.id, id));
+    return result;
+  }
 }

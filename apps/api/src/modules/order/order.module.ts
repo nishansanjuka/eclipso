@@ -20,6 +20,8 @@ import { ProductRepository } from '../product/infrastructure/product.repository'
 import { OrderItemController } from './presentation/order.item.controller';
 import { OrderItemDiscountsUpdateUsecase } from './application/order-item-discount.usercase';
 import { OrderItemTaxRecordUpdateUsecase } from './application/order-item-tax.usercase';
+import { InventoryMovementService } from '../inventory/infrastructure/inventory.movements.service';
+import { InventoryMovementsRepository } from '../inventory/infrastructure/inventory.movements.repository';
 
 @Module({
   imports: [DatabaseModule],
@@ -41,6 +43,8 @@ import { OrderItemTaxRecordUpdateUsecase } from './application/order-item-tax.us
     ProductRepository,
     OrderItemDeleteUsecase,
     OrderCreateUsecase,
+    InventoryMovementService,
+    InventoryMovementsRepository,
     OrderUpdateUsecase,
     OrderDeleteUsecase,
   ],
