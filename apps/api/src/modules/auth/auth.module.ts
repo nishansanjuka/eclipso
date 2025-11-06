@@ -19,6 +19,9 @@ import { ClerkWebhookService } from './infrastructure/webhook.service';
 import { ClerkWebhookUseCase } from './application/webhook.use-case';
 import { BusinessService } from '../business/infrastructure/business.service';
 import { BusinessRepository } from '../business/infrastructure/business.repository';
+import { SupplierController } from '../suppliers/presentation/supplier.controller';
+import { TaxController } from '../tax/presentation/tax.controller';
+import { InvoicesController } from '../invoice/presentation/invoice.controller';
 
 @Module({
   imports: [DatabaseModule],
@@ -39,6 +42,9 @@ import { BusinessRepository } from '../business/infrastructure/business.reposito
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(AuthMiddleware).forRoutes(AuthController);
+    consumer.apply(AuthMiddleware).forRoutes(SupplierController);
+    consumer.apply(AuthMiddleware).forRoutes(TaxController);
+    consumer.apply(AuthMiddleware).forRoutes(InvoicesController);
 
     consumer.apply(AuthMiddleware).forRoutes({
       path: '/',

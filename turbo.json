@@ -15,6 +15,10 @@
       "persistent": true,
       "dependsOn": ["^generate:ts"]
     },
+    "db:generate": {
+      "persistent": true,
+      "dependsOn": ["^db:generate"]
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },

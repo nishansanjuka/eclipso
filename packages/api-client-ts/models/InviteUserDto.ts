@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Abc
- * aa
+ * Eclipso POS API
+ * A comprehensive RESTful API for the Eclipso Point-of-Sale system. This API provides secure endpoints for authentication, multi-tenant organization management, user administration, and core business operations. Built with NestJS and designed for retail and hospitality environments, it supports real-time synchronization, role-based access control, and seamless third-party integrations.
  *
  * The version of the OpenAPI document: 1.0
  * 
@@ -29,7 +29,7 @@ export interface InviteUserDto {
      * @type {string}
      * @memberof InviteUserDto
      */
-    role: InviteUserDtoRoleEnum;
+    role?: InviteUserDtoRoleEnum;
     /**
      * 
      * @type {string}
@@ -60,7 +60,6 @@ export type InviteUserDtoRoleEnum = typeof InviteUserDtoRoleEnum[keyof typeof In
  */
 export function instanceOfInviteUserDto(value: object): value is InviteUserDto {
     if (!('emails' in value) || value['emails'] === undefined) return false;
-    if (!('role' in value) || value['role'] === undefined) return false;
     if (!('inviterUserId' in value) || value['inviterUserId'] === undefined) return false;
     if (!('orgId' in value) || value['orgId'] === undefined) return false;
     return true;
@@ -77,7 +76,7 @@ export function InviteUserDtoFromJSONTyped(json: any, ignoreDiscriminator: boole
     return {
         
         'emails': json['emails'],
-        'role': json['role'],
+        'role': json['role'] == null ? undefined : json['role'],
         'inviterUserId': json['inviterUserId'],
         'orgId': json['orgId'],
     };

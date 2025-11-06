@@ -68,15 +68,23 @@ src/
 │   │   ├── enums/        # Domain enums
 │   │   ├── infrastructure/ # External services (Clerk)
 │   │   └── presentation/  # Controllers & routes
+│   ├── brand/            # Brand management
 │   ├── business/         # Business/Organization management
-│   └── users/           # User management
-├── shared/              # Shared application code
-│   ├── database/        # Database configuration & migrations
-│   ├── decorators/      # Custom decorators
-│   ├── middleware/      # Custom middleware
-│   ├── services/        # Shared services
-│   ├── validators/      # Input validation
-│   └── zod/            # Zod schemas
+│   ├── discount/         # Discount & promotion management
+│   ├── inventory/        # Inventory tracking & management
+│   ├── invoice/          # Invoice generation & management
+│   ├── order/            # Order processing & management
+│   ├── product/          # Product catalog management
+│   ├── suppliers/        # Supplier management
+│   ├── tax/              # Tax configuration & calculation
+│   └── users/            # User management
+├── shared/               # Shared application code
+│   ├── database/         # Database configuration & migrations
+│   ├── decorators/       # Custom decorators
+│   ├── middleware/       # Custom middleware
+│   ├── services/         # Shared services
+│   ├── validators/       # Input validation
+│   └── zod/              # Zod schemas
 ```
 
 ### Key Design Patterns
@@ -93,6 +101,13 @@ src/
 - **Development**: `http://localhost:3000`
 - **Production**: `https://api.eclipso.example.com`
 
+### API Documentation
+
+Interactive API documentation is available at:
+- **Swagger UI**: `http://localhost:3000/api`
+- **Scalar API Reference**: `http://localhost:3000/reference`
+- **OpenAPI JSON**: `http://localhost:3000/api-json`
+
 ### Authentication
 
 All API endpoints require authentication via Bearer token:
@@ -101,6 +116,22 @@ All API endpoints require authentication via Bearer token:
 curl -H "Authorization: Bearer YOUR_TOKEN" \
      http://localhost:3000/api/endpoint
 ```
+
+### Available Modules
+
+The API provides the following feature modules:
+
+- **Authentication & Authorization** - User authentication, organization management, and access control
+- **Users** - User profile and account management
+- **Business** - Multi-tenant business/organization management
+- **Brands** - Brand catalog and management
+- **Products** - Product catalog, variants, and pricing
+- **Suppliers** - Supplier information and relationship management
+- **Inventory** - Stock tracking, levels, and warehouse management
+- **Taxes** - Tax configuration, rates, and calculations
+- **Discounts** - Promotional discounts and pricing rules
+- **Orders** - Order creation, processing, and fulfillment
+- **Invoices** - Invoice generation, PDF export, and history
 
 #### Organization Management
 
@@ -244,7 +275,201 @@ pnpm db:reset
 pnpm db:studio
 ```
 
-## 🔐 Authentication & Authorization
+## � Postman Integration
+
+### Automated Collection Sync
+
+The API includes an automated Postman collection sync feature that keeps your Postman workspace in sync with the latest API changes. This feature automatically:
+
+1. Downloads the OpenAPI specification from your running API
+2. Converts it to a Postman collection
+3. Injects authentication pre-request scripts
+4. Syncs the collection to your Postman workspace
+
+### Setup
+
+#### 1. Get Your Postman API Key
+
+1. Go to [Postman Account Settings](https://go.postman.co/settings/me/api-keys)
+2. Generate a new API key
+3. Copy the key
+
+#### 2. Get Your Collection ID
+
+1. Open your Postman workspace
+2. Navigate to the collection you want to sync
+3. Click the three dots (•••) next to the collection name
+4. Select "Share" → "Via API" → Copy the Collection ID
+
+#### 3. Configure Environment Variables
+
+Add these to your `.env` file:
+
+```bash
+# Postman Sync Configuration
+API_JSON_URL=http://localhost:3000/api-json
+POSTMAN_API_KEY=PMAK-your-api-key-here
+POSTMAN_COLLECTION_ID=your-collection-id-here
+```
+
+#### 4. Sync the Collection
+
+```bash
+# Start your API server first
+pnpm dev
+
+# In another terminal, run the sync command
+pnpm sync:postman
+```
+
+**Expected Output:**
+```
+🔧 Reading collection: C:\Users\...\Temp\collection.json
+✅ Postman collection patched with pre-request script!
+✅✅✅ Synced collection to Postman!
+```
+
+### Authentication Pre-Request Script
+
+The sync process automatically injects a pre-request script that:
+
+1. **Creates a Clerk session** using your test user ID
+2. **Activates the organization** (if the user belongs to one)
+3. **Generates a JWT token** for authentication
+4. **Sets the bearer token** in your Postman environment
+
+This means you don't need to manually obtain and update tokens for each request!
+
+### Postman Environment Setup
+
+Import the development environment template:
+
+1. Locate `scripts/postman-env-dev.json`
+2. Import it into Postman (Environments → Import)
+3. Update the environment variables:
+
+```json
+{
+  "baseUrl": "http://localhost:3000",
+  "CLERK_SECRET_KEY": "sk_test_your_secret_key",
+  "TEST_CLERK_USER_ID": "user_your_test_user_id",
+  "bearerToken": "" // Auto-populated by pre-request script
+}
+```
+
+### How It Works
+
+The `sync:postman` script performs the following steps:
+
+```powershell
+# 1. Download OpenAPI spec
+Invoke-WebRequest $env:API_JSON_URL -OutFile "$env:TEMP\openapi.json"
+
+# 2. Convert OpenAPI to Postman collection
+npx openapi2postmanv2 -s "$env:TEMP\openapi.json" -o "$env:TEMP\collection.json"
+
+# 3. Inject pre-request script
+node ./scripts/patch-postman.mjs
+
+# 4. Upload to Postman
+Invoke-RestMethod -Uri "https://api.getpostman.com/collections/$env:POSTMAN_COLLECTION_ID" -Method PUT
+```
+
+### Script Files
+
+- **`scripts/patch-postman.mjs`** - Injects the pre-request script into the collection
+- **`scripts/pre-request.js`** - Authentication flow for automatic token generation
+- **`scripts/postman-env-dev.json`** - Development environment template
+
+### Usage Tips
+
+#### Automatic Token Refresh
+
+The pre-request script runs before **every** request, ensuring your token is always fresh. No manual token management needed!
+
+#### Multiple Environments
+
+Create separate Postman environments for different stages:
+
+- **Development**: `http://localhost:3000`
+- **Staging**: `https://staging-api.eclipso.example.com`
+- **Production**: `https://api.eclipso.example.com`
+
+Each environment should have its own:
+- `CLERK_SECRET_KEY`
+- `TEST_CLERK_USER_ID`
+- `baseUrl`
+
+#### Troubleshooting Sync
+
+**Collection not found:**
+```bash
+# Ensure API is running
+pnpm dev
+
+# Verify API_JSON_URL is accessible
+curl http://localhost:3000/api-json
+```
+
+**Authentication errors:**
+```bash
+# Verify Clerk credentials in Postman environment
+# Check that TEST_CLERK_USER_ID exists in your Clerk dashboard
+# Ensure CLERK_SECRET_KEY has proper permissions
+```
+
+**Pre-request script not working:**
+- Check the Postman console (View → Show Postman Console)
+- Verify environment variables are set correctly
+- Ensure the test user has organization membership (if required)
+
+### Continuous Integration
+
+For CI/CD pipelines, you can automate collection syncing:
+
+```yaml
+# .github/workflows/sync-postman.yml
+name: Sync Postman Collection
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/src/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+      
+      - name: Start API
+        run: |
+          cd apps/api
+          pnpm install
+          pnpm dev &
+          sleep 10
+      
+      - name: Sync to Postman
+        env:
+          API_JSON_URL: http://localhost:3000/api-json
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+          POSTMAN_COLLECTION_ID: ${{ secrets.POSTMAN_COLLECTION_ID }}
+        run: |
+          cd apps/api
+          pnpm sync:postman
+```
+
+### Benefits
+
+✅ **Always Up-to-Date** - Postman collection stays in sync with your API  
+✅ **No Manual Token Management** - Automatic authentication for every request  
+✅ **Team Collaboration** - Share collections with consistent authentication  
+✅ **Multi-Organization Support** - Automatically activates user's default organization  
+✅ **OpenAPI Standard** - Uses industry-standard OpenAPI specification  
+
+## �🔐 Authentication & Authorization
 
 ### Clerk Integration
 
@@ -443,10 +668,17 @@ pnpm start:debug
       isGlobal: true,
       validate: configValidationSchema,
     }),
-    DrizzleModule,
     AuthModule,
-    BusinessModule,
     UsersModule,
+    BusinessModule,
+    BrandModule,
+    ProductModule,
+    SuppliersModule,
+    InventoryModule,
+    TaxModule,
+    DiscountModule,
+    OrderModule,
+    InvoiceModule,
   ],
 })
 export class AppModule {}

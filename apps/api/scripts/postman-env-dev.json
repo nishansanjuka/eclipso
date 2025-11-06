@@ -1,0 +1,20 @@
+{
+  "id": "dev-env",
+  "name": "DEV",
+  "values": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "enabled": true },
+    {
+      "key": "CLERK_SECRET_KEY",
+      "value": "{{YOUR_CLERK_SECRET_KEY}}",
+      "enabled": true
+    },
+    {
+      "key": "TEST_CLERK_USER_ID",
+      "value": "{{YOUR_CLERK_USER_ID}}",
+      "enabled": true
+    },
+    { "key": "bearerToken", "value": "", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_using": "NestJS Sync Script"
+}

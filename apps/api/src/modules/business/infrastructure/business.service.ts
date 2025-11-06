@@ -17,4 +17,8 @@ export class BusinessService {
   async deleteBusiness(businessId: string) {
     return this.businessRepository.deleteBusiness(businessId);
   }
+
+  async getBusinessWithUserByOrgId(orgId: string) {
+    return await this.businessRepository.getBusinessWithUserByOrgId(orgId);
+  }
 }

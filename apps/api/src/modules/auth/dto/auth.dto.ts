@@ -10,13 +10,13 @@ export class CreateOrganizationDto {
 }
 
 export class UpdateOrganizationDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   name?: string | null;
   @ApiProperty({
     enum: Object.values(BusinessType),
   })
   businessType?: BusinessType | null;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   orgId?: string | null;
 }
 
@@ -27,7 +27,7 @@ export class DeleteOrganizationDto {
 export class InviteUserDto {
   @ApiProperty()
   emails: string[];
-  @ApiProperty({ enum: UserRole })
+  @ApiProperty({ enum: UserRole, required: false })
   role?: UserRole;
   @ApiProperty()
   inviterUserId: string;

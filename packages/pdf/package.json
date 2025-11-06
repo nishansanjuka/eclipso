@@ -1,0 +1,45 @@
+{
+  "name": "@eclipso/pdf",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/es/index.js",
+  "module": "./dist/es/index.js",
+  "types": "./dist/es/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/es/index.d.ts",
+        "default": "./dist/es/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.cts",
+        "default": "./dist/cjs/index.cjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "bunchee && npm run copy-fonts",
+    "copy-fonts": "node -e \"const fs = require('fs'); fs.cpSync('src/fonts', 'dist/es/fonts', {recursive: true}); fs.cpSync('src/fonts', 'dist/cjs/fonts', {recursive: true});\"",
+    "dev": "bunchee --watch",
+    "lint": "eslint src/",
+    "check-types": "tsc --noEmit",
+    "test": "jest"
+  },
+  "dependencies": {
+    "path": "^0.12.7",
+    "pdfkit": "^0.17.2"
+  },
+  "devDependencies": {
+    "@eclipso/types": "workspace:^",
+    "@eclipso/typescript-config": "workspace:^",
+    "@types/node": "^24.10.0",
+    "@types/pdfkit": "^0.17.3",
+    "bunchee": "^6.4.0",
+    "eslint": "^9.39.1",
+    "typescript": "^5.9.3"
+  }
+}

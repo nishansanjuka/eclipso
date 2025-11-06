@@ -24,11 +24,13 @@
     "predb:migrate": "pnpm db:init",
     "db:migrate": "drizzle-kit migrate --config=./src/shared/database/drizzle.config.ts",
     "predb:push": "pnpm db:init",
-    "db:push": "drizzle-kit push --config=./src/shared/database/drizzle.config.ts"
+    "db:push": "drizzle-kit push --config=./src/shared/database/drizzle.config.ts",
+    "sync:postman": "dotenv -e .env -- powershell -Command \"Invoke-WebRequest $env:API_JSON_URL -OutFile \\\"${env:TEMP}\\openapi.json\\\"; npx openapi2postmanv2 -s \\\"${env:TEMP}\\openapi.json\\\" -o \\\"${env:TEMP}\\collection.json\\\" -p -O folderStrategy=Tags; node ./scripts/patch-postman.mjs; $collection = Get-Content \\\"${env:TEMP}\\collection.json\\\" -Raw; $body = @{ collection = (ConvertFrom-Json $collection) } | ConvertTo-Json -Depth 100; Invoke-RestMethod -Uri ('https://api.getpostman.com/collections/' + $env:POSTMAN_COLLECTION_ID) -Method PUT -Headers @{ 'X-Api-Key'=$env:POSTMAN_API_KEY; 'Content-Type'='application/json' } -Body $body; Write-Output '✅✅✅ Synced collection to Postman!';\""
   },
   "dependencies": {
     "@clerk/express": "^1.7.41",
     "@eclipso/api-client-ts": "workspace:^",
+    "@eclipso/pdf": "workspace:^",
     "@eclipso/types": "workspace:^",
     "@eclipso/utils": "workspace:^",
     "@nestjs/common": "^11.0.1",
@@ -36,6 +38,7 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.1",
+    "@scalar/nestjs-api-reference": "^1.0.5",
     "add": "^2.0.6",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.5",
@@ -62,6 +65,7 @@
     "@types/node": "^22.10.7",
     "@types/pg": "^8.15.5",
     "@types/supertest": "^6.0.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
@@ -73,7 +77,6 @@
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
     "tsx": "^4.20.6",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"

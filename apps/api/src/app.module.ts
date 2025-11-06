@@ -1,11 +1,17 @@
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { configuration } from './shared/config';
 import { ConfigService } from './shared/services/config.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { Module } from '@nestjs/common';
 import { UsersModule } from './modules/users/user.module';
+import { BusinessModule } from './modules/business/business.module';
+import { SuppliersModule } from './modules/suppliers/suppliers.module';
+import { TaxModule } from './modules/tax/tax.module';
+import { DiscountModule } from './modules/discount/discount.module';
+import { OrderModule } from './modules/order/order.module';
+import { ProductModule } from './modules/product/product.module';
+import { BrandModule } from './modules/brand/brand.module';
+import { InvoiceModule } from './modules/invoice/invoice.module';
 
 @Module({
   imports: [
@@ -13,10 +19,18 @@ import { UsersModule } from './modules/users/user.module';
       isGlobal: true,
       load: [configuration],
     }),
-    AuthModule,
+    TaxModule,
     UsersModule,
+    AuthModule,
+    BusinessModule,
+    SuppliersModule,
+    ProductModule,
+    DiscountModule,
+    OrderModule,
+    BrandModule,
+    InvoiceModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, ConfigService],
+  controllers: [],
+  providers: [ConfigService],
 })
 export class AppModule {}
