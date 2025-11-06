@@ -26,10 +26,10 @@ export interface UpdateTaxDto {
     name?: string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof UpdateTaxDto
      */
-    rate?: number;
+    rate?: string;
     /**
      * 
      * @type {string}

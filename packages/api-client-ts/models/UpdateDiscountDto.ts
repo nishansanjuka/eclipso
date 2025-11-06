@@ -26,10 +26,10 @@ export interface UpdateDiscountDto {
     name?: string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof UpdateDiscountDto
      */
-    value?: number;
+    value?: string;
     /**
      * 
      * @type {string}

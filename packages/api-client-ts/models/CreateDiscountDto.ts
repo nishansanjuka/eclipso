@@ -26,10 +26,10 @@ export interface CreateDiscountDto {
     name: string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof CreateDiscountDto
      */
-    value: number;
+    value: string;
     /**
      * 
      * @type {string}

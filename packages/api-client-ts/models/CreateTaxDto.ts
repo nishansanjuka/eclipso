@@ -26,10 +26,10 @@ export interface CreateTaxDto {
     name: string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof CreateTaxDto
      */
-    rate: number;
+    rate: string;
     /**
      * 
      * @type {string}
