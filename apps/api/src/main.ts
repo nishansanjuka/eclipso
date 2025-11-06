@@ -43,7 +43,7 @@ async function bootstrap() {
     '/api-reference',
     apiReference({
       darkMode: true,
-      theme: 'deepSpace',
+      theme: 'moon',
       title: 'Eclipso POS API Reference',
       content: document,
     }),

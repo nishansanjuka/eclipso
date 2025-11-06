@@ -3,7 +3,7 @@ import { type Response } from 'express';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { InvoiceCalculateUsecase } from '../application/invoice-calculate.usecase';
 import { INVOICE_API_OPERATIONS } from '../constants/api-operations';
 import { InvoiceGetUsecase } from '../application/invoice-get.usecase';
@@ -32,6 +32,18 @@ export class InvoicesController {
     description: INVOICE_API_OPERATIONS.CALCULATE.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Order ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Invoice PDF generated successfully',
+    content: {
+      'application/pdf': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   @Get('calculate/:id')
   @CatchEntityErrors()
   async calculateInvoice(
