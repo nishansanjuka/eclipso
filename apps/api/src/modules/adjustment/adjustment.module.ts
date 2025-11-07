@@ -8,6 +8,10 @@ import { BusinessRepository } from '../business/infrastructure/business.reposito
 import { InventoryMovementService } from '../inventory/infrastructure/inventory.movements.service';
 import { InventoryMovementsRepository } from '../inventory/infrastructure/inventory.movements.repository';
 import { AdjustmentController } from './presentation/adjustment.controller';
+import { ProductService } from '../product/infrastructure/product.service';
+import { UserService } from '../users/infrastructure/user.service';
+import { UserRepository } from '../users/infrastructure/user.repository';
+import { ProductRepository } from '../product/infrastructure/product.repository';
 
 @Module({
   imports: [DatabaseModule],
@@ -20,6 +24,10 @@ import { AdjustmentController } from './presentation/adjustment.controller';
     BusinessRepository,
     InventoryMovementService,
     InventoryMovementsRepository,
+    ProductService,
+    UserRepository,
+    ProductRepository,
+    UserService,
   ],
   exports: [AdjustmentService, AdjustmentCreateUsecase],
 })

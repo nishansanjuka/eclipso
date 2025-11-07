@@ -25,7 +25,7 @@
     "db:migrate": "drizzle-kit migrate --config=./src/shared/database/drizzle.config.ts",
     "predb:push": "pnpm db:init",
     "db:push": "drizzle-kit push --config=./src/shared/database/drizzle.config.ts",
-    "sync:postman": "dotenv -e .env -- powershell -Command \"Invoke-WebRequest $env:API_JSON_URL -OutFile \\\"${env:TEMP}\\openapi.json\\\"; npx openapi2postmanv2 -s \\\"${env:TEMP}\\openapi.json\\\" -o \\\"${env:TEMP}\\collection.json\\\" -p -O folderStrategy=Tags; node ./scripts/patch-postman.mjs; $collection = Get-Content \\\"${env:TEMP}\\collection.json\\\" -Raw; $body = @{ collection = (ConvertFrom-Json $collection) } | ConvertTo-Json -Depth 100; Invoke-RestMethod -Uri ('https://api.getpostman.com/collections/' + $env:POSTMAN_COLLECTION_ID) -Method PUT -Headers @{ 'X-Api-Key'=$env:POSTMAN_API_KEY; 'Content-Type'='application/json' } -Body $body; Write-Output '✅✅✅ Synced collection to Postman!';\""
+    "sync:postman": "dotenv -e .env -- powershell -Command \"Invoke-WebRequest $env:API_JSON_URL -OutFile \\\"${env:TEMP}\\openapi.json\\\"; npx openapi-to-postmanv2 -s \\\"${env:TEMP}\\openapi.json\\\" -o \\\"${env:TEMP}\\collection.json\\\" -p -O folderStrategy=Tags; node ./scripts/patch-postman.mjs; $collection = Get-Content \\\"${env:TEMP}\\collection.json\\\" -Raw; $body = @{ collection = (ConvertFrom-Json $collection) } | ConvertTo-Json -Depth 100; Invoke-RestMethod -Uri ('https://api.getpostman.com/collections/' + $env:POSTMAN_COLLECTION_ID) -Method PUT -Headers @{ 'X-Api-Key'=$env:POSTMAN_API_KEY; 'Content-Type'='application/json' } -Body $body -ErrorAction Stop; Write-Output '✅✅✅ Synced collection to Postman!';\""
   },
   "dependencies": {
     "@clerk/express": "^1.7.41",
