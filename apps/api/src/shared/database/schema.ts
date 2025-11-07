@@ -62,6 +62,16 @@ import {
 } from '../../modules/payment/infrastructure/schema/payment.schema';
 import { sales } from '../../modules/sale/infrastructure/schema/sale.schema';
 import { saleItems } from '../../modules/sale/infrastructure/schema/sale-item.schema';
+import {
+  refundMethodEnum,
+  refunds,
+} from '../../modules/return/infrastructure/schema/refund.schema';
+import { returnItems } from '../../modules/return/infrastructure/schema/return-item.schema';
+import {
+  returnReasonEnum,
+  returns,
+  returnStatusEnum,
+} from '../../modules/return/infrastructure/schema/return.schema';
 
 export const UsersTable = users;
 export const BusinessTable = businesses;
@@ -85,6 +95,9 @@ export const CustomersTable = customers;
 export const SalesTable = sales;
 export const SaleItemsTable = saleItems;
 export const PaymentsTable = payments;
+export const RefundMethodTable = refunds;
+export const ReturnsTable = returns;
+export const ReturnItemsTable = returnItems;
 
 // relations for tables
 export const UsersRelations = usersRelations;
@@ -109,3 +122,6 @@ export const ActionTypeEnum = actionTypeEnum;
 export const LogTypeEnum = logTypeEnum;
 export const PaymentMethodEnum = paymentMethodEnum;
 export const PaymentStatusEnum = paymentStatusEnum;
+export const RefundMethodEnum = refundMethodEnum;
+export const ReturnReasonEnum = returnReasonEnum;
+export const ReturnStatusEnum = returnStatusEnum;

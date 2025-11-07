@@ -3,7 +3,7 @@ import { businesses } from '../../../business/infrastructure/schema/business.sch
 import { users } from '../../../users/infrastructure/schema/user.schema';
 
 export const adjustments = pgTable('adjustments', {
-  id: uuid('id').defaultRandom().unique().notNull().primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   businessId: uuid('business_id')
     .notNull()
     .references(() => businesses.id, {
