@@ -9,7 +9,13 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+} from '@nestjs/swagger';
 import { AdjustmentService } from '../infrastructure/adjustment.service';
 import { AdjustmentCreateUsecase } from '../application/adjustment.create.usecase';
 import {
@@ -29,18 +35,18 @@ export class AdjustmentController {
     private readonly adjustmentCreateUsecase: AdjustmentCreateUsecase,
   ) {}
 
+  @ApiOperation({
+    operationId: ADJUSTMENT_API_OPERATIONS.CREATE.operationId,
+    description: ADJUSTMENT_API_OPERATIONS.CREATE.description,
+  })
   @Post(':productId')
-  @CatchEntityErrors()
   @ApiParam({ name: 'productId', description: 'Product ID' })
   @ApiQuery({
     name: 'qty',
     description: 'Quantity adjustment (positive to add, negative to subtract)',
   })
-  @ApiOperation({
-    summary: 'Create inventory adjustment',
-    operationId: ADJUSTMENT_API_OPERATIONS.CREATE.operationId,
-    description: ADJUSTMENT_API_OPERATIONS.CREATE.description,
-  })
+  @ApiBody({ type: CreateAdjustmentDto })
+  @CatchEntityErrors()
   async createAdjustment(
     @Query('qty') qty: number,
     @Param('productId') productId: string,
@@ -56,50 +62,46 @@ export class AdjustmentController {
     );
   }
 
-  @Get(':id')
-  @CatchEntityErrors()
   @ApiOperation({
-    summary: 'Get adjustment by ID',
     operationId: ADJUSTMENT_API_OPERATIONS.GET_BY_ID.operationId,
     description: ADJUSTMENT_API_OPERATIONS.GET_BY_ID.description,
   })
   @ApiParam({ name: 'id', description: 'Adjustment ID' })
+  @Get(':id')
+  @CatchEntityErrors()
   async getAdjustmentById(@Param('id') id: string) {
     return await this.adjustmentService.findAdjustmentById(id);
   }
 
-  @Get('business/:businessId')
-  @CatchEntityErrors()
   @ApiOperation({
-    summary: 'Get all adjustments for a business',
     operationId: ADJUSTMENT_API_OPERATIONS.GET_BY_BUSINESS.operationId,
     description: ADJUSTMENT_API_OPERATIONS.GET_BY_BUSINESS.description,
   })
   @ApiParam({ name: 'businessId', description: 'Business ID' })
+  @Get('business/:businessId')
+  @CatchEntityErrors()
   async getAdjustmentsByBusinessId(@Param('businessId') businessId: string) {
     return await this.adjustmentService.findAdjustmentsByBusinessId(businessId);
   }
 
-  @Get('user/:userId')
-  @CatchEntityErrors()
   @ApiOperation({
-    summary: 'Get all adjustments by a user',
     operationId: ADJUSTMENT_API_OPERATIONS.GET_BY_USER.operationId,
     description: ADJUSTMENT_API_OPERATIONS.GET_BY_USER.description,
   })
   @ApiParam({ name: 'userId', description: 'User clerk ID' })
+  @Get('user/:userId')
+  @CatchEntityErrors()
   async getAdjustmentsByUserId(@Param('userId') userId: string) {
     return await this.adjustmentService.findAdjustmentsByUserId(userId);
   }
 
-  @Get()
-  @CatchEntityErrors()
   @ApiOperation({
-    summary: 'Get all adjustments with optional limit',
     operationId: ADJUSTMENT_API_OPERATIONS.GET_ALL.operationId,
     description: ADJUSTMENT_API_OPERATIONS.GET_ALL.description,
   })
   @ApiQuery({ name: 'limit', required: false, description: 'Limit results' })
+  @CatchEntityErrors()
+  @Get()
   async getAllAdjustments(
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @User() user: AuthUserObject = {} as AuthUserObject,
@@ -107,14 +109,14 @@ export class AdjustmentController {
     return await this.adjustmentService.getAllAdjustments(user.orgId!, limit);
   }
 
-  @Put(':id')
-  @CatchEntityErrors()
   @ApiOperation({
-    summary: 'Update adjustment',
     operationId: ADJUSTMENT_API_OPERATIONS.UPDATE.operationId,
     description: ADJUSTMENT_API_OPERATIONS.UPDATE.description,
   })
   @ApiParam({ name: 'id', description: 'Adjustment ID' })
+  @ApiBody({ type: UpdateAdjustmentDto })
+  @Put(':id')
+  @CatchEntityErrors()
   async updateAdjustment(
     @Param('id') id: string,
     @Body() dto: UpdateAdjustmentDto,
@@ -122,14 +124,13 @@ export class AdjustmentController {
     return await this.adjustmentService.updateAdjustment(id, dto);
   }
 
-  @Delete(':id')
-  @CatchEntityErrors()
   @ApiOperation({
-    summary: 'Delete adjustment',
     operationId: ADJUSTMENT_API_OPERATIONS.DELETE.operationId,
     description: ADJUSTMENT_API_OPERATIONS.DELETE.description,
   })
   @ApiParam({ name: 'id', description: 'Adjustment ID' })
+  @Delete(':id')
+  @CatchEntityErrors()
   async deleteAdjustment(
     @Param('id') id: string,
     @User() user: AuthUserObject,
