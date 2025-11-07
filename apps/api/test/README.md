@@ -88,8 +88,8 @@ All modules have comprehensive end-to-end testing:
 - **Invoices** (`invoice.e2e-spec.ts`) - Invoice generation
 - **Suppliers** (`supplier.e2e-spec.ts`) - Supplier management
 
-### Unit Tests (18 suites, 39 tests) ✅
-Comprehensive use case business logic testing:
+### Unit Tests (32 suites, 68 tests) ✅
+Comprehensive use case business logic testing for all modules:
 
 **Brand Module** (3 tests)
 - `brand-create.usecase.spec.ts` - Brand creation logic
@@ -101,33 +101,49 @@ Comprehensive use case business logic testing:
 - `tax-update.usecase.spec.ts` - Tax update logic
 - `tax-delete.usecase.spec.ts` - Tax deletion logic
 
-**Discount Module** (1 test)
+**Discount Module** (3 tests)
 - `discount-create.usecase.spec.ts` - Discount creation with date validation
+- `discount-update.usecase.spec.ts` - Discount update logic
+- `discount-delete.usecase.spec.ts` - Discount deletion logic
 
 **Customer Module** (3 tests)
 - `customer-create.usecase.spec.ts` - Customer creation logic
 - `customer-update.usecase.spec.ts` - Customer update logic
 - `customer-delete.usecase.spec.ts` - Customer deletion logic
 
-**Supplier Module** (1 test)
+**Supplier Module** (3 tests)
 - `supplier-create.usecase.spec.ts` - Supplier creation logic
+- `supplier-update.usecase.spec.ts` - Supplier update logic
+- `supplier-delete.usecase.spec.ts` - Supplier deletion logic
 
-**Product Module** (1 test)
+**Product Module** (6 tests)
 - `product-create.usecase.spec.ts` - Product creation logic
+- `product-update.usecase.spec.ts` - Product update logic
+- `product-delete.usecase.spec.ts` - Product deletion logic
+- `category-create.usecase.spec.ts` - Category creation logic
+- `category-update.usecase.spec.ts` - Category update logic
+- `category-delete.usecase.spec.ts` - Category deletion logic
 
 **Order Module** (3 tests)
 - `order.create.usecase.spec.ts` - Order creation with invoice generation
 - `order.update.usecase.spec.ts` - Order update logic
 - `order.delete.usecase.spec.ts` - Order deletion with invoice cleanup
 
-**Sale Module** (1 test)
+**Sale Module** (4 tests)
 - `sale-create.usecase.spec.ts` - Sale creation with business validation
+- `sale-update.usecase.spec.ts` - Sale update logic
+- `sale-delete.usecase.spec.ts` - Sale deletion logic
+- `sale-get.usecase.spec.ts` - Sale retrieval logic
 
 **Return Module** (1 test)
 - `return-create.usecase.spec.ts` - Return creation with business validation
 
 **Adjustment Module** (1 test)
 - `adjustment.create.usecase.spec.ts` - Inventory adjustment creation
+
+**Invoice Module** (2 tests)
+- `invoice-calculate.usecase.spec.ts` - Invoice calculation logic
+- `invoice-get.usecase.spec.ts` - Invoice retrieval logic
 
 **Test Pattern**: Each unit test:
 - Mocks service dependencies (BusinessService, domain services)
@@ -139,8 +155,36 @@ Comprehensive use case business logic testing:
 
 ### ✅ All Tests Passing!
 - **E2E Tests**: 14 suites, 45 tests passing
-- **Unit Tests**: 18 suites, 39 tests passing
-- **Total**: 32 test suites, 84 tests
+- **Unit Tests**: 32 suites, 68 tests passing
+- **Total**: 46 test suites, 113 tests
+
+### 📦 Modules with Complete Test Coverage
+All major application modules have comprehensive unit and E2E test coverage:
+- ✅ **Brand** - Full CRUD testing (create, update, delete)
+- ✅ **Tax** - Full CRUD testing (create, update, delete)
+- ✅ **Discount** - Full CRUD testing (create, update, delete)
+- ✅ **Customer** - Full CRUD testing (create, update, delete)
+- ✅ **Supplier** - Full CRUD testing (create, update, delete)
+- ✅ **Product** - Full CRUD + Category management (6 use cases)
+- ✅ **Order** - Full CRUD testing (create, update, delete)
+- ✅ **Sale** - Complete testing (create, update, delete, get)
+- ✅ **Return** - Create with validation
+- ✅ **Adjustment** - Inventory adjustment creation
+- ✅ **Invoice** - Calculate and retrieve invoices
+
+### 📝 Modules Without Unit Tests (No Application Layer)
+These modules don't have use cases to test:
+- **Users** - No application layer, only infrastructure
+- **Business** - No application layer, only infrastructure
+- **Audit** - No application layer, only infrastructure
+- **Payment** - No application layer, only infrastructure
+- **Inventory** - No application layer, only infrastructure
+
+### 🔐 Auth Module (Special Case)
+The Auth module has E2E tests but no unit tests as it primarily handles:
+- Webhook processing from Clerk
+- Organization management through Clerk API
+- These are better tested through integration/E2E tests
 
 ### ⚠️ Limitations
 
