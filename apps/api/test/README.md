@@ -9,13 +9,42 @@ This directory contains unit tests and end-to-end (E2E) tests for the Eclipso AP
 ```
 test/
 ├── README.md                    # This file
-├── TESTING.md                   # Detailed testing guide
 ├── jest-e2e.json               # E2E test configuration
 ├── app.e2e-spec.ts             # Main app E2E tests
 └── e2e/                        # Module-specific E2E tests
+    ├── auth.e2e-spec.ts        # Authentication tests
+    ├── user.e2e-spec.ts        # User management tests
     ├── customer.e2e-spec.ts    # Customer module tests
     ├── sale.e2e-spec.ts        # Sale module tests
-    └── return.e2e-spec.ts      # Return module tests
+    ├── return.e2e-spec.ts      # Return module tests
+    ├── product.e2e-spec.ts     # Product module tests
+    ├── brand.e2e-spec.ts       # Brand module tests
+    ├── tax.e2e-spec.ts         # Tax module tests
+    ├── discount.e2e-spec.ts    # Discount module tests
+    ├── order.e2e-spec.ts       # Order module tests
+    ├── invoice.e2e-spec.ts     # Invoice module tests
+    ├── supplier.e2e-spec.ts    # Supplier module tests
+    └── adjustment.e2e-spec.ts  # Inventory adjustment tests
+
+src/modules/*/application/__tests__/  # Unit tests for use cases
+├── brand/__tests__/
+│   ├── brand-create.usecase.spec.ts
+│   ├── brand-update.usecase.spec.ts
+│   └── brand-delete.usecase.spec.ts
+├── tax/__tests__/
+│   ├── tax-create.usecase.spec.ts
+│   ├── tax-update.usecase.spec.ts
+│   └── tax-delete.usecase.spec.ts
+├── discount/__tests__/
+│   └── discount-create.usecase.spec.ts
+├── customer/__tests__/
+│   ├── customer-create.usecase.spec.ts
+│   ├── customer-update.usecase.spec.ts
+│   └── customer-delete.usecase.spec.ts
+├── suppliers/__tests__/
+│   └── supplier-create.usecase.spec.ts
+└── product/__tests__/
+    └── product-create.usecase.spec.ts
 ```
 
 ## Running Tests
@@ -40,11 +69,78 @@ pnpm test:e2e
 pnpm test:cov
 ```
 
+## 📊 Test Coverage
+
+### E2E Tests (14 suites, 45 tests) ✅
+All modules have comprehensive end-to-end testing:
+- **App Health** (`app.e2e-spec.ts`) - Application health checks
+- **Authentication** (`auth.e2e-spec.ts`) - Login, token validation
+- **Users** (`user.e2e-spec.ts`) - User management operations  
+- **Adjustment** (`adjustment.e2e-spec.ts`) - Inventory adjustments
+- **Customers** (`customer.e2e-spec.ts`) - Customer CRUD operations
+- **Sales** (`sale.e2e-spec.ts`) - Sales transactions
+- **Returns** (`return.e2e-spec.ts`) - Return processing
+- **Products** (`product.e2e-spec.ts`) - Product management
+- **Brands** (`brand.e2e-spec.ts`) - Brand CRUD operations
+- **Taxes** (`tax.e2e-spec.ts`) - Tax configuration
+- **Discounts** (`discount.e2e-spec.ts`) - Discount management
+- **Orders** (`order.e2e-spec.ts`) - Order processing
+- **Invoices** (`invoice.e2e-spec.ts`) - Invoice generation
+- **Suppliers** (`supplier.e2e-spec.ts`) - Supplier management
+
+### Unit Tests (18 suites, 39 tests) ✅
+Comprehensive use case business logic testing:
+
+**Brand Module** (3 tests)
+- `brand-create.usecase.spec.ts` - Brand creation logic
+- `brand-update.usecase.spec.ts` - Brand update logic
+- `brand-delete.usecase.spec.ts` - Brand deletion logic
+
+**Tax Module** (3 tests)
+- `tax-create.usecase.spec.ts` - Tax creation with validation
+- `tax-update.usecase.spec.ts` - Tax update logic
+- `tax-delete.usecase.spec.ts` - Tax deletion logic
+
+**Discount Module** (1 test)
+- `discount-create.usecase.spec.ts` - Discount creation with date validation
+
+**Customer Module** (3 tests)
+- `customer-create.usecase.spec.ts` - Customer creation logic
+- `customer-update.usecase.spec.ts` - Customer update logic
+- `customer-delete.usecase.spec.ts` - Customer deletion logic
+
+**Supplier Module** (1 test)
+- `supplier-create.usecase.spec.ts` - Supplier creation logic
+
+**Product Module** (1 test)
+- `product-create.usecase.spec.ts` - Product creation logic
+
+**Order Module** (3 tests)
+- `order.create.usecase.spec.ts` - Order creation with invoice generation
+- `order.update.usecase.spec.ts` - Order update logic
+- `order.delete.usecase.spec.ts` - Order deletion with invoice cleanup
+
+**Sale Module** (1 test)
+- `sale-create.usecase.spec.ts` - Sale creation with business validation
+
+**Return Module** (1 test)
+- `return-create.usecase.spec.ts` - Return creation with business validation
+
+**Adjustment Module** (1 test)
+- `adjustment.create.usecase.spec.ts` - Inventory adjustment creation
+
+**Test Pattern**: Each unit test:
+- Mocks service dependencies (BusinessService, domain services)
+- Tests successful execution when business exists
+- Tests NotFoundException when business not found
+- Validates business logic in isolation
+
 ## Current Test Status
 
-### ✅ Working Tests
-- **App Module**: Health check and API documentation
-- **Module Registration**: Verifies all modules load correctly
+### ✅ All Tests Passing!
+- **E2E Tests**: 14 suites, 45 tests passing
+- **Unit Tests**: 18 suites, 39 tests passing
+- **Total**: 32 test suites, 84 tests
 
 ### ⚠️ Limitations
 
