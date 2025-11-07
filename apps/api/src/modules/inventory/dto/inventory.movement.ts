@@ -7,6 +7,8 @@ export class CreateInventoryMovementDto {
   productId: string;
   @ApiProperty({ description: 'The ID of the order', required: false })
   orderId?: string;
+  @ApiProperty({ description: 'The ID of the adjustment', required: false })
+  adjustmentId?: string;
   @ApiProperty({ description: 'The quantity of the product' })
   qty: number;
   @ApiProperty({ description: 'The type of inventory movement' })
@@ -19,4 +21,6 @@ export class UpdateInventoryMovementDto {
   qty?: number;
   @ApiProperty({ required: false })
   movementType?: InventoryMovementTypeEnum;
+  @ApiProperty({ required: false })
+  adjustmentId?: string;
 }

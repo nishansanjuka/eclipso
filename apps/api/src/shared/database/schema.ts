@@ -53,6 +53,7 @@ import {
   auditLogs,
   logTypeEnum,
 } from '../../modules/audit/infrastructure/schema/audit-log.schema';
+import { adjustments } from '../../modules/adjustment/infrastructure/schema/adjustment.schema';
 
 export const UsersTable = users;
 export const BusinessTable = businesses;
@@ -71,6 +72,7 @@ export const DiscountTable = discounts;
 export const OrderItemsTaxesTable = orderItemsTaxes;
 export const OrderItemsDiscountsTable = orderItemsDiscounts;
 export const AuditLogsTable = auditLogs;
+export const AdjustmentsTable = adjustments;
 
 // relations for tables
 export const UsersRelations = usersRelations;

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ProductRepository } from './product.repository';
 import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
+import { SQL } from 'drizzle-orm';
 
 @Injectable()
 export class ProductService {
@@ -31,5 +32,17 @@ export class ProductService {
 
   async getProductIdByIdAndOrgId(id: string, orgId: string) {
     return await this.productRepository.getProductIdByIdAndOrgId(id, orgId);
+  }
+
+  async updateProductStockBySql(
+    productId: string,
+    businessId: string,
+    stockQtyExpression: SQL,
+  ) {
+    return await this.productRepository.updateStockBySql(
+      productId,
+      businessId,
+      stockQtyExpression,
+    );
   }
 }

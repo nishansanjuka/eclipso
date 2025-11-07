@@ -19,9 +19,17 @@ export class InventoryCreateEntity extends BaseModel {
   @Z(z.string({ error: 'Invalid Order Id' }).min(1, 'Order Id is required'))
   public readonly orderId?: string;
 
+  @Z(
+    z
+      .string({ error: 'Invalid Adjustment Id' })
+      .min(1, 'Adjustment Id is required'),
+  )
+  public readonly adjustmentId?: string;
+
   constructor(params: CreateInventoryMovementDto) {
     super(params);
     this.orderId = params.orderId;
+    this.adjustmentId = params.adjustmentId;
     this.productId = params.productId;
     this.qty = params.qty;
   }

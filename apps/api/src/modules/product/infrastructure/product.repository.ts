@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { type DrizzleClient } from '../../../shared/database/drizzle.module';
 import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
 import { products } from './schema/product.schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, SQL } from 'drizzle-orm';
 import { businesses } from '../../business/infrastructure/schema/business.schema';
 
 @Injectable()
@@ -41,5 +41,24 @@ export class ProductRepository {
       .where(and(eq(products.id, id), eq(businesses.orgId, orgId)));
 
     return res;
+  }
+
+  async updateStockBySql(
+    productId: string,
+    businessId: string,
+    stockQtyExpression: SQL,
+  ) {
+    const [result] = await this.db
+      .update(products)
+      .set({
+        stockQty: stockQtyExpression,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(eq(products.id, productId), eq(products.businessId, businessId)),
+      )
+      .returning();
+
+    return result;
   }
 }

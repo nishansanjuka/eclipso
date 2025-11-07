@@ -20,4 +20,13 @@ export class UserRepository {
       .returning();
     return result;
   }
+
+  async getUserByClerkId(clerkId: string) {
+    const [result] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.clerkId, clerkId));
+
+    return result;
+  }
 }
