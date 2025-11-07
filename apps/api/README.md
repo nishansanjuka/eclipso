@@ -68,13 +68,19 @@ src/
 │   │   ├── enums/        # Domain enums
 │   │   ├── infrastructure/ # External services (Clerk)
 │   │   └── presentation/  # Controllers & routes
+│   ├── adjustment/       # Inventory adjustments & stock corrections
+│   ├── audit/            # Audit logging & tracking
 │   ├── brand/            # Brand management
 │   ├── business/         # Business/Organization management
+│   ├── customer/         # Customer management & CRM
 │   ├── discount/         # Discount & promotion management
 │   ├── inventory/        # Inventory tracking & management
 │   ├── invoice/          # Invoice generation & management
-│   ├── order/            # Order processing & management
+│   ├── order/            # Purchase order processing & management
+│   ├── payment/          # Payment processing & tracking
 │   ├── product/          # Product catalog management
+│   ├── return/           # Product returns & refunds
+│   ├── sale/             # Sales transactions & POS
 │   ├── suppliers/        # Supplier management
 │   ├── tax/              # Tax configuration & calculation
 │   └── users/            # User management
@@ -121,16 +127,31 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 The API provides the following feature modules:
 
+#### Core Modules
 - **Authentication & Authorization** - User authentication, organization management, and access control
 - **Users** - User profile and account management
 - **Business** - Multi-tenant business/organization management
+- **Audit** - Audit logging and activity tracking
+
+#### Product & Inventory Management
 - **Brands** - Brand catalog and management
 - **Products** - Product catalog, variants, and pricing
+- **Inventory** - Real-time stock tracking with movement history
+- **Adjustment** - Stock adjustments and corrections
+
+#### Supplier & Procurement
 - **Suppliers** - Supplier information and relationship management
-- **Inventory** - Stock tracking, levels, and warehouse management
+- **Orders** - Purchase order creation, processing, and fulfillment
+
+#### Sales & Customer Management
+- **Customer** - Customer information and relationship management
+- **Sale** - Point-of-sale transactions with automatic inventory deduction
+- **Payment** - Payment processing and tracking for sales
+- **Return** - Product returns with automatic inventory restoration and refunds
+
+#### Financial Management
 - **Taxes** - Tax configuration, rates, and calculations
 - **Discounts** - Promotional discounts and pricing rules
-- **Orders** - Order creation, processing, and fulfillment
 - **Invoices** - Invoice generation, PDF export, and history
 
 #### Organization Management
@@ -219,6 +240,254 @@ Svix-Signature: signature
 - `organization.deleted` - Delete business and related data
 - `organizationMembership.deleted` - Remove user from business
 
+#### Customer Management
+
+##### Create Customer
+```http
+POST /customers/create
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "name": "John Doe",
+  "phone": "+1234567890",
+  "email": "john@example.com"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "businessId": "uuid",
+  "name": "John Doe",
+  "phone": "+1234567890",
+  "email": "john@example.com",
+  "createdAt": "2025-11-08T10:00:00Z",
+  "updatedAt": "2025-11-08T10:00:00Z"
+}
+```
+
+##### Get Customer
+```http
+GET /customers/:id
+Authorization: Bearer YOUR_TOKEN
+```
+
+##### Update Customer
+```http
+PATCH /customers/:id
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "name": "John Smith",
+  "email": "johnsmith@example.com"
+}
+```
+
+##### Delete Customer
+```http
+DELETE /customers/:id
+Authorization: Bearer YOUR_TOKEN
+```
+
+#### Sales Management
+
+##### Create Sale
+Creates a complete sale transaction with automatic inventory deduction and payment processing.
+
+```http
+POST /sales/create
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "customerId": "uuid",
+  "items": [
+    {
+      "productId": "uuid",
+      "qty": 2,
+      "price": "29.99",
+      "discountId": "uuid",
+      "taxId": "uuid"
+    }
+  ],
+  "payment": {
+    "method": "CASH",
+    "amount": "65.98",
+    "transactionRef": "TXN-2025-001"
+  }
+}
+```
+
+**Process Flow:**
+1. Validates customer and products belong to business
+2. Creates sale record with calculated totals
+3. Creates sale items for each product
+4. Creates inventory movements (negative qty for stock deduction)
+5. Updates product stock levels atomically
+6. Creates payment record
+7. All operations in a single database transaction
+
+**Response:**
+```json
+{
+  "sale": {
+    "id": "uuid",
+    "businessId": "uuid",
+    "customerId": "uuid",
+    "userId": "uuid",
+    "totalAmount": "65.98",
+    "createdAt": "2025-11-08T10:00:00Z"
+  },
+  "items": [...],
+  "inventoryMovements": [...],
+  "payment": {...}
+}
+```
+
+##### Get Sale
+```http
+GET /sales/:id
+Authorization: Bearer YOUR_TOKEN
+```
+
+**Response includes:**
+- Sale details
+- Sale items with product information
+- Payment information
+- Customer details
+
+##### Update Sale
+```http
+PATCH /sales/:id
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "customerId": "uuid"
+}
+```
+
+##### Delete Sale
+```http
+DELETE /sales/:id
+Authorization: Bearer YOUR_TOKEN
+```
+
+**Note:** Deleting a sale cascades to delete sale items and payment records.
+
+#### Payment Management
+
+Payments are automatically created with sales but can be queried separately.
+
+##### Payment Methods
+- `CASH` - Cash payment
+- `CARD` - Card payment (credit/debit)
+- `BANK_TRANSFER` - Bank transfer
+- `MOBILE_MONEY` - Mobile money payment
+- `OTHER` - Other payment methods
+
+##### Payment Status
+- `PENDING` - Payment initiated
+- `COMPLETED` - Payment successful
+- `FAILED` - Payment failed
+- `REFUNDED` - Payment refunded
+
+#### Returns & Refunds Management
+
+##### Create Return
+Creates a product return with automatic inventory restoration and optional refund.
+
+```http
+POST /returns/create
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "saleId": "uuid",
+  "qty": 1,
+  "reason": "DEFECTIVE",
+  "status": "PENDING",
+  "notes": "Product stopped working",
+  "items": [
+    {
+      "saleItemId": "uuid",
+      "qtyReturned": 1
+    }
+  ],
+  "refund": {
+    "method": "CASH",
+    "amount": "29.99",
+    "reason": "Defective product",
+    "transactionRef": "REFUND-2025-001"
+  }
+}
+```
+
+**Process Flow:**
+1. Validates sale exists and belongs to business
+2. Validates return items exist in original sale
+3. Validates return quantities don't exceed purchased quantities
+4. Creates return record
+5. Creates return items
+6. Creates inventory movements (positive qty for stock restoration)
+7. Updates product stock levels (increments stock)
+8. Creates refund record (optional)
+9. All operations in a single database transaction
+
+**Response:**
+```json
+{
+  "return": {
+    "id": "uuid",
+    "saleId": "uuid",
+    "userId": "uuid",
+    "qty": 1,
+    "reason": "DEFECTIVE",
+    "status": "PENDING",
+    "notes": "Product stopped working",
+    "createdAt": "2025-11-08T10:00:00Z"
+  },
+  "items": [...],
+  "inventoryMovements": [...],
+  "refund": {...}
+}
+```
+
+##### Return Reasons
+- `DEFECTIVE` - Product is defective
+- `WRONG_ITEM` - Wrong item delivered
+- `NOT_AS_DESCRIBED` - Product not as described
+- `CHANGED_MIND` - Customer changed mind
+- `DAMAGED` - Product arrived damaged
+- `OTHER` - Other reason
+
+##### Return Status
+- `PENDING` - Return initiated, awaiting processing
+- `APPROVED` - Return approved
+- `REJECTED` - Return rejected
+- `COMPLETED` - Return completed
+
+##### Refund Methods
+- `CASH` - Cash refund
+- `CARD` - Card refund
+- `BANK_TRANSFER` - Bank transfer
+- `STORE_CREDIT` - Store credit
+
+##### Get Return
+```http
+GET /returns/:id
+Authorization: Bearer YOUR_TOKEN
+```
+
+**Response includes:**
+- Return details
+- Return items with sale item references
+- Refund information (if applicable)
+- Inventory movement records
+
 ## 🗄️ Database Schema
 
 ### Users Table
@@ -254,9 +523,135 @@ CREATE TABLE business_users (
 );
 ```
 
+### Customers Table
+```sql
+CREATE TABLE customers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  phone TEXT,
+  email TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Sales Table
+```sql
+CREATE TABLE sales (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+  user_id UUID NOT NULL REFERENCES users(id),
+  total_amount NUMERIC(10, 2) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Sale Items Table
+```sql
+CREATE TABLE sale_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL REFERENCES products(id),
+  qty INTEGER NOT NULL,
+  price NUMERIC(10, 2) NOT NULL,
+  discount_id UUID REFERENCES discounts(id),
+  tax_id UUID REFERENCES taxes(id),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Payments Table
+```sql
+CREATE TABLE payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sale_id UUID NOT NULL UNIQUE REFERENCES sales(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id),
+  method payment_method_enum NOT NULL,
+  amount NUMERIC(10, 2) NOT NULL,
+  status payment_status_enum NOT NULL DEFAULT 'COMPLETED',
+  transaction_ref TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Returns Table
+```sql
+CREATE TABLE returns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sale_id UUID NOT NULL REFERENCES sales(id),
+  user_id UUID NOT NULL REFERENCES users(id),
+  qty INTEGER NOT NULL,
+  reason return_reason_enum NOT NULL,
+  status return_status_enum NOT NULL DEFAULT 'PENDING',
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Return Items Table
+```sql
+CREATE TABLE return_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  return_id UUID NOT NULL REFERENCES returns(id) ON DELETE CASCADE,
+  sale_item_id UUID NOT NULL REFERENCES sale_items(id),
+  qty_returned INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Refunds Table
+```sql
+CREATE TABLE refunds (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  return_id UUID NOT NULL UNIQUE REFERENCES returns(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id),
+  method refund_method_enum NOT NULL,
+  amount NUMERIC(10, 2) NOT NULL,
+  reason TEXT,
+  transaction_ref TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Inventory Movements Table
+```sql
+CREATE TABLE inventory_movements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES products(id),
+  order_id UUID REFERENCES orders(id),
+  sale_id UUID REFERENCES sales(id),
+  adjustment_id UUID REFERENCES adjustments(id),
+  qty INTEGER NOT NULL,
+  movement_type inventory_movement_type_enum NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
 ### Enums
 ```sql
+-- Business type
 CREATE TYPE business_type_enum AS ENUM ('retail', 'hospitality', 'service', 'other');
+
+-- Payment related
+CREATE TYPE payment_method_enum AS ENUM ('CASH', 'CARD', 'BANK_TRANSFER', 'MOBILE_MONEY', 'OTHER');
+CREATE TYPE payment_status_enum AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED');
+
+-- Return related
+CREATE TYPE return_reason_enum AS ENUM ('DEFECTIVE', 'WRONG_ITEM', 'NOT_AS_DESCRIBED', 'CHANGED_MIND', 'DAMAGED', 'OTHER');
+CREATE TYPE return_status_enum AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED');
+CREATE TYPE refund_method_enum AS ENUM ('CASH', 'CARD', 'BANK_TRANSFER', 'STORE_CREDIT');
+
+-- Inventory related
+CREATE TYPE inventory_movement_type_enum AS ENUM ('PURCHASE', 'SALE', 'RETURN', 'ADJUSTMENT');
 ```
 
 ### Database Commands
@@ -668,17 +1063,21 @@ pnpm start:debug
       isGlobal: true,
       validate: configValidationSchema,
     }),
-    AuthModule,
-    UsersModule,
-    BusinessModule,
-    BrandModule,
-    ProductModule,
-    SuppliersModule,
-    InventoryModule,
     TaxModule,
+    UsersModule,
+    AuthModule,
+    BusinessModule,
+    SuppliersModule,
+    ProductModule,
     DiscountModule,
     OrderModule,
+    BrandModule,
     InvoiceModule,
+    AuditModule,
+    AdjustmentModule,
+    CustomerModule,
+    SaleModule,
+    ReturnModule,
   ],
 })
 export class AppModule {}
