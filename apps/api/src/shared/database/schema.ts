@@ -54,6 +54,7 @@ import {
   logTypeEnum,
 } from '../../modules/audit/infrastructure/schema/audit-log.schema';
 import { adjustments } from '../../modules/adjustment/infrastructure/schema/adjustment.schema';
+import { customers } from '../../modules/customer/infrastructure/schema/customer.schema';
 
 export const UsersTable = users;
 export const BusinessTable = businesses;
@@ -73,6 +74,7 @@ export const OrderItemsTaxesTable = orderItemsTaxes;
 export const OrderItemsDiscountsTable = orderItemsDiscounts;
 export const AuditLogsTable = auditLogs;
 export const AdjustmentsTable = adjustments;
+export const CustomersTable = customers;
 
 // relations for tables
 export const UsersRelations = usersRelations;
