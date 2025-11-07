@@ -1,20 +1,16 @@
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 import { businesses } from '../../../business/infrastructure/schema/business.schema';
-import { users } from '../../../users/infrastructure/schema/user.schema';
 
-export const adjustments = pgTable('adjustments', {
-  id: uuid('id').defaultRandom().primaryKey(),
+export const customers = pgTable('customers', {
+  id: uuid('id').defaultRandom().unique().notNull(),
   businessId: uuid('business_id')
-    .notNull()
     .references(() => businesses.id, {
       onDelete: 'cascade',
-    }),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.clerkId, {
-      onDelete: 'cascade',
-    }),
-  reason: text('reason').notNull(),
+    })
+    .notNull(),
+  name: text('name').notNull(),
+  phone: text('phone').notNull(),
+  email: text('email').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

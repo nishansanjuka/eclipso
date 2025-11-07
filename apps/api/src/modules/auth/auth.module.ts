@@ -22,6 +22,7 @@ import { BusinessRepository } from '../business/infrastructure/business.reposito
 import { SupplierController } from '../suppliers/presentation/supplier.controller';
 import { TaxController } from '../tax/presentation/tax.controller';
 import { InvoicesController } from '../invoice/presentation/invoice.controller';
+import { SaleController } from '../sale/presentation/sale.controller';
 
 @Module({
   imports: [DatabaseModule],
@@ -45,6 +46,7 @@ export class AuthModule implements NestModule {
     consumer.apply(AuthMiddleware).forRoutes(SupplierController);
     consumer.apply(AuthMiddleware).forRoutes(TaxController);
     consumer.apply(AuthMiddleware).forRoutes(InvoicesController);
+    consumer.apply(AuthMiddleware).forRoutes(SaleController);
 
     consumer.apply(AuthMiddleware).forRoutes({
       path: '/',

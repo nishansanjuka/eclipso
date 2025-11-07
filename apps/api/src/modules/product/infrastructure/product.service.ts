@@ -45,4 +45,12 @@ export class ProductService {
       stockQtyExpression,
     );
   }
+
+  async getProductById(id: string, businessId: string) {
+    return await this.productRepository.getProductById(id, businessId);
+  }
+
+  async getProductsByIds(ids: string[], businessId: string) {
+    return await this.productRepository.getProductsByIds(ids, businessId);
+  }
 }

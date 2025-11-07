@@ -15,6 +15,13 @@ export class InventoryMovementsRepository {
     return await this.db.insert(inventoryMovements).values(inventoryData);
   }
 
+  async createBulk(inventoryData: CreateInventoryMovementDto[]) {
+    return await this.db
+      .insert(inventoryMovements)
+      .values(inventoryData)
+      .returning();
+  }
+
   async update(id: string, inventoryData: UpdateInventoryMovementDto) {
     return await this.db
       .update(inventoryMovements)

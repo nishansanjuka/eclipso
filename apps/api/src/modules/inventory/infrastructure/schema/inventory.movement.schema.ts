@@ -6,6 +6,7 @@ import { pgEnum } from 'drizzle-orm/pg-core';
 import { InventoryMovementTypeEnum } from '../enums/inventory.movement.enum';
 import { orders } from '../../../order/infrastructure/schema/order.schema';
 import { adjustments } from '../../../adjustment/infrastructure/schema/adjustment.schema';
+import { sales } from '../../../sale/infrastructure/schema/sale.schema';
 
 export const movementEnum = pgEnum(
   'movement_type_enum',
@@ -13,7 +14,7 @@ export const movementEnum = pgEnum(
 );
 
 export const inventoryMovements = pgTable('inventory_movements', {
-  id: uuid('id').defaultRandom().unique().notNull(),
+  id: uuid('id').defaultRandom().primaryKey(),
   productId: uuid('product_id')
     .notNull()
     .references(() => products.id, {
@@ -24,6 +25,9 @@ export const inventoryMovements = pgTable('inventory_movements', {
     .notNull()
     .default(InventoryMovementTypeEnum.ADJUSTMENT),
   orderId: uuid('order_id').references(() => orders.id, {
+    onDelete: 'set null',
+  }),
+  saleId: uuid('sale_id').references(() => sales.id, {
     onDelete: 'set null',
   }),
   adjustmentId: uuid('adjustment_id').references(() => adjustments.id, {
