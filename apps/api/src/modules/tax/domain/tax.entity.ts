@@ -1,8 +1,8 @@
 import z from 'zod';
-import { BaseModel } from '../../../shared/zod/base.model.js';
-import { Z } from '../../../shared/decorators/zod.validation.js';
-import { CreateTaxDto, UpdateTaxDto } from '../dto/tax.dto.js';
-import { TaxType } from '../enums/tax.types.enum.js';
+import { BaseModel } from '../../../shared/zod/base.model';
+import { Z } from '../../../shared/decorators/zod.validation';
+import { CreateTaxDto, UpdateTaxDto } from '../dto/tax.dto';
+import { TaxType } from '../enums/tax.types.enum';
 
 export class TaxCreateEntity extends BaseModel {
   @Z(z.string().optional())
