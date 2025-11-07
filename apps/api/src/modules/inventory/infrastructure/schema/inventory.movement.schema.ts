@@ -13,7 +13,7 @@ export const movementEnum = pgEnum(
 );
 
 export const inventoryMovements = pgTable('inventory_movements', {
-  id: uuid('id').defaultRandom().unique().notNull(),
+  id: uuid('id').defaultRandom().notNull().primaryKey(),
   productId: uuid('product_id')
     .notNull()
     .references(() => products.id, {
