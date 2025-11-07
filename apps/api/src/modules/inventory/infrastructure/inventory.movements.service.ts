@@ -15,6 +15,10 @@ export class InventoryMovementService {
     return await this.inventoryMovementRepository.create(inventoryData);
   }
 
+  async createBulk(inventoryData: CreateInventoryMovementDto[]) {
+    return await this.inventoryMovementRepository.createBulk(inventoryData);
+  }
+
   async update(id: string, inventoryData: UpdateInventoryMovementDto) {
     return await this.inventoryMovementRepository.update(id, inventoryData);
   }

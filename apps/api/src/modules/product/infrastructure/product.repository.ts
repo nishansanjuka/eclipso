@@ -61,4 +61,21 @@ export class ProductRepository {
 
     return result;
   }
+
+  async getProductById(id: string, businessId: string) {
+    const [result] = await this.db
+      .select()
+      .from(products)
+      .where(and(eq(products.id, id), eq(products.businessId, businessId)))
+      .limit(1);
+
+    return result;
+  }
+
+  async getProductsByIds(ids: string[], businessId: string) {
+    return await this.db
+      .select()
+      .from(products)
+      .where(and(eq(products.businessId, businessId)));
+  }
 }

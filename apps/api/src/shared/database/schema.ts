@@ -55,6 +55,13 @@ import {
 } from '../../modules/audit/infrastructure/schema/audit-log.schema';
 import { adjustments } from '../../modules/adjustment/infrastructure/schema/adjustment.schema';
 import { customers } from '../../modules/customer/infrastructure/schema/customer.schema';
+import {
+  paymentMethodEnum,
+  payments,
+  paymentStatusEnum,
+} from '../../modules/payment/infrastructure/schema/payment.schema';
+import { sales } from '../../modules/sale/infrastructure/schema/sale.schema';
+import { saleItems } from '../../modules/sale/infrastructure/schema/sale-item.schema';
 
 export const UsersTable = users;
 export const BusinessTable = businesses;
@@ -75,6 +82,9 @@ export const OrderItemsDiscountsTable = orderItemsDiscounts;
 export const AuditLogsTable = auditLogs;
 export const AdjustmentsTable = adjustments;
 export const CustomersTable = customers;
+export const SalesTable = sales;
+export const SaleItemsTable = saleItems;
+export const PaymentsTable = payments;
 
 // relations for tables
 export const UsersRelations = usersRelations;
@@ -97,3 +107,5 @@ export const DiscountTypeEnum = discountTypeEnum;
 export const TaxTypeEnum = taxTypeEnum;
 export const ActionTypeEnum = actionTypeEnum;
 export const LogTypeEnum = logTypeEnum;
+export const PaymentMethodEnum = paymentMethodEnum;
+export const PaymentStatusEnum = paymentStatusEnum;
