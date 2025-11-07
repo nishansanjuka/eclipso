@@ -18,6 +18,7 @@ import { AuditInterceptor } from './shared/interceptors/audit.interceptor';
 import { AdjustmentModule } from './modules/adjustment/adjustment.module';
 import { SaleModule } from './modules/sale/sale.module';
 import { ReturnModule } from './modules/return/return.module';
+import { CustomerModule } from './modules/customer/customer.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ReturnModule } from './modules/return/return.module';
     InvoiceModule,
     AuditModule,
     AdjustmentModule,
+    CustomerModule,
     SaleModule,
     ReturnModule,
   ],
