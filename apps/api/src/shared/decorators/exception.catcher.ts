@@ -20,7 +20,11 @@ export function CatchEntityErrors(): MethodDecorator {
       } catch (err: any) {
         if (err instanceof DrizzleQueryError) {
           logDebug('DrizzleQueryError:', err);
-          throw new BadRequestException(`${err.cause}`);
+          // Preserve original error in metadata for audit logging
+          const transformedError = new BadRequestException(`${err.cause}`);
+          (transformedError as any).originalError = err;
+          (transformedError as any).errorType = 'DrizzleQueryError';
+          throw transformedError;
         }
         if (err instanceof Error) {
           logDebug('Error:', err);
@@ -28,7 +32,10 @@ export function CatchEntityErrors(): MethodDecorator {
           if ('status' in err && err.status === 404) {
             throw new NotFoundException(err.message);
           } else {
-            throw new BadRequestException(err.message);
+            // Preserve original error in metadata
+            const transformedError = new BadRequestException(err.message);
+            (transformedError as any).originalError = err;
+            throw transformedError;
           }
         }
         throw err;
