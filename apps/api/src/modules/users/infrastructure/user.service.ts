@@ -13,4 +13,8 @@ export class UserService {
   async deleteUser(clerkId: string) {
     return await this.userRepository.deleteUserByClerkId(clerkId);
   }
+
+  async getUserByClerkId(clerkId: string) {
+    return await this.userRepository.getUserByClerkId(clerkId);
+  }
 }
