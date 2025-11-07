@@ -24,8 +24,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Get pnpm store directory
         shell: bash
@@ -43,12 +41,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run lint (API)
-        run: cd apps/api && pnpm lint
-
-      - name: Run lint (Web)
-        run: cd apps/web && pnpm lint
-        continue-on-error: true
+      - name: Run lint (Turbo)
+        run: pnpm lint
 
   build:
     name: Build Application
@@ -66,8 +60,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Get pnpm store directory
         shell: bash
@@ -85,12 +77,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build API
-        run: cd apps/api && pnpm build
-
-      - name: Build Web
-        run: cd apps/web && pnpm build
-        continue-on-error: true
+      - name: Build (Turbo)
+        run: pnpm build
 
   unit-tests:
     name: Unit Tests
@@ -108,8 +96,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Get pnpm store directory
         shell: bash
@@ -127,8 +113,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run unit tests
-        run: cd apps/api && pnpm test
+      - name: Run unit tests (API)
+        run: pnpm --filter api test
 
       - name: Upload test results
         if: always()
@@ -177,8 +163,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Get pnpm store directory
         shell: bash
@@ -197,12 +181,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run database migrations
-        run: cd apps/api && pnpm db:migrate
+        run: pnpm --filter api db:migrate
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/eclipso_test
 
-      - name: Run E2E tests
-        run: cd apps/api && pnpm test:e2e
+      - name: Run E2E tests (API)
+        run: pnpm --filter api test:e2e
 
       - name: Upload test results
         if: always()

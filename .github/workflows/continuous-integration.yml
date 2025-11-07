@@ -46,8 +46,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Get pnpm store directory
         shell: bash
@@ -65,20 +63,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint API
-        run: cd apps/api && pnpm lint
+      - name: Lint (Turbo)
+        run: pnpm lint
 
-      - name: Build API
-        run: cd apps/api && pnpm build
+      - name: Build (Turbo)
+        run: pnpm build
 
       - name: Run database migrations
-        run: cd apps/api && pnpm db:migrate
+        run: pnpm --filter api db:migrate
 
       - name: Run unit tests with coverage
-        run: cd apps/api && pnpm test:cov
+        run: pnpm --filter api test:cov
 
       - name: Run E2E tests
-        run: cd apps/api && pnpm test:e2e
+        run: pnpm --filter api test:e2e
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
