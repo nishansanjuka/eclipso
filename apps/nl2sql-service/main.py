@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from src.routes.ask_router import router as ask_router
-from src.routes.query_router import router as query_router
-
 
 app = FastAPI(
     title="NL2SQL Service",
@@ -11,7 +9,6 @@ app = FastAPI(
 
 # Include routers
 app.include_router(ask_router)
-app.include_router(query_router)
 
 
 @app.get("/")
@@ -22,8 +19,6 @@ async def root():
         "endpoints": {
             "ask": "/ask",
             "ask_health": "/ask/health",
-            "query": "/query",
-            "query_health": "/query/health",
             "docs": "/docs",
         },
     }

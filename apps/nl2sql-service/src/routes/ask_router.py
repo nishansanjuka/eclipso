@@ -1,7 +1,8 @@
 from dotenv import load_dotenv
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from ..modules.ask.ask_service import AskService
+from src.shared.middleware.auth import get_current_user
 from typing import List, Dict, Any
 import os
 
@@ -41,7 +42,7 @@ class AskResponse(BaseModel):
                 "sql_query": "SELECT product_name, SUM(quantity) as total_sold FROM sales GROUP BY product_name ORDER BY total_sold DESC LIMIT 5;",
                 "results": [
                     {"product_name": "Product A", "total_sold": 150},
-                    {"product_name": "Product B", "total_sold": 120}
+                    {"product_name": "Product B", "total_sold": 120},
                 ],
                 "answer": "The top 5 selling products are: Product A with 150 units sold, Product B with 120 units sold...",
                 "success": True,
@@ -51,17 +52,21 @@ class AskResponse(BaseModel):
 
 
 @router.post("/", response_model=AskResponse)
-async def ask_question(request: AskRequest):
+async def ask_question(request: AskRequest, user: dict = Depends(get_current_user)):
     """
     Convert natural language question to SQL query, execute it, and return human-readable answer.
 
+    Requires authentication via Clerk token.
+
     Args:
         request: AskRequest containing the natural language question
+        user: Authenticated user information from Clerk token
 
     Returns:
         AskResponse with SQL query, results, and human-readable answer
     """
     try:
+
         result = ask_service.ask(request.question)
 
         return AskResponse(
