@@ -39,6 +39,12 @@
     },
     "setup": {
       "cache": false
+    },
+    "freeze": {
+      "cache": false
+    },
+    "venv-install": {
+      "cache": false
     }
   }
 }

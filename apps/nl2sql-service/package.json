@@ -2,7 +2,9 @@
   "name": "nl2sql-service",
   "version": "1.0.0",
   "scripts": {
-    "setup": "python venv_init.py",
-    "dev": "python venv_init.py && .venv/Scripts/uvicorn.exe main:app --reload"
+    "setup": "python scripts/venv_init.py",
+    "dev": "python scripts/venv_dev.py",
+    "venv-install": "python scripts/venv_install.py --",
+    "freeze": "python scripts/venv_freeze.py"
   }
 }

@@ -1,8 +1,10 @@
 {
-  "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
-  ],
-  "typescript.preferences.importModuleSpecifier": "relative"
+    "eslint.workingDirectories": [
+        {
+            "mode": "auto"
+        }
+    ],
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "python.defaultInterpreterPath": "C:\\vs_code_repos\\eclipso\\apps\\nl2sql-service\\.venv\\Scripts\\python.exe",
+    "python.terminal.activateEnvironment": true
 }
