@@ -10,7 +10,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "generate:ts": "openapi-generator-cli generate -i http://localhost:3000/api-json -g typescript-fetch -o packages/api-client-ts --global-property=models --additional-properties=api=false && node ./scripts/clean-runtime-import.mjs"
+    "generate:ts": "openapi-generator-cli generate -i http://localhost:3000/api-json -g typescript-fetch -o packages/api-client-ts --global-property=models --additional-properties=api=false && node ./scripts/clean-runtime-import.mjs",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.25.0",
