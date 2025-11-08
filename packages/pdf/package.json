@@ -40,6 +40,7 @@
     "@types/pdfkit": "^0.17.3",
     "bunchee": "^6.4.0",
     "eslint": "^9.39.1",
+    "jest": "^30.2.0",
     "typescript": "^5.9.3"
   }
 }
