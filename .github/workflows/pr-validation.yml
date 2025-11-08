@@ -147,9 +147,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create database
+      - name: Create database if not exists
         run: |
-          psql -h localhost -U postgres -c "SELECT 'CREATE DATABASE eclipso_test' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'eclipso_test')\gexec"
+          psql -h localhost -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'eclipso_test'" | grep -q 1 || psql -h localhost -U postgres -c "CREATE DATABASE eclipso_test"
         env:
           PGPASSWORD: postgres
 
