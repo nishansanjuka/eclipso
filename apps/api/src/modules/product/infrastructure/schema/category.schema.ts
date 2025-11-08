@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { text, timestamp } from 'drizzle-orm/pg-core';
 import { pgTable, uuid } from 'drizzle-orm/pg-core';
 import { businesses } from '../../../business/infrastructure/schema/business.schema';

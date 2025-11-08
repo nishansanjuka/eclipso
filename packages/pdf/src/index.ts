@@ -23,7 +23,7 @@ function formatCurrency(
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount / 100);
-  } catch (error) {
+  } catch {
     // Fallback if currency/locale is invalid
     console.warn(`Invalid currency/locale: ${currency}/${locale}, using USD`);
     return new Intl.NumberFormat("en-US", {
