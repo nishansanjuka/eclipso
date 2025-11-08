@@ -77,8 +77,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages and apps
-        run: pnpm build
+      - name: Build all packages and apps using Turbo cache
+        run: pnpm turbo run build --cache-dir .turbo
 
       - name: Run unit tests (API)
         run: pnpm --filter api... test
@@ -149,7 +149,7 @@ jobs:
 
       - name: Create database
         run: |
-          psql -h localhost -U postgres -c "CREATE DATABASE eclipso_test;"
+          psql -h localhost -U postgres -c "SELECT 'CREATE DATABASE eclipso_test' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'eclipso_test')\gexec"
         env:
           PGPASSWORD: postgres
 
