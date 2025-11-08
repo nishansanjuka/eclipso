@@ -144,6 +144,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Create database
+        run: |
+          psql -h localhost -U postgres -c "CREATE DATABASE eclipso_test;"
+        env:
+          PGPASSWORD: postgres
+
       - name: Run database migrations
         run: pnpm --filter api db:migrate
         env:

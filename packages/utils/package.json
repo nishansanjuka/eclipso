@@ -25,8 +25,7 @@
     "build": "bunchee",
     "dev": "bunchee --watch",
     "lint": "eslint src/",
-    "check-types": "tsc --noEmit",
-    "test": "jest"
+    "check-types": "tsc --noEmit"
   },
   "devDependencies": {
     "@eclipso/typescript-config": "workspace:^",

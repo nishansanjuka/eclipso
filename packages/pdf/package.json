@@ -26,8 +26,7 @@
     "copy-fonts": "node -e \"const fs = require('fs'); fs.cpSync('src/fonts', 'dist/es/fonts', {recursive: true}); fs.cpSync('src/fonts', 'dist/cjs/fonts', {recursive: true});\"",
     "dev": "bunchee --watch",
     "lint": "eslint src/",
-    "check-types": "tsc --noEmit",
-    "test": "jest"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "path": "^0.12.7",
