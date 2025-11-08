@@ -36,6 +36,9 @@
     },
     "check-types": {
       "dependsOn": ["^check-types"]
+    },
+    "setup": {
+      "cache": false
     }
   }
 }
