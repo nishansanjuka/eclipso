@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build (Turbo)
+      - name: Build all packages and apps
         run: pnpm build
 
   unit-tests:
