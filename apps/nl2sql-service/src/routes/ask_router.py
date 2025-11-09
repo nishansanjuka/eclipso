@@ -31,6 +31,7 @@ ask_service = AskService(
 class AskRequest(BaseModel):
     question: str
 
+    # Example for OpenAPI docs
     class Config:
         json_schema_extra = {
             "example": {
@@ -47,6 +48,7 @@ class AskResponse(BaseModel):
     success: bool
     error: str | None = None
 
+    # Example for OpenAPI docs
     class Config:
         json_schema_extra = {
             "example": {
@@ -67,22 +69,15 @@ class AskResponse(BaseModel):
 async def ask_question(
     request: AskRequest, user: dict = Depends(require_org_role(ALLOWED_ROLES))
 ):
-    """
-    Convert natural language question to SQL query, execute it, and return human-readable answer.
-
-    Requires authentication via Clerk token.
-    Access restricted to: admin roles only.
-
-    SECURITY: Automatically filters all queries to return ONLY data belonging to the
-    authenticated user's organization. Users cannot access data from other organizations.
-
-    Args:
-        request: AskRequest containing the natural language question
-        user: Authenticated user information from Clerk token (contains user_id and org_id)
-
-    Returns:
-        AskResponse with SQL query, results, and human-readable answer
-    """
+    # Convert natural language question to SQL query, execute it, and return human-readable answer.
+    # Requires authentication via Clerk token. Access restricted to: admin roles only.
+    # SECURITY: Automatically filters all queries to return ONLY data belonging to the
+    # authenticated user's organization. Users cannot access data from other organizations.
+    # Args:
+    #   request: AskRequest containing the natural language question
+    #   user: Authenticated user information from Clerk token (contains user_id and org_id)
+    # Returns:
+    #   AskResponse with SQL query, results, and human-readable answer
     try:
         # Pass user context for automatic security filtering
         result = ask_service.ask(
@@ -118,9 +113,7 @@ async def ask_question(
 
 @router.get("/health")
 async def health_check():
-    """
-    Health check endpoint for the ask service.
-    """
+    # Health check endpoint for the ask service.
     return {"status": "healthy", "service": "ask", "model": MODEL_NAME}
 
 
@@ -128,30 +121,22 @@ async def health_check():
 async def ask_question_stream(
     request: AskRequest, user: dict = Depends(require_org_role(ALLOWED_ROLES))
 ):
-    """
-    Convert natural language question to SQL query with streaming status updates.
-
-    This endpoint returns Server-Sent Events (SSE) with real-time progress:
-    1. retrieving_context - Finding relevant database tables
-    2. generating_query - Converting question to SQL
-    3. executing_query - Fetching data from database
-    4. generating_answer - Analyzing and formatting results (progressive answer streaming)
-    5. completed - Final result with complete answer and data
-    6. error - If any error occurs
-
-    Requires authentication via Clerk token.
-    Access restricted to: admin roles only.
-
-    SECURITY: Automatically filters all queries to return ONLY data belonging to the
-    authenticated user's organization.
-
-    Args:
-        request: AskRequest containing the natural language question
-        user: Authenticated user information from Clerk token
-
-    Returns:
-        StreamingResponse with SSE events
-    """
+    # Convert natural language question to SQL query with streaming status updates.
+    # This endpoint returns Server-Sent Events (SSE) with real-time progress:
+    #   1. retrieving_context - Finding relevant database tables
+    #   2. generating_query - Converting question to SQL
+    #   3. executing_query - Fetching data from database
+    #   4. generating_answer - Analyzing and formatting results (progressive answer streaming)
+    #   5. completed - Final result with complete answer and data
+    #   6. error - If any error occurs
+    # Requires authentication via Clerk token. Access restricted to: admin roles only.
+    # SECURITY: Automatically filters all queries to return ONLY data belonging to the
+    # authenticated user's organization.
+    # Args:
+    #   request: AskRequest containing the natural language question
+    #   user: Authenticated user information from Clerk token
+    # Returns:
+    #   StreamingResponse with SSE events
 
     def generate():
         # Generator function for SSE

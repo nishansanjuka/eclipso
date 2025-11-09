@@ -1,7 +1,6 @@
-"""
-Clerk authentication middleware for FastAPI.
-Uses the official Clerk Python SDK for token verification.
-"""
+# Clerk authentication middleware for FastAPI.
+# Uses the official Clerk Python SDK for token verification.
+
 
 from fastapi import HTTPException, status, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -32,24 +31,23 @@ class ClerkAuth:
         self.clerk = Clerk(bearer_auth=self.secret_key)
 
     async def verify_token(self, request: Request) -> dict:
-        """
-        Verify the Clerk session token using the official SDK.
+        # Verify the Clerk session token using the official SDK.
+        #
+        # The authentication flow:
+        # 1. Client sends JWT token in Authorization header (obtained from Clerk frontend)
+        # 2. sdk.authenticate_request() verifies the token using CLERK_SECRET_KEY
+        # 3. It fetches JWKS from Clerk automatically and validates the signature
+        # 4. Returns user information from the verified token payload
+        #
+        # Args:
+        #    request: FastAPI Request object with Authorization header
+        #
+        # Returns:
+        #    Decoded token payload containing user information
+        #
+        # Raises:
+        #    HTTPException: If token is invalid or expired
 
-        The authentication flow:
-        1. Client sends JWT token in Authorization header (obtained from Clerk frontend)
-        2. sdk.authenticate_request() verifies the token using CLERK_SECRET_KEY
-        3. It fetches JWKS from Clerk automatically and validates the signature
-        4. Returns user information from the verified token payload
-
-        Args:
-            request: FastAPI Request object with Authorization header
-
-        Returns:
-            Decoded token payload containing user information
-
-        Raises:
-            HTTPException: If token is invalid or expired
-        """
         try:
             # Convert FastAPI request to httpx.Request for Clerk SDK
             httpx_request = httpx.Request(
@@ -93,15 +91,14 @@ class ClerkAuth:
             )
 
     async def get_user(self, user_id: str):
-        """
-        Get full user information from Clerk.
-
-        Args:
-            user_id: The Clerk user ID
-
-        Returns:
-            User object from Clerk
-        """
+        # Get full user information from Clerk.
+        #
+        # Args:
+        #   user_id: The Clerk user ID
+        #
+        # Returns:
+        #   User object from Clerk
+        
         try:
             user = self.clerk.users.get(user_id=user_id)
             return user
@@ -119,23 +116,22 @@ clerk_auth = ClerkAuth()
 async def get_current_user(
     request: Request,
 ) -> dict:
-    """
-    FastAPI dependency to get the current authenticated user from Clerk token.
-
-    Usage:
-        @app.get("/protected")
-        async def protected_route(user: dict = Depends(get_current_user)):
-            return {"user_id": user["user_id"]}
-
-    Returns:
-        User information from verified token including:
-        - user_id: Clerk user ID
-        - session_id: Clerk session ID
-        - org_id: Organization ID (if applicable)
-        - org_role: User's role in organization
-        - org_slug: Organization slug
-        - org_permissions: List of organization permissions
-    """
+    # FastAPI dependency to get the current authenticated user from Clerk token.
+    #
+    # Usage:
+    #   @app.get("/protected")
+    #   async def protected_route(user: dict = Depends(get_current_user)):
+    #       return {"user_id": user["user_id"]}
+    #
+    # Returns:
+    #   User information from verified token including:
+    #   - user_id: Clerk user ID
+    #   - session_id: Clerk session ID
+    #   - org_id: Organization ID (if applicable)
+    #   - org_role: User's role in organization
+    #   - org_slug: Organization slug
+    #   - org_permissions: List of organization permissions
+    
     user = await clerk_auth.verify_token(request)
 
     # Ensure user has a valid ID
@@ -149,30 +145,27 @@ async def get_current_user(
 
 
 async def get_current_user_full(user_data: dict = Depends(get_current_user)):
-    """
-    Get full user information including email, name, etc.
-
-    Usage:
-        @app.get("/profile")
-        async def get_profile(user = Depends(get_current_user_full)):
-            return {"email": user.email_addresses[0].email_address}
-    """
+    # Get full user information including email, name, etc.
+    #
+    # Usage:
+    #   @app.get("/profile")
+    #   async def get_profile(user = Depends(get_current_user_full)):
+    #       return {"email": user.email_addresses[0].email_address}
+    
     user = await clerk_auth.get_user(user_data["user_id"])
     return user
 
 
 async def require_org_permission(permission: str):
-    """
-    Dependency factory to check if user has specific organization permission.
-
-    Usage:
-        @app.post("/admin")
-        async def admin_route(
-            user: dict = Depends(get_current_user),
-            _: None = Depends(require_org_permission("org:admin"))
-        ):
-            return {"message": "Admin access granted"}
-    """
+    # Dependency factory to check if user has specific organization permission.
+    #
+    # Usage:
+    #   @app.post("/admin")
+    #   async def admin_route(
+    #       user: dict = Depends(get_current_user),
+    #       _: None = Depends(require_org_permission("org:admin"))
+    #   ):
+    #       return {"message": "Admin access granted"}
 
     async def check_permission(user: dict = Depends(get_current_user)):
         org_permissions = user.get("org_permissions", [])
@@ -189,26 +182,24 @@ async def require_org_permission(permission: str):
 
 
 def require_org_role(allowed_roles: list[str]):
-    """
-    Dependency factory to check if user has one of the allowed organization roles.
-
-    Args:
-        allowed_roles: List of allowed role names (e.g., ["admin", "org:admin"])
-
-    Usage:
-        # Single service with specific roles
-        @app.post("/analytics")
-        async def analytics_route(
-            user: dict = Depends(require_org_role(["admin", "analyst"]))
-        ):
-            return {"message": "Access granted"}
-
-        # Or define as constant for reusability
-        ALLOWED_ROLES = ["admin"]
-        @app.post("/nl2sql")
-        async def nl2sql_route(user: dict = Depends(require_org_role(ALLOWED_ROLES))):
-            return {"data": "..."}
-    """
+    # Dependency factory to check if user has one of the allowed organization roles.
+    #
+    # Args:
+    #   allowed_roles: List of allowed role names (e.g., ["admin", "org:admin"])
+    #
+    # Usage:
+    #   # Single service with specific roles
+    #   @app.post("/analytics")
+    #   async def analytics_route(
+    #       user: dict = Depends(require_org_role(["admin", "analyst"]))
+    #   ):
+    #       return {"message": "Access granted"}
+    #
+    #   # Or define as constant for reusability
+    #   ALLOWED_ROLES = ["admin"]
+    #   @app.post("/nl2sql")
+    #   async def nl2sql_route(user: dict = Depends(require_org_role(ALLOWED_ROLES))):
+    #       return {"data": "..."}
 
     async def check_role(user: dict = Depends(get_current_user)):
         user_role = user.get("org_role")
