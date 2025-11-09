@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from ..modules.ask.ask_service import AskService
 from src.shared.middleware.auth import get_current_user
@@ -114,3 +115,56 @@ async def health_check():
     Health check endpoint for the ask service.
     """
     return {"status": "healthy", "service": "ask", "model": MODEL_NAME}
+
+
+@router.post("/stream")
+async def ask_question_stream(
+    request: AskRequest, user: dict = Depends(get_current_user)
+):
+    """
+    Convert natural language question to SQL query with streaming status updates.
+
+    This endpoint returns Server-Sent Events (SSE) with real-time progress:
+    1. retrieving_context - Finding relevant database tables
+    2. generating_query - Converting question to SQL
+    3. executing_query - Fetching data from database
+    4. generating_answer - Analyzing and formatting results
+    5. completed - Final result with answer and data
+    6. error - If any error occurs
+
+    Requires authentication via Clerk token.
+
+    SECURITY: Automatically filters all queries to return ONLY data belonging to the
+    authenticated user's organization.
+
+    Args:
+        request: AskRequest containing the natural language question
+        user: Authenticated user information from Clerk token
+
+    Returns:
+        StreamingResponse with SSE events
+    """
+
+    def generate():
+        # Generator function for SSE
+        try:
+            for event in ask_service.ask_stream(
+                question=request.question,
+                user_context={
+                    "user_id": user.get("user_id"),
+                    "org_id": user.get("org_id"),
+                },
+            ):
+                yield event
+        except Exception as e:
+            # Fallback error event
+            yield f"data: {{'status': 'error', 'data': {{'error': '{str(e)}'}}}}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        },
+    )
