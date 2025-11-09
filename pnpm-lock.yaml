@@ -181,6 +181,15 @@ importers:
         specifier: ^8.20.0
         version: 8.46.2(eslint@9.38.0)(typescript@5.9.2)
 
+  apps/nl2sql-service:
+    devDependencies:
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
+      dotenv-cli:
+        specifier: ^11.0.0
+        version: 11.0.0
+
   packages/api-client-ts: {}
 
   packages/eslint-config:
