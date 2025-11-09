@@ -3,12 +3,16 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from ..modules.ask.ask_service import AskService
-from src.shared.middleware.auth import get_current_user
+from src.shared.middleware.auth import get_current_user, require_org_role
 from typing import List, Dict, Any
 import os
 
 load_dotenv()
 router = APIRouter(prefix="/ask", tags=["ask"])
+
+# Role-based access control configuration
+# Only users with these roles can access the NL2SQL service
+ALLOWED_ROLES = ["admin"]  # Add more roles as needed: ["admin", "analyst", "manager"]
 
 # Initialize the service (you can move this to a dependency injection pattern later)
 DATABASE_URL = os.getenv("DATABASE_URL", "")
@@ -60,11 +64,14 @@ class AskResponse(BaseModel):
 
 
 @router.post("/", response_model=AskResponse)
-async def ask_question(request: AskRequest, user: dict = Depends(get_current_user)):
+async def ask_question(
+    request: AskRequest, user: dict = Depends(require_org_role(ALLOWED_ROLES))
+):
     """
     Convert natural language question to SQL query, execute it, and return human-readable answer.
 
     Requires authentication via Clerk token.
+    Access restricted to: admin roles only.
 
     SECURITY: Automatically filters all queries to return ONLY data belonging to the
     authenticated user's organization. Users cannot access data from other organizations.
@@ -119,7 +126,7 @@ async def health_check():
 
 @router.post("/stream")
 async def ask_question_stream(
-    request: AskRequest, user: dict = Depends(get_current_user)
+    request: AskRequest, user: dict = Depends(require_org_role(ALLOWED_ROLES))
 ):
     """
     Convert natural language question to SQL query with streaming status updates.
@@ -128,11 +135,12 @@ async def ask_question_stream(
     1. retrieving_context - Finding relevant database tables
     2. generating_query - Converting question to SQL
     3. executing_query - Fetching data from database
-    4. generating_answer - Analyzing and formatting results
-    5. completed - Final result with answer and data
+    4. generating_answer - Analyzing and formatting results (progressive answer streaming)
+    5. completed - Final result with complete answer and data
     6. error - If any error occurs
 
     Requires authentication via Clerk token.
+    Access restricted to: admin roles only.
 
     SECURITY: Automatically filters all queries to return ONLY data belonging to the
     authenticated user's organization.

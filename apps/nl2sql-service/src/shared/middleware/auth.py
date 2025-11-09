@@ -186,3 +186,45 @@ async def require_org_permission(permission: str):
         return None
 
     return check_permission
+
+
+def require_org_role(allowed_roles: list[str]):
+    """
+    Dependency factory to check if user has one of the allowed organization roles.
+
+    Args:
+        allowed_roles: List of allowed role names (e.g., ["admin", "org:admin"])
+
+    Usage:
+        # Single service with specific roles
+        @app.post("/analytics")
+        async def analytics_route(
+            user: dict = Depends(require_org_role(["admin", "analyst"]))
+        ):
+            return {"message": "Access granted"}
+
+        # Or define as constant for reusability
+        ALLOWED_ROLES = ["admin"]
+        @app.post("/nl2sql")
+        async def nl2sql_route(user: dict = Depends(require_org_role(ALLOWED_ROLES))):
+            return {"data": "..."}
+    """
+
+    async def check_role(user: dict = Depends(get_current_user)):
+        user_role = user.get("org_role")
+
+        if not user_role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User must be part of an organization to access this resource",
+            )
+
+        if user_role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied. Required roles: {', '.join(allowed_roles)}. Your role: {user_role}",
+            )
+
+        return user
+
+    return check_role
