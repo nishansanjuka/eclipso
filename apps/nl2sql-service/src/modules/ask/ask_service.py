@@ -2,91 +2,80 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 import re
 
-# from ..llm.ollama_client import OllamaLLM
-from src.shared.utils.get_db_info import get_database_schema
 from .constants.system_prompt import SYSTEM_PROMPT
 from ..llm.gemini_client import GeminiLLM
+from ..llm.ollama_client import OllamaLLM
 from ..query.query_service import QueryService
 from .reasoning_service import ReasoningService
+from .vector_store_service import VectorStoreService
 from sqlalchemy.exc import SQLAlchemyError
 
 
 class AskService:
-    def __init__(self, database_url: str, model_name: str):
-        """
-        Initialize the Ask service with LLM model and database connection.
+    def __init__(
+        self,
+        database_url: str,
+        model_name: str,
+        pinecone_api_key: str,
+        index_name: str = "dense-index-final",
+    ):
 
-        Args:
-            database_url: SQLAlchemy database connection string
-            model_name: Name of the Ollama model to use (default: llama3.2)
-        """
-        self.llm = GeminiLLM(model_name=model_name)
+        # Initialize the Ask service with LLM model and database connection.
+
+        # Args:
+        #    database_url: SQLAlchemy database connection string
+        #    model_name: Name of the Gemini model to use
+        #    pinecone_api_key: Pinecone API key for vector store
+        #    index_name: Name of the Pinecone index to use
+
+        self.llm = (
+            OllamaLLM(model_name=model_name)
+            if "llama" in model_name
+            else GeminiLLM(model_name=model_name)
+        )
         self.database_url = database_url
         self.output_parser = StrOutputParser()
         self.query_service = QueryService(database_url=database_url)
         self.reasoning_service = ReasoningService(model_name=model_name)
+        self.vector_store_service = VectorStoreService(
+            api_key=pinecone_api_key, index_name=index_name
+        )
 
     @staticmethod
     def clean_sql_query(sql_query: str) -> str:
-        """
-        Remove markdown formatting and extra whitespace from SQL query.
 
-        Args:
-            sql_query: Raw SQL query string from LLM
+        # Remove markdown formatting and extra whitespace from SQL query.
 
-        Returns:
-            Cleaned SQL query
-        """
+        # Args:
+        #    sql_query: Raw SQL query string from LLM
+
+        # Returns:
+        #    Cleaned SQL query
+
         # Remove markdown code blocks (```sql ... ``` or ``` ... ```)
         sql_query = re.sub(r"```sql\s*", "", sql_query)
         sql_query = re.sub(r"```\s*", "", sql_query)
-        
+
         # Remove leading/trailing whitespace
         sql_query = sql_query.strip()
-        
+
         return sql_query
 
-    def get_schema_context(self) -> str:
-        """
-        Retrieve database schema as formatted context string.
-
-        Returns:
-            Formatted string containing database schema information
-        """
-        schema_info = get_database_schema(self.database_url)
-        context = []
-
-        for table_name, table_info in schema_info.items():
-            columns = ", ".join(
-                [f"{col['name']} ({col['type']})" for col in table_info["columns"]]
-            )
-            context.append(f"Table: {table_name}\nColumns: {columns}")
-
-            if table_info["foreign_keys"]:
-                fks = ", ".join(
-                    [
-                        f"{fk['column']} -> {fk['references']}"
-                        for fk in table_info["foreign_keys"]
-                    ]
-                )
-                context.append(f"Foreign Keys: {fks}")
-
-        return "\n\n".join(context)
-
     def ask(self, question: str, user_context: dict | None = None) -> dict:
-        """
-        Process natural language question and generate SQL query or answer.
-        Automatically filters data by authenticated user's business context.
 
-        Args:
-            question: Natural language question about the database
-            user_context: Authenticated user information containing user_id (clerk_id) and org_id
+        # Process natural language question and generate SQL query or answer.
+        # Automatically filters data by authenticated user's business context.
 
-        Returns:
-            Dictionary containing SQL query, results, and human-readable answer
-        """
-        schema_context = self.get_schema_context()
-        
+        # Args:
+        #    question: Natural language question about the database
+        #    user_context: Authenticated user information containing user_id (clerk_id) and org_id
+
+        # Returns:
+        #    Dictionary containing SQL query, results, and human-readable answer
+
+        # Get relevant schema context using similarity search
+        schema_context = self.vector_store_service.search_similar_schemas(question, k=5)
+
         # Extract security context
         clerk_id = user_context.get("user_id") if user_context else None
         org_id = user_context.get("org_id") if user_context else None
@@ -101,20 +90,28 @@ class AskService:
 
         chain = prompt_template | self.llm.model() | self.output_parser
 
-        sql_query = chain.invoke({
-            "context": schema_context, 
-            "question": question,
-            "clerk_id": clerk_id,
-            "org_id": org_id
-        })
+        sql_query = chain.invoke(
+            {
+                "context": schema_context,
+                "question": question,
+                "clerk_id": clerk_id,
+                "org_id": org_id,
+            }
+        )
 
         # Clean the SQL query (remove markdown formatting)
         sql_query = self.clean_sql_query(sql_query)
 
         print(f"Generated SQL Query: {sql_query}")
 
-        # Check if LLM couldn't help
-        if "I can't help you with that" in sql_query:
+        # Validate if response is actual SQL (starts with SELECT, INSERT, UPDATE, DELETE, WITH)
+        sql_keywords = ["SELECT", "INSERT", "UPDATE", "DELETE", "WITH"]
+        is_sql = any(
+            sql_query.upper().strip().startswith(keyword) for keyword in sql_keywords
+        )
+
+        if not is_sql:
+            # LLM returned a message instead of SQL
             return {
                 "sql_query": None,
                 "results": None,
@@ -132,7 +129,7 @@ class AskService:
             )
 
             return {
-                "sql_query": sql_query,
+                "sql_query": "`SQL Query Removed for Security`",
                 "results": db_results,
                 "answer": human_answer,
                 "success": True,

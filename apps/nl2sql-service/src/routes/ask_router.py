@@ -12,8 +12,11 @@ router = APIRouter(prefix="/ask", tags=["ask"])
 # Initialize the service (you can move this to a dependency injection pattern later)
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 MODEL_NAME = os.getenv("LLM_MODEL_NAME", "")
+PINCONE_API_KEY = os.getenv("PINECONE_API_KEY", "")
 
-ask_service = AskService(database_url=DATABASE_URL, model_name=MODEL_NAME)
+ask_service = AskService(
+    database_url=DATABASE_URL, model_name=MODEL_NAME, pinecone_api_key=PINCONE_API_KEY
+)
 
 
 class AskRequest(BaseModel):

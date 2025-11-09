@@ -1,6 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from ..llm.gemini_client import GeminiLLM
+from ..llm.ollama_client import OllamaLLM
 from .constants.reasoning_prompt import REASONING_PROMPT
 import json
 from typing import List, Dict, Any
@@ -17,7 +18,11 @@ class ReasoningService:
         Args:
             model_name: Name of the LLM model to use
         """
-        self.llm = GeminiLLM(model_name=model_name)
+        self.llm = (
+            OllamaLLM(model_name=model_name)
+            if "llama" in model_name
+            else GeminiLLM(model_name=model_name)
+        )
         self.output_parser = StrOutputParser()
 
     def generate_human_response(
