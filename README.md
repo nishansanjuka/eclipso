@@ -11,6 +11,7 @@ eclipso/
 ├── apps/
 │   ├── api/          # NestJS backend API
 │   ├── mobile/       # Mobile application
+│   ├── nl2sql-service/ # Natural Language to SQL service
 │   └── web/          # Web frontend
 └── packages/
     ├── api-client-ts/    # TypeScript API client
@@ -28,6 +29,7 @@ eclipso/
 - Node.js 18+
 - pnpm 8+
 - PostgreSQL 14+
+- Python 3.11+ (for NL2SQL service)
 
 ### Installation
 
@@ -67,6 +69,19 @@ Located in [`apps/api/`](apps/api) - Core backend service providing RESTful APIs
 - PostgreSQL with Drizzle ORM
 
 📖 **[View API Documentation](apps/api/README.md)**
+
+### NL2SQL Service (Python/FastAPI)
+
+Located in [`apps/nl2sql-service/`](apps/nl2sql-service) - AI-powered natural language to SQL query service.
+
+**Key Features:**
+- Convert natural language questions to SQL queries
+- Execute queries and return human-readable answers
+- Google Gemini AI integration
+- Clerk authentication
+- Three-step pipeline: NL → SQL → Data → Answer
+
+📖 **[View NL2SQL Documentation](apps/nl2sql-service/README.md)**
 
 ### Mobile App
 
@@ -204,6 +219,13 @@ pnpm db:reset         # Reset database
 # Linting & Formatting
 pnpm lint             # Lint all packages
 pnpm format           # Format all code
+
+# NL2SQL Service (Python)
+cd apps/nl2sql-service
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
 ```
 
 ### Workspace Structure
@@ -351,6 +373,7 @@ For support and questions:
 ## 📋 Project Status
 
 - **API**: ✅ Core features complete (Auth, Products, Orders, Invoices, Inventory)
+- **NL2SQL Service**: ✅ AI-powered natural language queries with Gemini
 - **Packages**: ✅ TypeScript client, PDF generator, shared utilities
 - **Web App**: 🚧 In development
 - **Mobile App**: 📋 Planned

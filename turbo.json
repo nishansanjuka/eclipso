@@ -1,5 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "ui": "tui",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -36,6 +37,15 @@
     },
     "check-types": {
       "dependsOn": ["^check-types"]
+    },
+    "setup": {
+      "cache": false
+    },
+    "freeze": {
+      "cache": false
+    },
+    "venv-install": {
+      "cache": false
     }
   }
 }

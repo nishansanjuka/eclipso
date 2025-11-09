@@ -31,6 +31,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/eclipso_ci
       NODE_ENV: test
+      STORE_PATH: ""
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}

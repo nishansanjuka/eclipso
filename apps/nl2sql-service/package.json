@@ -1,0 +1,15 @@
+{
+  "name": "nl2sql-service",
+  "version": "1.0.0",
+  "scripts": {
+    "setup": "python scripts/venv_init.py",
+    "dev": "python scripts/venv_dev.py",
+    "venv-install": "python scripts/venv_install.py --",
+    "freeze": "python scripts/venv_freeze.py",
+    "sync:postman": "dotenv -e .env -- powershell -Command \"Invoke-WebRequest http://localhost:8000/openapi.json -OutFile \\\"${env:TEMP}\\openapi.json\\\"; npx openapi-to-postmanv2 -s \\\"${env:TEMP}\\openapi.json\\\" -o \\\"${env:TEMP}\\collection.json\\\" -p -O folderStrategy=Tags; node ./scripts/patch-postman.mjs; node ./scripts/upload-postman.mjs;\""
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "dotenv-cli": "^11.0.0"
+  }
+}
