@@ -58,16 +58,29 @@ async def ask_question(request: AskRequest, user: dict = Depends(get_current_use
 
     Requires authentication via Clerk token.
 
+    SECURITY: Automatically filters all queries to return ONLY data belonging to the
+    authenticated user's organization. Users cannot access data from other organizations.
+
     Args:
         request: AskRequest containing the natural language question
-        user: Authenticated user information from Clerk token
+        user: Authenticated user information from Clerk token (contains user_id and org_id)
 
     Returns:
         AskResponse with SQL query, results, and human-readable answer
     """
     try:
-
-        result = ask_service.ask(request.question)
+        # Pass user context for automatic security filtering
+        result = ask_service.ask(
+            question=request.question,
+            user_context={
+                "user_id": user.get(
+                    "user_id"
+                ),  # Clerk user ID (matches users.clerk_id)
+                "org_id": user.get(
+                    "org_id"
+                ),  # Clerk org ID (matches businesses.org_id)
+            },
+        )
 
         return AskResponse(
             question=request.question,

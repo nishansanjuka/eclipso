@@ -73,19 +73,25 @@ class AskService:
 
         return "\n\n".join(context)
 
-    def ask(self, question: str) -> dict:
+    def ask(self, question: str, user_context: dict | None = None) -> dict:
         """
         Process natural language question and generate SQL query or answer.
+        Automatically filters data by authenticated user's business context.
 
         Args:
             question: Natural language question about the database
+            user_context: Authenticated user information containing user_id (clerk_id) and org_id
 
         Returns:
             Dictionary containing SQL query, results, and human-readable answer
         """
         schema_context = self.get_schema_context()
+        
+        # Extract security context
+        clerk_id = user_context.get("user_id") if user_context else None
+        org_id = user_context.get("org_id") if user_context else None
 
-        # Step 1: Generate SQL query from natural language
+        # Step 1: Generate SQL query from natural language with security context
         prompt_template = ChatPromptTemplate.from_messages(
             [
                 ("system", SYSTEM_PROMPT),
@@ -95,11 +101,16 @@ class AskService:
 
         chain = prompt_template | self.llm.model() | self.output_parser
 
-        sql_query = chain.invoke({"context": schema_context, "question": question})
-        
+        sql_query = chain.invoke({
+            "context": schema_context, 
+            "question": question,
+            "clerk_id": clerk_id,
+            "org_id": org_id
+        })
+
         # Clean the SQL query (remove markdown formatting)
         sql_query = self.clean_sql_query(sql_query)
-        
+
         print(f"Generated SQL Query: {sql_query}")
 
         # Check if LLM couldn't help
