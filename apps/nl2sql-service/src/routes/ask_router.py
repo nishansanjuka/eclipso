@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from ..modules.ask.ask_service import AskService
 from src.shared.middleware.auth import get_current_user
@@ -13,9 +13,13 @@ router = APIRouter(prefix="/ask", tags=["ask"])
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 MODEL_NAME = os.getenv("LLM_MODEL_NAME", "")
 PINCONE_API_KEY = os.getenv("PINECONE_API_KEY", "")
+INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "")
 
 ask_service = AskService(
-    database_url=DATABASE_URL, model_name=MODEL_NAME, pinecone_api_key=PINCONE_API_KEY
+    database_url=DATABASE_URL,
+    model_name=MODEL_NAME,
+    pinecone_api_key=PINCONE_API_KEY,
+    index_name=INDEX_NAME,
 )
 
 

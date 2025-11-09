@@ -29,7 +29,10 @@ def generate_schema_chunks(schema: dict):
         chunk = f"TABLE: {table}\n\nCOLUMNS:\n"
 
         for col in defn.get("columns", []):
-            chunk += f"- {col['name']} {col['type']}\n"
+            col_line = f"- {col['name']} {col['type']}"
+            if "enum_values" in col:
+                col_line += f" (ENUM: {col['enum_values']})"
+            chunk += col_line + "\n"
 
         chunk += "\nFOREIGN KEYS (outbound):\n"
         if not outbound:

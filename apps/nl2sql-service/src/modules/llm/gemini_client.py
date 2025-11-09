@@ -4,6 +4,10 @@ import os
 
 class GeminiLLM:
     def __init__(self, model_name: str = "gemini-2.0-flash-lite"):
+        # Initialize Gemini LLM client
+        # Args:
+        #   model_name: Name of the Gemini model to use
+        
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError(
@@ -21,4 +25,5 @@ class GeminiLLM:
         )
 
     def model(self):
+        # Return the LLM client instance
         return self.client

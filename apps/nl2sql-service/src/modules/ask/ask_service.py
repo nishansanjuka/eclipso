@@ -1,14 +1,14 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-import re
+from sqlalchemy.exc import SQLAlchemyError
 
 from .constants.system_prompt import SYSTEM_PROMPT
 from ..llm.gemini_client import GeminiLLM
 from ..llm.ollama_client import OllamaLLM
 from ..query.query_service import QueryService
 from .reasoning_service import ReasoningService
-from .vector_store_service import VectorStoreService
-from sqlalchemy.exc import SQLAlchemyError
+from ..vector_store.vector_store_service import VectorStoreService
+from src.shared.utils.sql_utils import clean_sql_query, is_valid_sql
 
 
 class AskService:
@@ -17,16 +17,14 @@ class AskService:
         database_url: str,
         model_name: str,
         pinecone_api_key: str,
-        index_name: str = "dense-index-final",
+        index_name: str,
     ):
-
         # Initialize the Ask service with LLM model and database connection.
-
         # Args:
-        #    database_url: SQLAlchemy database connection string
-        #    model_name: Name of the Gemini model to use
-        #    pinecone_api_key: Pinecone API key for vector store
-        #    index_name: Name of the Pinecone index to use
+        #   database_url: SQLAlchemy database connection string
+        #   model_name: Name of the Gemini model to use
+        #   pinecone_api_key: Pinecone API key for vector store
+        #   index_name: Name of the Pinecone index to use
 
         self.llm = (
             OllamaLLM(model_name=model_name)
@@ -41,37 +39,14 @@ class AskService:
             api_key=pinecone_api_key, index_name=index_name
         )
 
-    @staticmethod
-    def clean_sql_query(sql_query: str) -> str:
-
-        # Remove markdown formatting and extra whitespace from SQL query.
-
-        # Args:
-        #    sql_query: Raw SQL query string from LLM
-
-        # Returns:
-        #    Cleaned SQL query
-
-        # Remove markdown code blocks (```sql ... ``` or ``` ... ```)
-        sql_query = re.sub(r"```sql\s*", "", sql_query)
-        sql_query = re.sub(r"```\s*", "", sql_query)
-
-        # Remove leading/trailing whitespace
-        sql_query = sql_query.strip()
-
-        return sql_query
-
     def ask(self, question: str, user_context: dict | None = None) -> dict:
-
         # Process natural language question and generate SQL query or answer.
         # Automatically filters data by authenticated user's business context.
-
         # Args:
-        #    question: Natural language question about the database
-        #    user_context: Authenticated user information containing user_id (clerk_id) and org_id
-
+        #   question: Natural language question about the database
+        #   user_context: Authenticated user information containing user_id (clerk_id) and org_id
         # Returns:
-        #    Dictionary containing SQL query, results, and human-readable answer
+        #   Dictionary containing SQL query, results, and human-readable answer
 
         # Get relevant schema context using similarity search
         schema_context = self.vector_store_service.search_similar_schemas(question, k=5)
@@ -100,17 +75,12 @@ class AskService:
         )
 
         # Clean the SQL query (remove markdown formatting)
-        sql_query = self.clean_sql_query(sql_query)
+        sql_query = clean_sql_query(sql_query)
 
         print(f"Generated SQL Query: {sql_query}")
 
-        # Validate if response is actual SQL (starts with SELECT, INSERT, UPDATE, DELETE, WITH)
-        sql_keywords = ["SELECT", "INSERT", "UPDATE", "DELETE", "WITH"]
-        is_sql = any(
-            sql_query.upper().strip().startswith(keyword) for keyword in sql_keywords
-        )
-
-        if not is_sql:
+        # Validate if response is actual SQL
+        if not is_valid_sql(sql_query):
             # LLM returned a message instead of SQL
             return {
                 "sql_query": None,

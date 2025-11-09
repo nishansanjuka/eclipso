@@ -1,23 +1,22 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from dotenv import load_dotenv
+import json
+from typing import List, Dict, Any
+
 from ..llm.gemini_client import GeminiLLM
 from ..llm.ollama_client import OllamaLLM
 from .constants.reasoning_prompt import REASONING_PROMPT
-import json
-from typing import List, Dict, Any
-from dotenv import load_dotenv
 
 load_dotenv()
 
 
 class ReasoningService:
     def __init__(self, model_name: str):
-        """
-        Initialize the Reasoning service with LLM model.
-
-        Args:
-            model_name: Name of the LLM model to use
-        """
+        # Initialize the Reasoning service with LLM model.
+        # Args:
+        #   model_name: Name of the LLM model to use
+        
         self.llm = (
             OllamaLLM(model_name=model_name)
             if "llama" in model_name
@@ -28,17 +27,14 @@ class ReasoningService:
     def generate_human_response(
         self, question: str, sql_query: str, db_results: List[Dict[str, Any]]
     ) -> str:
-        """
-        Convert database query results into human-readable response.
-
-        Args:
-            question: Original user question
-            sql_query: SQL query that was executed
-            db_results: JSON results from database
-
-        Returns:
-            Human-readable answer based on the results
-        """
+        # Convert database query results into human-readable response.
+        # Args:
+        #   question: Original user question
+        #   sql_query: SQL query that was executed (not used, kept for backward compatibility)
+        #   db_results: JSON results from database
+        # Returns:
+        #   Brief human-readable summary (2-3 sentences, no JSON)
+        
         # Convert results to formatted JSON string
         results_json = json.dumps(db_results, indent=2, default=str)
 
@@ -55,7 +51,7 @@ class ReasoningService:
         chain = prompt_template | self.llm.model() | self.output_parser
 
         response = chain.invoke(
-            {"question": question, "sql_query": sql_query, "results": results_json}
+            {"question": question, "results": results_json}
         )
 
-        return response
+        return response.strip()
