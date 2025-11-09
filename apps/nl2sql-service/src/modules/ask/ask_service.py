@@ -115,27 +115,35 @@ class AskService:
                 "success": False,
             }
 
-    def ask_stream(self, question: str, user_context: dict | None = None) -> Generator[str, None, None]:
+    def ask_stream(
+        self, question: str, user_context: dict | None = None
+    ) -> Generator[str, None, None]:
         # Process natural language question with streaming status updates.
         # Args:
         #   question: Natural language question about the database
         #   user_context: Authenticated user information containing user_id (clerk_id) and org_id
         # Yields:
         #   SSE formatted status updates
-        
+
         try:
             # Step 1: Retrieve schema context
-            yield create_stream_event("retrieving_context", {"message": "Finding relevant database tables..."})
-            
-            schema_context = self.vector_store_service.search_similar_schemas(question, k=5)
-            
+            yield create_stream_event(
+                "retrieving_context", {"message": "Finding relevant database tables..."}
+            )
+
+            schema_context = self.vector_store_service.search_similar_schemas(
+                question, k=5
+            )
+
             # Extract security context
             clerk_id = user_context.get("user_id") if user_context else None
             org_id = user_context.get("org_id") if user_context else None
 
             # Step 2: Generate SQL query
-            yield create_stream_event("generating_query", {"message": "Converting your question to SQL..."})
-            
+            yield create_stream_event(
+                "generating_query", {"message": "Converting your question to SQL..."}
+            )
+
             prompt_template = ChatPromptTemplate.from_messages(
                 [
                     ("system", SYSTEM_PROMPT),
@@ -160,51 +168,93 @@ class AskService:
             # Validate if response is actual SQL
             if not is_valid_sql(sql_query):
                 # LLM returned a message instead of SQL
-                yield create_stream_event("completed", {
-                    "question": question,
-                    "sql_query": None,
-                    "results": None,
-                    "answer": sql_query,
-                    "success": True
-                })
+                yield create_stream_event(
+                    "completed",
+                    {
+                        "question": question,
+                        "sql_query": None,
+                        "results": None,
+                        "answer": sql_query,
+                        "success": True,
+                    },
+                )
                 return
 
             # Step 3: Execute query
-            yield create_stream_event("executing_query", {"message": "Fetching your data..."})
-            
-            db_results = self.query_service.query(sql_query)
-
-            # Step 4: Generate human-readable response
-            yield create_stream_event("generating_answer", {"message": "Analyzing results..."})
-            
-            human_answer = self.reasoning_service.generate_human_response(
-                question=question, sql_query=sql_query, db_results=db_results
+            yield create_stream_event(
+                "executing_query", {"message": "Fetching your data..."}
             )
 
-            # Step 5: Send final result
-            yield create_stream_event("completed", {
-                "question": question,
-                "sql_query": "`SQL Query Removed for Security`",
-                "results": db_results,
-                "answer": human_answer,
-                "success": True
-            })
+            db_results = self.query_service.query(sql_query)
+
+            # Step 4: Initialize the response object and stream answer progressively
+            yield create_stream_event(
+                "generating_answer",
+                {
+                    "question": question,
+                    "sql_query": "`SQL Query Removed for Security`",
+                    "results": db_results,
+                    "answer": "",
+                    "success": True,
+                },
+            )
+
+            # Stream the answer token-by-token, updating the same object structure
+            answer_chunks = []
+            for chunk in self.reasoning_service.generate_human_response_stream(
+                question=question, sql_query=sql_query, db_results=db_results
+            ):
+                answer_chunks.append(chunk)
+                current_answer = "".join(answer_chunks)
+
+                # Send progressive updates with the full object structure
+                yield create_stream_event(
+                    "generating_answer",
+                    {
+                        "question": question,
+                        "sql_query": "`SQL Query Removed for Security`",
+                        "results": db_results,
+                        "answer": current_answer,
+                        "success": True,
+                    },
+                )
+
+            # Combine all chunks for final result
+            human_answer = "".join(answer_chunks).strip()
+
+            # Step 5: Send final completed event with same structure
+            yield create_stream_event(
+                "completed",
+                {
+                    "question": question,
+                    "sql_query": "`SQL Query Removed for Security`",
+                    "results": db_results,
+                    "answer": human_answer,
+                    "success": True,
+                },
+            )
 
         except SQLAlchemyError as e:
-            yield create_stream_event("error", {
-                "question": question,
-                "sql_query": None,
-                "results": None,
-                "answer": f"Error executing query: {str(e)}",
-                "success": False,
-                "error": str(e)
-            })
+            yield create_stream_event(
+                "error",
+                {
+                    "question": question,
+                    "sql_query": None,
+                    "results": None,
+                    "answer": f"Error executing query: {str(e)}",
+                    "success": False,
+                    "error": str(e),
+                },
+            )
         except Exception as e:
-            yield create_stream_event("error", {
-                "question": question,
-                "sql_query": None,
-                "results": None,
-                "answer": f"An error occurred: {str(e)}",
-                "success": False,
-                "error": str(e)
-            })
+            yield create_stream_event(
+                "error",
+                {
+                    "question": question,
+                    "sql_query": None,
+                    "results": None,
+                    "answer": f"An error occurred: {str(e)}",
+                    "success": False,
+                    "error": str(e),
+                },
+            )
