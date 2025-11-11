@@ -88,3 +88,10 @@ async def scalar_html():
         theme=Theme.MOON,
         dark_mode=True,
     )
+
+# Add root route that redirects to /api-reference
+from fastapi.responses import RedirectResponse
+
+@app.get("/", include_in_schema=False)
+async def root_redirect():
+    return RedirectResponse(url="/api-reference", status_code=302)
