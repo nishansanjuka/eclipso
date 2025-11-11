@@ -23,9 +23,42 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    permissions:
+      contents: read
+      deployments: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Create GitHub Deployment
+        id: create_deployment
+        run: |
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/deployments \
+            -d '{"ref":"'"${{ github.sha }}"'","environment":"api-production","auto_merge":false,"required_contexts":[]}')
+
+          http_status=$(echo "$response" | tr -d '\r' | sed -n 's/.*HTTP_STATUS:\([0-9]*\)$/\1/p')
+
+          if [ "$http_status" != "201" ]; then
+            echo "⚠️ Deployment creation failed with status $http_status (continuing anyway)"
+            echo "deployment_id=0" >> $GITHUB_OUTPUT
+          else
+            deployment_id=$(echo "$response" | sed '$d' | jq -r '.id')
+            echo "deployment_id=$deployment_id" >> $GITHUB_OUTPUT
+            echo "✅ Created deployment ID: $deployment_id"
+          fi
+
+      - name: Update Deployment Status to In Progress
+        if: steps.create_deployment.outputs.deployment_id != '0'
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/deployments/${{ steps.create_deployment.outputs.deployment_id }}/statuses \
+            -d '{"state":"in_progress","environment":"api-production"}'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -87,6 +120,26 @@ jobs:
           sleep 10
           curl -f ${{ steps.deploy.outputs.url }}/api || exit 1
           echo "✅ Deployment verification successful!"
+
+      - name: Update GitHub Deployment Status - Success
+        if: success() && steps.create_deployment.outputs.deployment_id != '0'
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/deployments/${{ steps.create_deployment.outputs.deployment_id }}/statuses \
+            -d '{"state":"success","environment":"api-production","environment_url":"${{ steps.deploy.outputs.url }}","description":"API deployed to Vercel"}'
+          echo "✅ Updated GitHub deployment status to success"
+
+      - name: Update GitHub Deployment Status - Failure
+        if: failure() && steps.create_deployment.outputs.deployment_id != '0'
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/deployments/${{ steps.create_deployment.outputs.deployment_id }}/statuses \
+            -d '{"state":"failure","environment":"api-production","description":"Deployment failed - check logs"}'
+          echo "❌ Updated GitHub deployment status to failure"
 
       - name: Deployment summary
         run: |
