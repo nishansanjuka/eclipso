@@ -16,6 +16,7 @@ env:
   STORE_PATH: ""
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  PRODUCTION_URL: "https://eclipso-api.vercel.app/"
 
 jobs:
   deploy:
@@ -58,7 +59,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/deployments/${{ steps.create_deployment.outputs.deployment_id }}/statuses \
-            -d '{"state":"in_progress","environment":"api-production"}'
+            -d '{"state":"in_progress","environment":"api-production","environment_url":"${{ env.PRODUCTION_URL }}"}'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -99,18 +100,9 @@ jobs:
       - name: Deploy Project Artifacts to Vercel
         id: deploy
         run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-          echo "preview_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          echo "🚀 Deployed to: $DEPLOYMENT_URL"
-
-      - name: Get Vercel Production Alias URL
-        id: vercel_alias
-        run: |
-          # Get the production alias (primary) URL for the project
-          PROD_URL=$(vercel alias --scope ${{ secrets.VERCEL_ORG_ID }} ls | grep -Eo 'https://[a-zA-Z0-9\-]+\.vercel\.app' | head -1)
-          echo "prod_url=$PROD_URL" >> $GITHUB_OUTPUT
-          echo "🌐 Production URL: $PROD_URL"
-
+          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+          echo "url=${{ env.PRODUCTION_URL }}" >> $GITHUB_OUTPUT
+          echo "🚀 Deployed to: ${{ env.PRODUCTION_URL }}"
 
       - name: Update GitHub Deployment Status - Success
         if: success() && steps.create_deployment.outputs.deployment_id != '0'
@@ -119,7 +111,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/deployments/${{ steps.create_deployment.outputs.deployment_id }}/statuses \
-            -d '{"state":"success","environment":"api-production","environment_url":"${{ steps.vercel_alias.outputs.prod_url }}","description":"API deployed to Vercel (production)"}'
+            -d '{"state":"success","environment":"api-production","environment_url":"${{ env.PRODUCTION_URL }}","description":"API deployed to Vercel"}'
           echo "✅ Updated GitHub deployment status to success"
 
       - name: Update GitHub Deployment Status - Failure
@@ -129,9 +121,8 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/deployments/${{ steps.create_deployment.outputs.deployment_id }}/statuses \
-            -d '{"state":"failure","environment":"api-production","description":"Deployment failed - check logs"}'
+            -d '{"state":"failure","environment":"api-production","environment_url":"${{ env.PRODUCTION_URL }}","description":"Deployment failed - check logs"}'
           echo "❌ Updated GitHub deployment status to failure"
-
 
       - name: Deployment summary
         run: |
@@ -139,12 +130,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Project:** Eclipso API" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** Production" >> $GITHUB_STEP_SUMMARY
-          echo "**Production URL:** ${{ steps.vercel_alias.outputs.prod_url }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Preview URL:** ${{ steps.deploy.outputs.preview_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ env.PRODUCTION_URL }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Quick Links" >> $GITHUB_STEP_SUMMARY
-          echo "- 📖 [API Documentation](${{ steps.vercel_alias.outputs.prod_url }}/api)" >> $GITHUB_STEP_SUMMARY
-          echo "- 🔍 [Health Check](${{ steps.vercel_alias.outputs.prod_url }}/health)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📖 [API Documentation](${{ env.PRODUCTION_URL }}api)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔍 [Health Check](${{ env.PRODUCTION_URL }}health)" >> $GITHUB_STEP_SUMMARY
 
       - name: Notify on failure
         if: failure()
