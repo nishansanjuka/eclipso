@@ -27,15 +27,12 @@ describe('AppController (e2e)', () => {
     await app.close();
   });
 
-  describe('Health Check', () => {
-    it('/ (GET) - should return 401 for unauthorized requests', () => {
+  describe('Root Route', () => {
+    it('/ (GET) - should always redirect to /api-reference', () => {
       return request(app.getHttpServer())
         .get('/')
-        .expect(401)
-        .expect((res) => {
-          expect(res.body).toHaveProperty('message');
-          expect(res.body).toHaveProperty('statusCode', 401);
-        });
+        .expect(302)
+        .expect('Location', '/api-reference');
     });
   });
 
