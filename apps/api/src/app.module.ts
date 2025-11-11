@@ -20,6 +20,8 @@ import { SaleModule } from './modules/sale/sale.module';
 import { ReturnModule } from './modules/return/return.module';
 import { CustomerModule } from './modules/customer/customer.module';
 
+import { RootController } from './root.controller';
+
 @Module({
   imports: [
     NestConfigModule.forRoot({
@@ -42,7 +44,7 @@ import { CustomerModule } from './modules/customer/customer.module';
     SaleModule,
     ReturnModule,
   ],
-  controllers: [],
+  controllers: [RootController],
   providers: [
     ConfigService,
     {
