@@ -52,3 +52,4 @@ EXPOSE 8080
 
 # Run the application using uvicorn with PORT from environment
 CMD uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers 1
+# Force rebuild 11/11/2025 15:41:02
