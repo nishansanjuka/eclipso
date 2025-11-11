@@ -40,12 +40,15 @@ RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
+# Set default PORT if not provided
+ENV PORT=8080
+
 # Expose port
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8080/api-reference')"
+# Health check - disabled for Cloud Run (it has its own health checks)
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+#     CMD python -c "import requests; requests.get('http://localhost:${PORT}/api-reference')"
 
-# Run the application using uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
+# Run the application using uvicorn with PORT from environment
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers 1

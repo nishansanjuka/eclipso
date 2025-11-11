@@ -36,3 +36,4 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+gcp-key-eclipso-prod-2025.json
