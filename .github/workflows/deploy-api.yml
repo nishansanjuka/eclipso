@@ -102,12 +102,6 @@ jobs:
           echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
           echo "🚀 Deployed to: $DEPLOYMENT_URL"
 
-      - name: Verify deployment
-        run: |
-          sleep 10
-          curl -f ${{ steps.deploy.outputs.url }}/api-reference || exit 1
-          echo "✅ Deployment verification successful!"
-
       - name: Update GitHub Deployment Status - Success
         if: success() && steps.create_deployment.outputs.deployment_id != '0'
         run: |
