@@ -16,7 +16,7 @@ ALLOWED_ROLES = ["admin"]  # Add more roles as needed: ["admin", "analyst", "man
 
 # Initialize the service (you can move this to a dependency injection pattern later)
 DATABASE_URL = os.getenv("DATABASE_URL", "")
-MODEL_NAME = os.getenv("LLM_MODEL_NAME", "")
+MODEL_NAME = os.getenv("LLM_MODEL_NAME", "gemini-2.0-flash")
 PINCONE_API_KEY = os.getenv("PINECONE_API_KEY", "")
 INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "")
 
