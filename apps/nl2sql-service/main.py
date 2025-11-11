@@ -1,3 +1,4 @@
+# Eclipso NL2SQL Service - Cloud Run Deployment v1.0.1
 from fastapi import FastAPI
 from src.routes.ask_router import router as ask_router
 from scalar_fastapi import get_scalar_api_reference
