@@ -272,78 +272,90 @@ pnpm test:coverage
 
 This monorepo uses **GitHub Actions** for Continuous Delivery with separate workflows for each service:
 
-- **NL2SQL Service** → Google Cloud Run (automated Docker deployments)
-- **API** → Vercel (serverless deployments)
+- **NL2SQL Service** → Google Cloud Run (containerized Python FastAPI app)
+- **API** → Vercel (serverless NestJS app)
 
-📖 **[View Detailed Deployment Guide](DEPLOYMENT.md)**
-
-### Quick Deployment Overview
+### Deployment Overview
 
 #### NL2SQL Service (Google Cloud Run)
 
-```bash
-# Automated on push to main branch
-# Manual deployment:
-cd apps/nl2sql-service
-docker build -t gcr.io/PROJECT_ID/nl2sql-service:latest .
-docker push gcr.io/PROJECT_ID/nl2sql-service:latest
-gcloud run deploy nl2sql-service --image gcr.io/PROJECT_ID/nl2sql-service:latest
-```
+- **Automated Deployments:**
+  - Triggered on push to `main` via `.github/workflows/deploy-nl2sql.yml`
+  - Uses multi-stage Docker build and pushes to Google Container Registry
+  - Deploys to Cloud Run with secrets mounted from Google Secret Manager
+  - Health checks and auto-scaling enabled
+  - Root route `/` redirects to `/api-reference` (Scalar docs)
 
-**Features:**
-- Automatic Docker builds with multi-stage optimization
-- Scale-to-zero for cost efficiency
-- Secret management via Google Secret Manager
-- Health checks and startup probes
-- Auto-scaling (0-10 instances)
+- **Manual Deployment:**
+  ```bash
+  cd apps/nl2sql-service
+  docker build -t gcr.io/<PROJECT_ID>/nl2sql-service:latest .
+  docker push gcr.io/<PROJECT_ID>/nl2sql-service:latest
+  gcloud run deploy nl2sql-service \
+    --image gcr.io/<PROJECT_ID>/nl2sql-service:latest \
+    --region us-central1 \
+    --set-secrets DATABASE_URL=DATABASE_URL:latest,CLERK_SECRET_KEY=CLERK_SECRET_KEY:latest,...
+  ```
+
+- **Secret Management:**
+  - All environment variables are managed via Google Secret Manager
+  - Use PowerShell `Set-Content -NoNewline` to avoid trailing newlines when creating secrets
+  - Example:
+    ```powershell
+    Set-Content -Path .\secret.txt -Value "<value>" -NoNewline
+    gcloud secrets versions add <SECRET_NAME> --data-file=.\secret.txt
+    ```
+
+- **Endpoints:**
+  - API: `https://<cloud-run-url>`
+  - Docs: `https://<cloud-run-url>/api-reference` (Scalar)
+  - OpenAPI: `https://<cloud-run-url>/openapi.json`
+  - Root `/` redirects to `/api-reference`
 
 #### API (Vercel)
 
-```bash
-# Automated on push to main branch
-# Manual deployment:
-pnpm turbo run build --filter=api...
-vercel --prod
-```
 
-**Features:**
-- Turborepo build caching
-- Automatic database migrations
-- Zero-config deployments
-- Edge network distribution
-- Preview deployments for PRs
+- **Automated Deployments:**
+  - Triggered on push to `main` via `.github/workflows/deploy-api.yml`
+  - Uses Vercel CLI for serverless deployment
+  - Supports Turborepo remote build caching (set `TURBO_TOKEN` and `TURBO_TEAM` in GitHub secrets)
+  - Root route `/` always redirects to `/api-reference` (Scalar docs)
 
-### Environment Setup
+- **Manual Deployment:**
+  ```bash
+  pnpm turbo run build --filter=api...
+  vercel --prod
+  ```
 
-1. **Database**: Set up PostgreSQL instance (Neon, Supabase, or managed Postgres)
+- **Secret Management:**
+  - All environment variables are managed via Vercel dashboard and GitHub secrets
+  - Required: `DATABASE_URL`, `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, etc.
+
+- **Endpoints:**
+  - API: `https://<vercel-url>`
+  - Docs: `https://<vercel-url>/api-reference` (Scalar)
+  - OpenAPI: `https://<vercel-url>/api-json`
+  - Root `/` always redirects to `/api-reference`
+
+
+### Environment & Secrets Setup
+
+1. **Database**: Set up PostgreSQL (Neon, Supabase, or managed Postgres)
 2. **Authentication**: Configure Clerk application
 3. **Cloud Accounts**:
-   - Google Cloud Platform (for NL2SQL service)
-   - Vercel account (for API)
+  - Google Cloud Platform (for NL2SQL service)
+  - Vercel account (for API)
 4. **Secrets Configuration**:
-   - GitHub Secrets for CI/CD
-   - Google Secret Manager for Cloud Run
-   - Vercel environment variables
+  - GitHub Secrets for CI/CD
+  - Google Secret Manager for Cloud Run (NL2SQL)
+  - Vercel environment variables (API)
 5. **Migrations**: Run database migrations on first deployment
 
-### GitHub Secrets Required
-
-**For NL2SQL Service:**
-- `GCP_PROJECT_ID`: Your Google Cloud project ID
-- `GCP_SA_KEY`: Service account JSON key
-
-**For API:**
-- `VERCEL_TOKEN`: Vercel deployment token
-- `VERCEL_ORG_ID`: Vercel organization ID
-- `VERCEL_PROJECT_ID`: Vercel project ID
-- `DATABASE_URL`: PostgreSQL connection string
-- `CLERK_SECRET_KEY`: Clerk secret key
-- `CLERK_PUBLISHABLE_KEY`: Clerk publishable key
-- `CLERK_WEBHOOK_SECRET`: Clerk webhook secret
-
-**Optional (Turborepo Remote Caching):**
-- `TURBO_TOKEN`: Turbo remote cache token
-- `TURBO_TEAM`: Turbo team name
+**GitHub/Vercel/Cloud Run Secrets Required:**
+  - See each app's README for full list
+  - NL2SQL: `DATABASE_URL`, `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, etc. (in Google Secret Manager)
+  - API: `DATABASE_URL`, `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, etc. (in Vercel/GitHub)
+  - Turborepo: `TURBO_TOKEN`, `TURBO_TEAM` (optional, for remote caching)
 
 ### Deployment Workflows
 
