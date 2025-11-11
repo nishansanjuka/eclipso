@@ -270,31 +270,87 @@ pnpm test:coverage
 
 ## 🚀 Deployment
 
-### Build for Production
+This monorepo uses **GitHub Actions** for Continuous Delivery with separate workflows for each service:
+
+- **NL2SQL Service** → Google Cloud Run (automated Docker deployments)
+- **API** → Vercel (serverless deployments)
+
+📖 **[View Detailed Deployment Guide](DEPLOYMENT.md)**
+
+### Quick Deployment Overview
+
+#### NL2SQL Service (Google Cloud Run)
 
 ```bash
-# Build all applications
-pnpm build
-
-# Build specific application
-pnpm build:api
-pnpm build:web
+# Automated on push to main branch
+# Manual deployment:
+cd apps/nl2sql-service
+docker build -t gcr.io/PROJECT_ID/nl2sql-service:latest .
+docker push gcr.io/PROJECT_ID/nl2sql-service:latest
+gcloud run deploy nl2sql-service --image gcr.io/PROJECT_ID/nl2sql-service:latest
 ```
+
+**Features:**
+- Automatic Docker builds with multi-stage optimization
+- Scale-to-zero for cost efficiency
+- Secret management via Google Secret Manager
+- Health checks and startup probes
+- Auto-scaling (0-10 instances)
+
+#### API (Vercel)
+
+```bash
+# Automated on push to main branch
+# Manual deployment:
+pnpm turbo run build --filter=api...
+vercel --prod
+```
+
+**Features:**
+- Turborepo build caching
+- Automatic database migrations
+- Zero-config deployments
+- Edge network distribution
+- Preview deployments for PRs
 
 ### Environment Setup
 
-1. **Database**: Set up PostgreSQL instance
+1. **Database**: Set up PostgreSQL instance (Neon, Supabase, or managed Postgres)
 2. **Authentication**: Configure Clerk application
-3. **Environment Variables**: Set required environment variables for each app
-4. **Migrations**: Run database migrations
-5. **Build**: Build applications for production
+3. **Cloud Accounts**:
+   - Google Cloud Platform (for NL2SQL service)
+   - Vercel account (for API)
+4. **Secrets Configuration**:
+   - GitHub Secrets for CI/CD
+   - Google Secret Manager for Cloud Run
+   - Vercel environment variables
+5. **Migrations**: Run database migrations on first deployment
 
-### Deployment Scripts
+### GitHub Secrets Required
 
-Each application includes deployment-ready configurations:
-- Docker support (coming soon)
-- CI/CD pipeline configurations
-- Environment-specific builds
+**For NL2SQL Service:**
+- `GCP_PROJECT_ID`: Your Google Cloud project ID
+- `GCP_SA_KEY`: Service account JSON key
+
+**For API:**
+- `VERCEL_TOKEN`: Vercel deployment token
+- `VERCEL_ORG_ID`: Vercel organization ID
+- `VERCEL_PROJECT_ID`: Vercel project ID
+- `DATABASE_URL`: PostgreSQL connection string
+- `CLERK_SECRET_KEY`: Clerk secret key
+- `CLERK_PUBLISHABLE_KEY`: Clerk publishable key
+- `CLERK_WEBHOOK_SECRET`: Clerk webhook secret
+
+**Optional (Turborepo Remote Caching):**
+- `TURBO_TOKEN`: Turbo remote cache token
+- `TURBO_TEAM`: Turbo team name
+
+### Deployment Workflows
+
+- `.github/workflows/deploy-nl2sql.yml` - Deploys NL2SQL service to Cloud Run
+- `.github/workflows/deploy-api.yml` - Deploys API to Vercel
+- `.github/workflows/continuous-integration.yml` - CI pipeline for quality checks
+- `.github/workflows/pr-validation.yml` - PR validation tests
 
 ## 🤝 Contributing
 
@@ -378,8 +434,8 @@ For support and questions:
 - **Web App**: 🚧 In development
 - **Mobile App**: 📋 Planned
 - **Documentation**: ✅ Comprehensive API docs with Postman sync
-- **Testing**: ✅ Unit tests implemented
-- **CI/CD**: 📋 Planned
+- **Testing**: ✅ Unit tests and E2E tests implemented
+- **CI/CD**: ✅ Automated deployments (Cloud Run + Vercel)
 
 ---
 

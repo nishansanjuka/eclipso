@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "buildCommand": "cd apps/api && pnpm build",
+  "devCommand": "cd apps/api && pnpm dev",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": null,
+  "outputDirectory": "apps/api/dist",
+  "builds": [
+    {
+      "src": "apps/api/dist/main.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "apps/api/dist/main.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "regions": ["iad1"]
+}
