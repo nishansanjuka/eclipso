@@ -51,5 +51,4 @@ EXPOSE 8080
 #     CMD python -c "import requests; requests.get('http://localhost:${PORT}/api-reference')"
 
 # Run the application using uvicorn with PORT from environment
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers 1
-# Force rebuild 11/11/2025 15:41:02
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers 1"]
