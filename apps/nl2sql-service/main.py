@@ -1,4 +1,4 @@
-# Eclipso NL2SQL Service - Deployed with clean secrets v2
+# Eclipso NL2SQL Service - Fresh deployment after service deletion
 from fastapi import FastAPI
 from src.routes.ask_router import router as ask_router
 from scalar_fastapi import get_scalar_api_reference
