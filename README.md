@@ -1,6 +1,8 @@
 # Eclipso - Point of Sale System
 
 Eclipso is a lightweight, extensible Point-of-Sale (POS) system built for retail and hospitality environments. It provides core POS features and a well-documented API for third-party integrations.
+[API](https://eclipso-api.vercel.app/) , 
+[Nl2SQL](https://nl2sql-service-m6cw7qd6bq-uc.a.run.app)
 
 ## 🏗️ Architecture
 
