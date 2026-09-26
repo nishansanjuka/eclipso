@@ -26,7 +26,7 @@ export const paymentStatusEnum = pgEnum('payment_status', [
 
 export const payments = pgTable('payments', {
   id: uuid('id').defaultRandom().unique().notNull(),
-  saleId: uuid('sale_id').references(() => sales.id),
+  saleId: uuid('sale_id').references(() => sales.id, { onDelete: 'cascade' }),
   method: paymentMethodEnum('method').notNull(),
   amount: numeric('amount', { precision: 10, scale: 2 }).notNull().default('0'),
   status: paymentStatusEnum('status')

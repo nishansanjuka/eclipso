@@ -31,9 +31,7 @@ export const returns = pgTable('returns', {
   saleId: uuid('sale_id')
     .notNull()
     .references(() => sales.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   qty: integer('qty').notNull(),
   reason: returnReasonEnum('reason').notNull(),
   status: returnStatusEnum('status')

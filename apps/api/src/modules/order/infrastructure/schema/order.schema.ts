@@ -18,7 +18,7 @@ export const orders = pgTable('orders', {
     .notNull(),
   supplierId: uuid('supplier_id')
     .references(() => suppliers.id, {
-      onDelete: 'cascade',
+      onDelete: 'no action',
     })
     .notNull(),
   invoiceId: uuid('invoice_id')

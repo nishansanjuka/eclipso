@@ -15,8 +15,13 @@ export const logTypeEnum = pgEnum('log_type', LogType);
 
 export const auditLogs = pgTable('audit_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').references(() => users.clerkId),
-  orgId: text('org_id').references(() => businesses.orgId),
+  userId: text('user_id').references(() => users.clerkId, {
+    onDelete: 'set null',
+  }),
+  // Keep the trail when a business is deleted (attribution is nulled).
+  orgId: text('org_id').references(() => businesses.orgId, {
+    onDelete: 'set null',
+  }),
   action: actionTypeEnum('action').notNull(),
   logType: logTypeEnum('log_type').notNull(),
   resource: text('resource').notNull(),

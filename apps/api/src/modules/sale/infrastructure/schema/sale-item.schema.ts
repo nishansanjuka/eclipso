@@ -17,9 +17,11 @@ export const saleItems = pgTable('sale_items', {
       onDelete: 'cascade',
     })
     .notNull(),
+  // A product that has been sold can no longer be deleted (NO ACTION rather
+  // than RESTRICT so deleting a whole business can still cascade).
   productId: uuid('product_id')
     .references(() => products.id, {
-      onDelete: 'cascade',
+      onDelete: 'no action',
     })
     .notNull(),
   discountId: uuid('discount_id').references(() => discounts.id, {
@@ -29,7 +31,14 @@ export const saleItems = pgTable('sale_items', {
     onDelete: 'set null',
   }),
   qty: integer('qty').notNull().default(1),
+  /** Unit price at the time of sale (copied from the product, not the client). */
   price: numeric('price', { precision: 10, scale: 2 }).notNull().default('0'),
+  discountAmount: numeric('discount_amount', { precision: 10, scale: 2 })
+    .notNull()
+    .default('0'),
+  taxAmount: numeric('tax_amount', { precision: 10, scale: 2 })
+    .notNull()
+    .default('0'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

@@ -23,9 +23,7 @@ export const refunds = pgTable('refunds', {
     .notNull()
     .unique()
     .references(() => returns.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   method: refundMethodEnum('method').notNull(),
   amount: numeric('amount', { precision: 10, scale: 2 }).notNull().default('0'),
   reason: text('reason'),

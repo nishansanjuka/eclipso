@@ -9,11 +9,9 @@ export const adjustments = pgTable('adjustments', {
     .references(() => businesses.id, {
       onDelete: 'cascade',
     }),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.clerkId, {
-      onDelete: 'cascade',
-    }),
+  userId: text('user_id').references(() => users.clerkId, {
+    onDelete: 'set null',
+  }),
   reason: text('reason').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

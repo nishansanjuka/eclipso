@@ -15,6 +15,13 @@
       "when": 1790438390337,
       "tag": "0001_access_control",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790448183614,
+      "tag": "0002_pos_integrity",
+      "breakpoints": true
     }
   ]
 }

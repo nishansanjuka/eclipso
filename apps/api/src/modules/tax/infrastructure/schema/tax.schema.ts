@@ -12,7 +12,7 @@ export const taxes = pgTable('tax', {
   id: uuid('id').defaultRandom().unique().notNull(),
   businessId: uuid('business_id')
     .notNull()
-    .references(() => businesses.id),
+    .references(() => businesses.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   rate: numeric('rate', { precision: 5, scale: 2 }).notNull().default('0'),
   type: taxTypeEnum('type').notNull(),

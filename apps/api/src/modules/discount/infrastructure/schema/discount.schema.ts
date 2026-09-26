@@ -13,7 +13,7 @@ export const discounts = pgTable('discount', {
   id: uuid('id').defaultRandom().unique().notNull(),
   businessId: uuid('business_id')
     .notNull()
-    .references(() => businesses.id),
+    .references(() => businesses.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   value: numeric('value', { precision: 10, scale: 2 }).notNull().default('0'),
   type: discountTypeEnum('type').notNull(),
