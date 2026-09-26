@@ -24,3 +24,8 @@ export class DatabaseModule {}
 export type DrizzleClient = NodePgDatabase<typeof schema> & {
   $client: Pool;
 };
+
+/** Either the pool-backed client or an open transaction. */
+export type DbExecutor =
+  | DrizzleClient
+  | Parameters<Parameters<DrizzleClient['transaction']>[0]>[0];

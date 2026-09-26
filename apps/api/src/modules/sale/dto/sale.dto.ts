@@ -1,32 +1,48 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CreatePaymentDto } from '../../payment/dto/payment.dto';
+import { PaymentMethodEnum } from '../../payment/infrastructure/enums/payment.enum';
 
+/**
+ * Checkout request. Prices, totals, quantities of the sale and payment status
+ * are deliberately NOT accepted: the server computes them from the catalog.
+ */
 export class CreateSaleItemDto {
-  id?: string;
-  saleId?: string;
-  @ApiProperty()
+  @ApiProperty({ format: 'uuid' })
   productId: string;
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ format: 'uuid' })
   discountId?: string;
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ format: 'uuid' })
   taxId?: string;
-  @ApiProperty()
+  @ApiProperty({ minimum: 1 })
   qty: number;
-  @ApiProperty()
-  price: string;
+}
+
+export class CreateSalePaymentDto {
+  @ApiProperty({ enum: PaymentMethodEnum })
+  method: PaymentMethodEnum;
+  @ApiProperty({
+    description: 'Amount tendered, must equal the computed sale total.',
+    example: '12.34',
+  })
+  amount: string;
+  @ApiPropertyOptional()
+  transactionRef?: string;
 }
 
 export class CreateSaleDto {
-  id?: string;
-  businessId: string;
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ format: 'uuid' })
   customerId?: string;
-  @ApiProperty()
-  totalAmount: string;
-  @ApiProperty()
-  qty: number;
   @ApiProperty({ type: [CreateSaleItemDto] })
   items: CreateSaleItemDto[];
-  @ApiPropertyOptional({ type: CreatePaymentDto })
-  payment?: CreatePaymentDto;
+  @ApiPropertyOptional({ type: CreateSalePaymentDto })
+  payment?: CreateSalePaymentDto;
+}
+
+export class UpdateSaleDto {
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  customerId?: string | null;
+}
+
+export class VoidSaleDto {
+  @ApiProperty({ description: 'Why the sale is being voided.' })
+  reason: string;
 }

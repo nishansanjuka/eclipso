@@ -1,47 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ReturnRepository } from './return.repository';
-import {
-  CreateRefundDto,
-  CreateReturnDto,
-  CreateReturnItemDto,
-} from '../dto/return.dto';
 
+/** Read side only. Returns are created through `ReturnCreateUseCase`. */
 @Injectable()
 export class ReturnService {
   constructor(private readonly returnRepository: ReturnRepository) {}
-
-  async createReturn(
-    returnData: Omit<CreateReturnDto, 'items' | 'refund'> & { userId: string },
-  ) {
-    return await this.returnRepository.createReturn(returnData);
-  }
-
-  async createReturnItem(
-    returnItemData: CreateReturnItemDto & { returnId: string },
-  ) {
-    return await this.returnRepository.createReturnItem(returnItemData);
-  }
-
-  async createReturnItems(
-    returnItemsData: (CreateReturnItemDto & { returnId: string })[],
-  ) {
-    return await this.returnRepository.createReturnItems(returnItemsData);
-  }
-
-  async createRefund(
-    refundData: CreateRefundDto & { returnId: string; userId: string },
-  ) {
-    return await this.returnRepository.createRefund(refundData);
-  }
-
-  async updateReturn(id: string, returnData: Partial<CreateReturnDto>) {
-    return await this.returnRepository.updateReturn(id, returnData);
-  }
-
-  async deleteReturn(id: string) {
-    await this.returnRepository.deleteReturnItemsByReturnId(id);
-    return await this.returnRepository.deleteReturn(id);
-  }
 
   async getReturnById(id: string, businessId: string) {
     const returnRecord = await this.returnRepository.getReturnById(

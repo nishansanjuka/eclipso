@@ -60,7 +60,10 @@ import {
   payments,
   paymentStatusEnum,
 } from '../../modules/payment/infrastructure/schema/payment.schema';
-import { sales } from '../../modules/sale/infrastructure/schema/sale.schema';
+import {
+  sales,
+  saleStatusEnum,
+} from '../../modules/sale/infrastructure/schema/sale.schema';
 import { saleItems } from '../../modules/sale/infrastructure/schema/sale-item.schema';
 import {
   refundMethodEnum,
@@ -134,3 +137,4 @@ export const PaymentStatusEnum = paymentStatusEnum;
 export const RefundMethodEnum = refundMethodEnum;
 export const ReturnReasonEnum = returnReasonEnum;
 export const ReturnStatusEnum = returnStatusEnum;
+export const SaleStatusEnum = saleStatusEnum;

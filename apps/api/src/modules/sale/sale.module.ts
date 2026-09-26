@@ -3,9 +3,10 @@ import { DatabaseModule } from '../../shared/database/drizzle.module';
 import { SaleController } from './presentation/sale.controller';
 import { SaleService } from './infrastructure/sale.service';
 import { SaleRepository } from './infrastructure/sale.repository';
+import { SaleCheckoutRepository } from './infrastructure/sale-checkout.repository';
 import { SaleCreateUseCase } from './application/sale-create.usecase';
 import { SaleUpdateUseCase } from './application/sale-update.usecase';
-import { SaleDeleteUseCase } from './application/sale-delete.usecase';
+import { SaleVoidUseCase } from './application/sale-void.usecase';
 import { SaleGetUseCase } from './application/sale-get.usecase';
 import { BusinessService } from '../business/infrastructure/business.service';
 import { BusinessRepository } from '../business/infrastructure/business.repository';
@@ -22,9 +23,10 @@ import { PaymentRepository } from '../payment/infrastructure/payment.repository'
   providers: [
     SaleService,
     SaleRepository,
+    SaleCheckoutRepository,
     SaleCreateUseCase,
     SaleUpdateUseCase,
-    SaleDeleteUseCase,
+    SaleVoidUseCase,
     SaleGetUseCase,
     BusinessService,
     BusinessRepository,

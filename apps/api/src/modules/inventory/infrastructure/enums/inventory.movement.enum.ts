@@ -3,4 +3,5 @@ export enum InventoryMovementTypeEnum {
   SALE = 'sale',
   RETURN = 'return',
   ADJUSTMENT = 'adjustment',
+  VOID = 'void',
 }

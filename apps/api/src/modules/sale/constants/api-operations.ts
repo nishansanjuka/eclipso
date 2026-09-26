@@ -7,12 +7,12 @@ export const SALE_API_OPERATIONS = {
   UPDATE: {
     operationId: 'updateSale',
     description:
-      "Updates an existing sale's information by ID. This operation allows modification of sale details within the user's organization.",
+      'Changes the customer attached to a completed sale. Totals, lines and payments cannot be edited; use a return or a void to correct a sale.',
   },
-  DELETE: {
-    operationId: 'deleteSale',
+  VOID: {
+    operationId: 'voidSale',
     description:
-      "Permanently removes a sale from the system by ID. This operation will delete the sale record, all associated sale items, and inventory movements within the user's organization. This action cannot be undone.",
+      'Voids a completed sale with a reason. Sales are never deleted: the sale is marked voided, all sold units are returned to stock with inventory movements, and completed payments are marked refunded. A sale that already has returns cannot be voided, and a voided sale cannot be voided again.',
   },
   GET: {
     operationId: 'getSale',

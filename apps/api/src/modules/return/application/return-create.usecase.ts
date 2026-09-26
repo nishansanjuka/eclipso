@@ -1,149 +1,148 @@
 import {
   BadRequestException,
-  Inject,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateReturnDto } from '../dto/return.dto';
-import { ReturnService } from '../infrastructure/return.service';
-import { BusinessService } from '../../business/infrastructure/business.service';
-import { SaleService } from '../../sale/infrastructure/sale.service';
-import { InventoryMovementService } from '../../inventory/infrastructure/inventory.movements.service';
-import { ProductService } from '../../product/infrastructure/product.service';
 import { ReturnCreateEntity } from '../domain/return.entity';
-import { type DrizzleClient } from '../../../shared/database/drizzle.module';
+import { refundForReturnMinor } from '../domain/refund-pricing';
+import { ReturnCheckoutRepository } from '../infrastructure/return-checkout.repository';
+import { ReturnStatusEnum } from '../infrastructure/enums/return.enum';
+import { SaleCheckoutRepository } from '../../sale/infrastructure/sale-checkout.repository';
+import { SaleStatusEnum } from '../../sale/infrastructure/enums/sale.enum';
+import { toDecimal } from '../../sale/domain/sale-pricing';
 import { InventoryMovementTypeEnum } from '../../inventory/infrastructure/enums/inventory.movement.enum';
-import { sql } from 'drizzle-orm';
 
+/**
+ * Processes a return against an existing sale.
+ *
+ * The sale row is locked first, so concurrent returns of the same sale are
+ * serialized and the "already returned" check cannot be raced. Quantity,
+ * refund amount, status and cashier are all derived here, never trusted from
+ * the request. One transaction: stock, ledger, return and refund commit
+ * together or not at all.
+ */
 @Injectable()
 export class ReturnCreateUseCase {
   constructor(
-    @Inject('DRIZZLE_CLIENT') private readonly db: DrizzleClient,
-    private readonly returnService: ReturnService,
-    private readonly businessService: BusinessService,
-    private readonly saleService: SaleService,
-    private readonly inventoryMovementService: InventoryMovementService,
-    private readonly productService: ProductService,
+    private readonly sales: SaleCheckoutRepository,
+    private readonly returnsRepo: ReturnCheckoutRepository,
   ) {}
 
   async execute(
-    orgId: string,
-    userId: string,
-    returnData: Omit<CreateReturnDto, 'userId'>,
+    businessId: string,
+    cashierClerkId: string,
+    returnData: CreateReturnDto,
   ) {
-    // Get business from orgId
-    const business =
-      await this.businessService.getBusinessWithUserByOrgId(orgId);
+    const entity = new ReturnCreateEntity(returnData);
 
-    if (!business) {
-      throw new NotFoundException('Business not found');
-    }
-
-    const businessId = business.id;
-
-    // Execute everything in a transaction
-    return await this.db.transaction(async () => {
-      // Step 1: Validate sale exists and belongs to business
-      const sale = await this.saleService.getSaleById(
-        returnData.saleId,
-        businessId,
-      );
-
-      if (!sale) {
-        throw new NotFoundException('Sale not found');
+    return this.sales.transaction(async (tx) => {
+      const sale = await this.sales.lockSale(tx, businessId, entity.saleId);
+      if (!sale) throw new NotFoundException('Sale not found');
+      if (sale.status === SaleStatusEnum.VOIDED) {
+        throw new ConflictException(
+          'This sale was voided and cannot be returned',
+        );
       }
 
-      // Step 2: Validate return items exist in the sale
-      for (const item of returnData.items) {
-        const saleItem = sale.items.find((si) => si.id === item.saleItemId);
+      const saleItems = await this.sales.loadSaleItems(tx, sale.id);
+      const itemById = new Map(saleItems.map((i) => [i.id, i]));
+      const alreadyReturned = await this.returnsRepo.returnedQtyBySaleItem(
+        tx,
+        entity.items.map((i) => i.saleItemId),
+      );
 
-        if (!saleItem) {
+      // Validate every line and price the refund from what was actually paid.
+      let refundMinor = 0;
+      let totalQty = 0;
+      for (const item of entity.items) {
+        const line = itemById.get(item.saleItemId);
+        if (!line) {
           throw new NotFoundException(
             `Sale item with ID ${item.saleItemId} not found in this sale`,
           );
         }
-
-        if (item.qtyReturned > saleItem.qty) {
+        const returned = alreadyReturned.get(line.id) ?? 0;
+        const remaining = line.qty - returned;
+        if (item.qtyReturned > remaining) {
           throw new BadRequestException(
-            `Cannot return ${item.qtyReturned} items. Only ${saleItem.qty} were purchased.`,
+            `Cannot return ${item.qtyReturned} of sale item ${line.id}: ${line.qty} sold, ${returned} already returned, ${remaining} left.`,
           );
         }
+        refundMinor += refundForReturnMinor(line, returned, item.qtyReturned);
+        totalQty += item.qtyReturned;
       }
 
-      // Step 3: Create the return entity
-      const returnEntity = new ReturnCreateEntity({
-        ...returnData,
-        userId,
+      const cashierId = await this.sales.findUserIdByClerkId(
+        tx,
+        cashierClerkId,
+      );
+      const returnRecord = await this.returnsRepo.insertReturn(tx, {
+        saleId: sale.id,
+        userId: cashierId ?? null,
+        qty: totalQty,
+        reason: entity.reason,
+        status: ReturnStatusEnum.COMPLETED,
+        notes: entity.notes ?? null,
       });
 
-      // Step 4: Create the return record
-      const [returnRecord] = await this.returnService.createReturn({
-        saleId: returnEntity.saleId,
-        userId: returnEntity.userId,
-        qty: returnEntity.qty,
-        reason: returnEntity.reason,
-        status: returnEntity.status,
-        notes: returnEntity.notes,
-      });
-
-      // Step 5: Create return items
-      const returnItemRecords = await this.returnService.createReturnItems(
-        returnEntity.items.map((item) => ({
+      const items = await this.returnsRepo.insertItems(
+        tx,
+        entity.items.map((i) => ({
           returnId: returnRecord.id,
-          saleItemId: item.saleItemId,
-          qtyReturned: item.qtyReturned,
+          saleItemId: i.saleItemId,
+          qtyReturned: i.qtyReturned,
         })),
       );
 
-      // Step 6: Create inventory movements and update product stock
-      const inventoryMovements: Awaited<
-        ReturnType<typeof this.inventoryMovementService.createBulk>
-      > = [];
-      for (const item of returnItemRecords) {
-        // Get the sale item to find the product
-        const saleItem = sale.items.find((si) => si.id === item.saleItemId);
-        if (!saleItem) continue;
-
-        // Create inventory movement (IN - adding back to stock)
-        const movements = await this.inventoryMovementService.createBulk([
-          {
-            productId: saleItem.productId,
-            qty: item.qtyReturned, // Positive quantity for return (stock IN)
-            movementType: InventoryMovementTypeEnum.RETURN,
-          },
-        ]);
-        inventoryMovements.push(...movements);
-
-        // Update product stock (increment)
-        await this.productService.updateProductStockBySql(
-          saleItem.productId,
-          businessId,
-          sql`stock_qty + ${item.qtyReturned}`,
+      // Restock in product-id order (consistent lock order), summed per product.
+      const qtyByProduct = new Map<string, number>();
+      for (const item of entity.items) {
+        const line = itemById.get(item.saleItemId)!;
+        qtyByProduct.set(
+          line.productId,
+          (qtyByProduct.get(line.productId) ?? 0) + item.qtyReturned,
         );
       }
-
-      // Step 7: Create refund if provided
-      let refund:
-        | Awaited<ReturnType<typeof this.returnService.createRefund>>[0]
-        | null = null;
-      if (returnEntity.refund) {
-        const [createdRefund] = await this.returnService.createRefund({
-          returnId: returnRecord.id,
-          userId: returnEntity.userId,
-          method: returnEntity.refund.method,
-          amount: returnEntity.refund.amount,
-          reason: returnEntity.refund.reason,
-          transactionRef: returnEntity.refund.transactionRef,
-        });
-        refund = createdRefund;
+      for (const productId of [...qtyByProduct.keys()].sort()) {
+        const ok = await this.sales.restock(
+          tx,
+          businessId,
+          productId,
+          qtyByProduct.get(productId)!,
+        );
+        if (!ok) throw new NotFoundException(`Product ${productId} not found`);
       }
 
-      // Step 8: Return complete return data
+      const inventoryMovements = await this.sales.insertMovements(
+        tx,
+        [...qtyByProduct.entries()].map(([productId, qty]) => ({
+          productId,
+          saleId: sale.id,
+          qty,
+          movementType: InventoryMovementTypeEnum.RETURN,
+        })),
+      );
+
+      const refund = entity.refund
+        ? await this.returnsRepo.insertRefund(tx, {
+            returnId: returnRecord.id,
+            userId: cashierId ?? null,
+            method: entity.refund.method,
+            // Computed above, never taken from the request.
+            amount: toDecimal(refundMinor),
+            reason: entity.refund.reason ?? null,
+            transactionRef: entity.refund.transactionRef ?? null,
+          })
+        : null;
+
       return {
         return: returnRecord,
-        items: returnItemRecords,
+        items,
         inventoryMovements,
         refund,
+        refundAmount: toDecimal(refundMinor),
       };
     });
   }

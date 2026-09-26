@@ -1,146 +1,176 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ReturnCreateUseCase } from '../return-create.usecase';
-import { ReturnService } from '../../infrastructure/return.service';
-import { BusinessService } from '../../../business/infrastructure/business.service';
-import { SaleService } from '../../../sale/infrastructure/sale.service';
-import { InventoryMovementService } from '../../../inventory/infrastructure/inventory.movements.service';
-import { ProductService } from '../../../product/infrastructure/product.service';
+import {
+  RefundMethodEnum,
+  ReturnReasonEnum,
+} from '../../infrastructure/enums/return.enum';
+
+const BIZ = 'business-1';
+const SALE = '11111111-1111-4111-8111-111111111111';
+const ITEM_A = '22222222-2222-4222-8222-222222222222';
+const ITEM_B = '33333333-3333-4333-8333-333333333333';
+
+// A: 3 x 10.00, -3.00 discount, +2.16 tax = 29.16 paid. B: 1 x 5.00.
+const lines = [
+  {
+    id: ITEM_A,
+    productId: 'p-b',
+    qty: 3,
+    price: '10.00',
+    discountAmount: '3.00',
+    taxAmount: '2.16',
+  },
+  {
+    id: ITEM_B,
+    productId: 'p-a',
+    qty: 1,
+    price: '5.00',
+    discountAmount: '0.00',
+    taxAmount: '0.00',
+  },
+];
 
 describe('ReturnCreateUseCase', () => {
-  let usecase: ReturnCreateUseCase;
-  let returnService: jest.Mocked<ReturnService>;
-  let businessService: jest.Mocked<BusinessService>;
-  let saleService: jest.Mocked<SaleService>;
-  let inventoryMovementService: jest.Mocked<InventoryMovementService>;
-  let productService: jest.Mocked<ProductService>;
-  let mockDb: any;
+  let sales: Record<string, jest.Mock>;
+  let returnsRepo: Record<string, jest.Mock>;
+  let useCase: ReturnCreateUseCase;
 
-  beforeEach(async () => {
-    mockDb = {
-      transaction: jest.fn((callback) => callback()),
+  beforeEach(() => {
+    sales = {
+      transaction: jest.fn((fn: (tx: unknown) => unknown) => fn('tx')),
+      lockSale: jest.fn().mockResolvedValue({ id: SALE, status: 'completed' }),
+      loadSaleItems: jest.fn().mockResolvedValue(lines),
+      findUserIdByClerkId: jest.fn().mockResolvedValue('user-uuid'),
+      restock: jest.fn().mockResolvedValue(true),
+      insertMovements: jest.fn((_tx, v) => Promise.resolve(v)),
     };
-
-    const mockReturnService = {
-      createReturn: jest.fn(),
-      createReturnItems: jest.fn(),
-      createRefund: jest.fn(),
+    returnsRepo = {
+      returnedQtyBySaleItem: jest.fn().mockResolvedValue(new Map()),
+      insertReturn: jest.fn((_tx, v) => Promise.resolve({ id: 'ret-1', ...v })),
+      insertItems: jest.fn((_tx, v) => Promise.resolve(v)),
+      insertRefund: jest.fn((_tx, v) => Promise.resolve({ id: 'ref-1', ...v })),
     };
-
-    const mockBusinessService = {
-      getBusinessWithUserByOrgId: jest.fn(),
-    };
-
-    const mockSaleService = {
-      getSaleById: jest.fn(),
-    };
-
-    const mockInventoryMovementService = {
-      createBulk: jest.fn(),
-    };
-
-    const mockProductService = {
-      updateProductStockBySql: jest.fn(),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ReturnCreateUseCase,
-        {
-          provide: 'DRIZZLE_CLIENT',
-          useValue: mockDb,
-        },
-        {
-          provide: ReturnService,
-          useValue: mockReturnService,
-        },
-        {
-          provide: BusinessService,
-          useValue: mockBusinessService,
-        },
-        {
-          provide: SaleService,
-          useValue: mockSaleService,
-        },
-        {
-          provide: InventoryMovementService,
-          useValue: mockInventoryMovementService,
-        },
-        {
-          provide: ProductService,
-          useValue: mockProductService,
-        },
-      ],
-    }).compile();
-
-    usecase = module.get<ReturnCreateUseCase>(ReturnCreateUseCase);
-    returnService = module.get(ReturnService);
-    businessService = module.get(BusinessService);
-    saleService = module.get(SaleService);
-    inventoryMovementService = module.get(InventoryMovementService);
-    productService = module.get(ProductService);
+    useCase = new ReturnCreateUseCase(sales as any, returnsRepo as any);
   });
 
-  describe('execute', () => {
-    const orgId = 'org-123';
-    const userId = 'user-123';
-    const returnData = {
-      saleId: 'sale-123',
+  const run = (data: any) => useCase.execute(BIZ, 'clerk_1', data);
+  const base = {
+    saleId: SALE,
+    reason: ReturnReasonEnum.DEFECTIVE,
+    items: [{ saleItemId: ITEM_A, qtyReturned: 1 }],
+  };
+
+  it('computes qty, status and refund from the sale, ignoring client values', async () => {
+    const result: any = await run({
+      ...base,
+      qty: 99,
+      status: 'pending',
+      refund: { method: RefundMethodEnum.CASH, amount: '9999.00' },
+    });
+
+    expect(result.return).toMatchObject({
+      saleId: SALE,
+      userId: 'user-uuid',
       qty: 1,
-      reason: 'defective' as const,
-      status: 'pending' as const,
+      status: 'completed',
+    });
+    expect(result.refund.amount).toBe('9.72'); // 29.16 / 3
+    expect(result.refundAmount).toBe('9.72');
+  });
+
+  it('restocks and writes RETURN movements in product-id order', async () => {
+    await run({
+      ...base,
       items: [
-        {
-          saleItemId: 'item-123',
-          qtyReturned: 1,
-        },
+        { saleItemId: ITEM_A, qtyReturned: 2 },
+        { saleItemId: ITEM_B, qtyReturned: 1 },
       ],
-    };
-    const mockBusiness = { id: 'business-123' };
-    const mockSale = {
-      id: 'sale-123',
-      items: [{ id: 'item-123', qty: 2, productId: 'product-123' }],
-    };
-    const mockReturn = { id: 'return-123' };
-    const mockReturnItems = [{ id: 'return-item-123', saleItemId: 'item-123' }];
-
-    it('should create a return successfully when business and sale exist', async () => {
-      // Since the usecase uses transaction and complex entity validation,
-      // we're testing that the business and sale validation works
-      businessService.getBusinessWithUserByOrgId.mockResolvedValue(
-        mockBusiness as any,
-      );
-
-      // The usecase will fail during entity creation due to complex validation
-      // but we've verified the business lookup works
-      await expect(
-        usecase.execute(orgId, userId, returnData as any),
-      ).rejects.toThrow();
-
-      expect(businessService.getBusinessWithUserByOrgId).toHaveBeenCalledWith(
-        orgId,
-      );
     });
 
-    it('should throw NotFoundException when business not found', async () => {
-      businessService.getBusinessWithUserByOrgId.mockResolvedValue(null as any);
+    expect(sales.restock.mock.calls.map((c) => [c[2], c[3]])).toEqual([
+      ['p-a', 1],
+      ['p-b', 2],
+    ]);
+    expect(sales.insertMovements.mock.calls[0][1]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          productId: 'p-b',
+          qty: 2,
+          movementType: 'return',
+        }),
+      ]),
+    );
+  });
 
-      await expect(
-        usecase.execute(orgId, userId, returnData as any),
-      ).rejects.toThrow(NotFoundException);
-      expect(returnService.createReturn).not.toHaveBeenCalled();
+  it('refunds exactly what was paid across several partial returns', async () => {
+    returnsRepo.returnedQtyBySaleItem.mockResolvedValue(new Map([[ITEM_A, 1]]));
+    const second: any = await run({
+      ...base,
+      items: [{ saleItemId: ITEM_A, qtyReturned: 2 }],
+      refund: { method: RefundMethodEnum.CARD },
     });
+    // first return refunded 9.72; the remaining two make up the rest of 29.16
+    expect(second.refundAmount).toBe('19.44');
+  });
 
-    it('should throw NotFoundException when sale not found', async () => {
-      businessService.getBusinessWithUserByOrgId.mockResolvedValue(
-        mockBusiness as any,
-      );
-      saleService.getSaleById.mockResolvedValue(null as any);
+  it('refuses to return more than was sold minus what was already returned', async () => {
+    returnsRepo.returnedQtyBySaleItem.mockResolvedValue(new Map([[ITEM_A, 2]]));
+    await expect(
+      run({ ...base, items: [{ saleItemId: ITEM_A, qtyReturned: 2 }] }),
+    ).rejects.toThrow(/3 sold, 2 already returned, 1 left/);
+    expect(returnsRepo.insertReturn).not.toHaveBeenCalled();
+    expect(sales.restock).not.toHaveBeenCalled();
+  });
 
-      await expect(
-        usecase.execute(orgId, userId, returnData as any),
-      ).rejects.toThrow(NotFoundException);
-      expect(returnService.createReturn).not.toHaveBeenCalled();
-    });
+  it('404s for a sale from another business or an item not on the sale', async () => {
+    sales.lockSale.mockResolvedValue(undefined);
+    await expect(run(base)).rejects.toThrow(NotFoundException);
+
+    sales.lockSale.mockResolvedValue({ id: SALE, status: 'completed' });
+    await expect(
+      run({
+        ...base,
+        items: [
+          {
+            saleItemId: '44444444-4444-4444-8444-444444444444',
+            qtyReturned: 1,
+          },
+        ],
+      }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('refuses returns on a voided sale', async () => {
+    sales.lockSale.mockResolvedValue({ id: SALE, status: 'voided' });
+    await expect(run(base)).rejects.toThrow(ConflictException);
+  });
+
+  it('locks the sale before reading the returned quantities', async () => {
+    await run(base);
+    expect(sales.lockSale.mock.invocationCallOrder[0]).toBeLessThan(
+      returnsRepo.returnedQtyBySaleItem.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('validates the request', async () => {
+    await expect(run({ ...base, items: [] })).rejects.toThrow(/At least one/);
+    await expect(
+      run({ ...base, items: [{ saleItemId: ITEM_A, qtyReturned: 0 }] }),
+    ).rejects.toThrow(/at least 1/);
+    await expect(
+      run({
+        ...base,
+        items: [
+          { saleItemId: ITEM_A, qtyReturned: 1 },
+          { saleItemId: ITEM_A, qtyReturned: 1 },
+        ],
+      }),
+    ).rejects.toThrow(/only once/);
+    await expect(run({ ...base, saleId: 'x' })).rejects.toThrow(/valid UUID/);
+  });
+
+  it('a stock restore failure aborts the whole return', async () => {
+    sales.restock.mockResolvedValue(false);
+    await expect(run(base)).rejects.toThrow(NotFoundException);
   });
 });

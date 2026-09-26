@@ -3,6 +3,8 @@ import { DatabaseModule } from '../../shared/database/drizzle.module';
 import { ReturnController } from './presentation/return.controller';
 import { ReturnService } from './infrastructure/return.service';
 import { ReturnRepository } from './infrastructure/return.repository';
+import { ReturnCheckoutRepository } from './infrastructure/return-checkout.repository';
+import { SaleCheckoutRepository } from '../sale/infrastructure/sale-checkout.repository';
 import { ReturnCreateUseCase } from './application/return-create.usecase';
 import { BusinessService } from '../business/infrastructure/business.service';
 import { BusinessRepository } from '../business/infrastructure/business.repository';
@@ -21,6 +23,8 @@ import { PaymentRepository } from '../payment/infrastructure/payment.repository'
   providers: [
     ReturnService,
     ReturnRepository,
+    ReturnCheckoutRepository,
+    SaleCheckoutRepository,
     ReturnCreateUseCase,
     BusinessService,
     BusinessRepository,

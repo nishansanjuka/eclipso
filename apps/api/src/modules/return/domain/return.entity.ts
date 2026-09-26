@@ -9,107 +9,73 @@ import {
 import {
   RefundMethodEnum,
   ReturnReasonEnum,
-  ReturnStatusEnum,
 } from '../infrastructure/enums/return.enum';
 
+const MAX_LINES = 200;
+
 export class ReturnItemCreateEntity extends BaseModel {
-  @Z(z.string().nullable().optional())
-  public readonly id?: string;
-
-  @Z(z.string().nullable().optional())
-  public readonly returnId?: string;
-
   @Z(
     z
       .string({ error: 'Invalid Sale Item ID' })
-      .min(1, 'Sale Item ID is required'),
+      .uuid('Sale Item ID must be a valid UUID'),
   )
   public readonly saleItemId: string;
 
   @Z(
     z
       .number({ error: 'Invalid quantity' })
+      .int('Quantity returned must be a whole number')
       .min(1, 'Quantity returned must be at least 1'),
   )
   public readonly qtyReturned: number;
 
   constructor(params: CreateReturnItemDto) {
     super(params);
-    this.id = params.id;
-    this.returnId = params.returnId;
     this.saleItemId = params.saleItemId;
     this.qtyReturned = params.qtyReturned;
   }
 }
 
 export class RefundCreateEntity extends BaseModel {
-  @Z(z.string().nullable().optional())
-  public readonly id?: string;
-
-  @Z(z.string().nullable().optional())
-  public readonly returnId?: string;
-
-  @Z(z.string().nullable().optional())
-  public readonly userId?: string;
-
   @Z(z.nativeEnum(RefundMethodEnum, { error: 'Invalid refund method' }))
   public readonly method: RefundMethodEnum;
 
-  @Z(
-    z
-      .string({ error: 'Invalid amount' })
-      .regex(/^\d+(\.\d{1,2})?$/, 'Amount must be a valid decimal'),
-  )
-  public readonly amount: string;
+  @Z(z.string().max(255).nullable().optional())
+  public readonly reason?: string | null;
 
-  @Z(z.string().nullable().optional())
-  public readonly reason?: string;
-
-  @Z(z.string().nullable().optional())
-  public readonly transactionRef?: string;
+  @Z(z.string().max(255).nullable().optional())
+  public readonly transactionRef?: string | null;
 
   constructor(params: CreateRefundDto) {
     super(params);
-    this.id = params.id;
-    this.returnId = params.returnId;
-    this.userId = params.userId;
     this.method = params.method;
-    this.amount = params.amount;
     this.reason = params.reason;
     this.transactionRef = params.transactionRef;
   }
 }
 
 export class ReturnCreateEntity extends BaseModel {
-  @Z(z.string().nullable().optional())
-  public readonly id?: string;
-
-  @Z(z.string({ error: 'Invalid Sale ID' }).min(1, 'Sale ID is required'))
-  public readonly saleId: string;
-
-  @Z(z.string({ error: 'Invalid User ID' }).min(1, 'User ID is required'))
-  public readonly userId: string;
-
   @Z(
-    z
-      .number({ error: 'Invalid quantity' })
-      .min(1, 'Quantity must be at least 1'),
+    z.string({ error: 'Invalid Sale ID' }).uuid('Sale ID must be a valid UUID'),
   )
-  public readonly qty: number;
+  public readonly saleId: string;
 
   @Z(z.nativeEnum(ReturnReasonEnum, { error: 'Invalid return reason' }))
   public readonly reason: ReturnReasonEnum;
 
-  @Z(z.nativeEnum(ReturnStatusEnum, { error: 'Invalid return status' }))
-  public readonly status: ReturnStatusEnum;
-
-  @Z(z.string().nullable().optional())
-  public readonly notes?: string;
+  @Z(z.string().max(1000).nullable().optional())
+  public readonly notes?: string | null;
 
   @Z(
     z
       .array(z.instanceof(ReturnItemCreateEntity))
-      .min(1, 'At least one return item is required'),
+      .min(1, 'At least one return item is required')
+      .max(MAX_LINES, `A return can have at most ${MAX_LINES} lines`)
+      .refine(
+        (items) =>
+          new Set(items.map((i) => i.saleItemId)).size === items.length,
+        'Each sale item can appear only once per return',
+      ),
   )
   public readonly items: ReturnItemCreateEntity[];
 
@@ -117,17 +83,17 @@ export class ReturnCreateEntity extends BaseModel {
   public readonly refund?: RefundCreateEntity;
 
   constructor(params: CreateReturnDto) {
-    super(params);
-    this.id = params.id;
-    this.saleId = params.saleId;
-    this.userId = params.userId!;
-    this.qty = params.qty;
-    this.reason = params.reason;
-    this.status = params.status;
-    this.notes = params.notes;
-    this.items = params.items.map((item) => new ReturnItemCreateEntity(item));
-    this.refund = params.refund
+    const items = (params.items ?? []).map(
+      (item) => new ReturnItemCreateEntity(item),
+    );
+    const refund = params.refund
       ? new RefundCreateEntity(params.refund)
       : undefined;
+    super({ ...params, items, refund });
+    this.saleId = params.saleId;
+    this.reason = params.reason;
+    this.notes = params.notes;
+    this.items = items;
+    this.refund = refund;
   }
 }

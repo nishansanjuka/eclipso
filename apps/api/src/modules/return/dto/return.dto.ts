@@ -2,26 +2,22 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   RefundMethodEnum,
   ReturnReasonEnum,
-  ReturnStatusEnum,
 } from '../infrastructure/enums/return.enum';
 
+/**
+ * Return request. Quantities of the return, the refund amount, the status and
+ * the cashier are NOT accepted: the server derives them from the original sale.
+ */
 export class CreateReturnItemDto {
-  id?: string;
-  returnId?: string;
-  @ApiProperty()
+  @ApiProperty({ format: 'uuid' })
   saleItemId: string;
-  @ApiProperty()
+  @ApiProperty({ minimum: 1 })
   qtyReturned: number;
 }
 
 export class CreateRefundDto {
-  id?: string;
-  returnId?: string;
-  userId?: string;
   @ApiProperty({ enum: RefundMethodEnum })
   method: RefundMethodEnum;
-  @ApiProperty()
-  amount: string;
   @ApiPropertyOptional()
   reason?: string;
   @ApiPropertyOptional()
@@ -29,20 +25,18 @@ export class CreateRefundDto {
 }
 
 export class CreateReturnDto {
-  id?: string;
-  @ApiProperty()
+  @ApiProperty({ format: 'uuid' })
   saleId: string;
-  userId?: string;
-  @ApiProperty()
-  qty: number;
   @ApiProperty({ enum: ReturnReasonEnum })
   reason: ReturnReasonEnum;
-  @ApiProperty({ enum: ReturnStatusEnum })
-  status: ReturnStatusEnum;
   @ApiPropertyOptional()
   notes?: string;
   @ApiProperty({ type: [CreateReturnItemDto] })
   items: CreateReturnItemDto[];
-  @ApiPropertyOptional({ type: CreateRefundDto })
+  @ApiPropertyOptional({
+    type: CreateRefundDto,
+    description:
+      'Record how the customer is refunded. The amount is computed from what was paid for the returned units.',
+  })
   refund?: CreateRefundDto;
 }

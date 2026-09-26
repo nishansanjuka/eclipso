@@ -37,8 +37,8 @@ export class ReturnController {
     @User() user: AuthUserObject,
   ) {
     return this.returnCreateUseCase.execute(
-      user.orgId!,
-      user.userId!,
+      user.businessId!,
+      user.userId,
       returnData,
     );
   }

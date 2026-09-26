@@ -3,6 +3,7 @@ import {
   uuid,
   numeric,
   integer,
+  pgEnum,
   text,
   timestamp,
   uniqueIndex,
@@ -10,6 +11,10 @@ import {
 import { businesses } from '../../../business/infrastructure/schema/business.schema';
 import { customers } from '../../../customer/infrastructure/schema/customer.schema';
 import { users } from '../../../users/infrastructure/schema/user.schema';
+
+import { SaleStatusEnum } from '../enums/sale.enum';
+
+export const saleStatusEnum = pgEnum('sale_status', SaleStatusEnum);
 
 export const sales = pgTable(
   'sales',
@@ -46,6 +51,15 @@ export const sales = pgTable(
       .notNull()
       .default('0'),
     qty: integer('qty').notNull().default(0),
+    /** Sales are never deleted; a mistaken one is voided (stock restored). */
+    status: saleStatusEnum('status')
+      .notNull()
+      .default(SaleStatusEnum.COMPLETED),
+    voidedAt: timestamp('voided_at'),
+    voidedBy: uuid('voided_by').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    voidReason: text('void_reason'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
