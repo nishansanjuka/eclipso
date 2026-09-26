@@ -38,6 +38,10 @@ import {
 } from '../../../shared/decorators/require-permissions.decorator';
 import { PermissionType } from '../enums/auth-permissions.enum';
 import { AUTH_API_OPERATIONS } from '../constants/api-operations';
+import {
+  SetMemberBranchesDto,
+  setMemberBranchesSchema,
+} from '../../branch/dto/branch.dto';
 
 @ApiTags('Access')
 @ApiHeader({
@@ -64,6 +68,8 @@ export class AuthController {
       orgId: user.orgId ?? null,
       roleKey: user.roleKey ?? null,
       permissions: user.permissions,
+      branchId: user.branchId ?? null,
+      restrictedBranchIds: user.restrictedBranchIds,
     };
   }
 
@@ -211,6 +217,23 @@ export class AuthController {
   ) {
     const { roleId } = parseBody(assignRoleSchema, body);
     return this.useCase.assignRole(user, userId, roleId);
+  }
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.SET_MEMBER_BRANCHES.operationId,
+    description: AUTH_API_OPERATIONS.SET_MEMBER_BRANCHES.description,
+  })
+  @ApiParam({ name: 'userId', type: String })
+  @ApiBody({ type: SetMemberBranchesDto })
+  @RequirePermissions(PermissionType.MEMBER_MANAGE)
+  @Put('members/:userId/branches')
+  setMemberBranches(
+    @User() user: AuthUserObject,
+    @Param('userId') userId: string,
+    @Body() body: unknown,
+  ) {
+    const { branchIds } = parseBody(setMemberBranchesSchema, body);
+    return this.useCase.setMemberBranches(user, userId, branchIds);
   }
 
   @ApiOperation({

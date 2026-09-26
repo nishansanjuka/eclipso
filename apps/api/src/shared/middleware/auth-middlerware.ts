@@ -10,6 +10,9 @@ import 'dotenv/config';
 import { AccessService } from '../../modules/auth/infrastructure/access.service';
 
 export const BUSINESS_HEADER = 'x-business-id';
+export const BRANCH_HEADER = 'x-branch-id';
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BUSINESS_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
 /**
@@ -36,14 +39,16 @@ class AuthMiddleware implements NestMiddleware {
       }
 
       let requestedOrgId: string | undefined;
+      let requestedBranchId: string | undefined;
       try {
         requestedOrgId = this.readBusinessHeader(req);
+        requestedBranchId = this.readBranchHeader(req);
       } catch (error) {
         return next(error);
       }
 
       this.access
-        .resolve(auth.userId, requestedOrgId)
+        .resolve(auth.userId, requestedOrgId, requestedBranchId)
         .then((context) => {
           req.user = context;
           next();
@@ -57,6 +62,15 @@ class AuthMiddleware implements NestMiddleware {
     if (raw === undefined) return undefined;
     if (typeof raw !== 'string' || !BUSINESS_ID_PATTERN.test(raw)) {
       throw new BadRequestException('Invalid X-Business-Id header.');
+    }
+    return raw;
+  }
+
+  private readBranchHeader(req: Request): string | undefined {
+    const raw = req.headers[BRANCH_HEADER];
+    if (raw === undefined) return undefined;
+    if (typeof raw !== 'string' || !UUID_PATTERN.test(raw)) {
+      throw new BadRequestException('Invalid X-Branch-Id header.');
     }
     return raw;
   }

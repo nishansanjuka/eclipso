@@ -1,7 +1,15 @@
-import { pgTable, primaryKey, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  foreignKey,
+  index,
+  pgTable,
+  primaryKey,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { roles } from '../../../modules/auth/infrastructure/schema/access.schema';
 import { users } from '../../../modules/users/infrastructure/schema/user.schema';
 import { businesses } from '../../../modules/business/infrastructure/schema/business.schema';
+import { branches } from '../../../modules/branch/infrastructure/schema/branch.schema';
 import { relations } from 'drizzle-orm';
 import { text } from 'drizzle-orm/pg-core';
 
@@ -25,6 +33,31 @@ export const businessUsers = pgTable(
     joinedAt: timestamp('joined_at').defaultNow().notNull(),
   },
   (t) => [primaryKey({ columns: [t.userClerkId, t.businessId] })],
+);
+
+/**
+ * Optional branch restriction for a member. A member with NO rows here can work
+ * in every branch of the business; with rows, only in those branches. Rows are
+ * removed automatically with the membership or the branch.
+ */
+export const memberBranches = pgTable(
+  'member_branches',
+  {
+    userClerkId: text('user_id').notNull(),
+    businessId: text('business_id').notNull(),
+    branchId: uuid('branch_id')
+      .notNull()
+      .references(() => branches.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userClerkId, t.businessId, t.branchId] }),
+    foreignKey({
+      columns: [t.userClerkId, t.businessId],
+      foreignColumns: [businessUsers.userClerkId, businessUsers.businessId],
+      name: 'member_branches_membership_fk',
+    }).onDelete('cascade'),
+    index('member_branches_branch_idx').on(t.branchId),
+  ],
 );
 
 export const usersRelations = relations(users, ({ many }) => ({

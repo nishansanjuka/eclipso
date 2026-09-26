@@ -30,6 +30,7 @@ import { SupplierController } from '../suppliers/presentation/supplier.controlle
 import { TaxController } from '../tax/presentation/tax.controller';
 import { InvoicesController } from '../invoice/presentation/invoice.controller';
 import { SaleController } from '../sale/presentation/sale.controller';
+import { BranchController } from '../branch/presentation/branch.controller';
 
 @Module({
   imports: [DatabaseModule, UsersModule, BusinessModule],
@@ -50,6 +51,7 @@ export class AuthModule implements NestModule {
       .apply(AuthMiddleware)
       .forRoutes(
         AuthController,
+        BranchController,
         SupplierController,
         TaxController,
         InvoicesController,

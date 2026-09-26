@@ -1,8 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 import { type DrizzleClient } from '../../../shared/database/drizzle.module';
 import { businesses } from '../../business/infrastructure/schema/business.schema';
-import { businessUsers } from '../../../shared/database/relations/business.user.schema';
+import { branches } from '../../branch/infrastructure/schema/branch.schema';
+import {
+  businessUsers,
+  memberBranches,
+} from '../../../shared/database/relations/business.user.schema';
 import { users } from '../../users/infrastructure/schema/user.schema';
 import { permissions, rolePermissions, roles } from './schema/access.schema';
 import {
@@ -28,6 +32,11 @@ export interface RoleRecord {
   permissions: PermissionType[];
 }
 
+export interface OperableBranch {
+  id: string;
+  isDefault: boolean;
+}
+
 export interface MembershipRecord {
   userId: string;
   orgId: string;
@@ -35,6 +44,13 @@ export interface MembershipRecord {
   roleId: string | null;
   roleKey: string | null;
   permissions: PermissionType[];
+  /**
+   * Branches the member has been limited to (any status), or null when they
+   * may work in every branch.
+   */
+  restrictedBranchIds: string[] | null;
+  /** Active branches the member may operate in, default branch first. */
+  operableBranches: OperableBranch[];
 }
 
 @Injectable()
@@ -168,6 +184,7 @@ export class AccessRepository {
         roleId: null,
         roleKey: null,
         permissions: [],
+        ...(await this.loadBranchAccess(row.businessId, userId, orgId, db)),
       };
     }
 
@@ -180,6 +197,49 @@ export class AccessRepository {
       permissions: rows
         .map((r) => r.permission)
         .filter((p): p is PermissionType => p !== null),
+      ...(await this.loadBranchAccess(rows[0].businessId, userId, orgId, db)),
+    };
+  }
+
+  /**
+   * Which branches a member may operate in. Restriction rows are authoritative:
+   * a member who has any is limited to exactly those branches (never silently
+   * widened, even if all of them are later deactivated).
+   */
+  private async loadBranchAccess(
+    businessId: string,
+    userId: string,
+    orgId: string,
+    db: Executor,
+  ): Promise<
+    Pick<MembershipRecord, 'restrictedBranchIds' | 'operableBranches'>
+  > {
+    const [active, restrictedRows] = await Promise.all([
+      db
+        .select({ id: branches.id, isDefault: branches.isDefault })
+        .from(branches)
+        .where(
+          and(eq(branches.businessId, businessId), eq(branches.isActive, true)),
+        )
+        .orderBy(desc(branches.isDefault), asc(branches.createdAt)),
+      db
+        .select({ branchId: memberBranches.branchId })
+        .from(memberBranches)
+        .where(
+          and(
+            eq(memberBranches.userClerkId, userId),
+            eq(memberBranches.businessId, orgId),
+          ),
+        ),
+    ]);
+
+    if (restrictedRows.length === 0) {
+      return { restrictedBranchIds: null, operableBranches: active };
+    }
+    const allowed = new Set(restrictedRows.map((r) => r.branchId));
+    return {
+      restrictedBranchIds: [...allowed],
+      operableBranches: active.filter((b) => allowed.has(b.id)),
     };
   }
 
@@ -206,7 +266,7 @@ export class AccessRepository {
   }
 
   async listMembers(orgId: string) {
-    return this.db
+    const rows = await this.db
       .select({
         userId: users.clerkId,
         name: users.name,
@@ -219,6 +279,20 @@ export class AccessRepository {
       .innerJoin(users, eq(users.clerkId, businessUsers.userClerkId))
       .leftJoin(roles, eq(roles.id, businessUsers.roleId))
       .where(eq(businessUsers.businessId, orgId));
+
+    const restrictions = await this.db
+      .select({
+        userId: memberBranches.userClerkId,
+        branchId: memberBranches.branchId,
+      })
+      .from(memberBranches)
+      .where(eq(memberBranches.businessId, orgId));
+    const byUser = new Map<string, string[]>();
+    for (const r of restrictions) {
+      byUser.set(r.userId, [...(byUser.get(r.userId) ?? []), r.branchId]);
+    }
+    // Empty = not restricted (may work in every branch).
+    return rows.map((r) => ({ ...r, branchIds: byUser.get(r.userId) ?? [] }));
   }
 
   /** System roles plus this business's custom roles, with their permissions. */
@@ -314,10 +388,21 @@ export class AccessRepository {
     ownerRoleId: string;
   }) {
     await this.db.transaction(async (tx) => {
-      await tx.insert(businesses).values({
-        orgId: params.orgId,
-        name: params.name,
-        businessType: params.businessType,
+      const [business] = await tx
+        .insert(businesses)
+        .values({
+          orgId: params.orgId,
+          name: params.name,
+          businessType: params.businessType,
+        })
+        .returning({ id: businesses.id });
+      // Every business starts with one branch, so single-location shops never
+      // have to deal with branches at all.
+      await tx.insert(branches).values({
+        businessId: business.id,
+        code: 'MAIN',
+        name: 'Main',
+        isDefault: true,
       });
       await tx.insert(businessUsers).values({
         businessId: params.orgId,
@@ -353,6 +438,48 @@ export class AccessRepository {
           eq(businessUsers.userClerkId, userId),
         ),
       );
+  }
+
+  /** Replaces the member's branch restriction; an empty list lifts it. */
+  async setMemberBranches(
+    orgId: string,
+    userId: string,
+    branchIds: string[],
+    db: Executor = this.db,
+  ) {
+    await db
+      .delete(memberBranches)
+      .where(
+        and(
+          eq(memberBranches.businessId, orgId),
+          eq(memberBranches.userClerkId, userId),
+        ),
+      );
+    if (branchIds.length > 0) {
+      await db.insert(memberBranches).values(
+        branchIds.map((branchId) => ({
+          userClerkId: userId,
+          businessId: orgId,
+          branchId,
+        })),
+      );
+    }
+  }
+
+  /** Ids (of the given) that are branches of this business, active or not. */
+  async branchIdsInBusiness(
+    businessId: string,
+    ids: string[],
+    db: Executor = this.db,
+  ): Promise<string[]> {
+    if (ids.length === 0) return [];
+    const rows = await db
+      .select({ id: branches.id })
+      .from(branches)
+      .where(
+        and(eq(branches.businessId, businessId), inArray(branches.id, ids)),
+      );
+    return rows.map((r) => r.id);
   }
 
   async removeMember(orgId: string, userId: string, db: Executor = this.db) {

@@ -37,7 +37,11 @@ export class AccessService implements OnModuleInit {
    * - No header → the user's only business is used; several → the caller must
    *   choose; none → a business-less context (e.g. for creating a business).
    */
-  async resolve(userId: string, requestedOrgId?: string): Promise<AuthContext> {
+  async resolve(
+    userId: string,
+    requestedOrgId?: string,
+    requestedBranchId?: string,
+  ): Promise<AuthContext> {
     let orgId = requestedOrgId;
 
     if (!orgId) {
@@ -66,7 +70,36 @@ export class AccessService implements OnModuleInit {
       roleId: membership.roleId ?? undefined,
       roleKey: membership.roleKey ?? undefined,
       permissions: membership.permissions,
+      branchId: this.pickBranch(membership, requestedBranchId),
+      restrictedBranchIds: membership.restrictedBranchIds,
     });
+  }
+
+  /**
+   * Which branch the request operates in.
+   *
+   * - `X-Branch-Id` is untrusted: it only chooses among the branches this
+   *   member may operate in, and anything else is rejected with the same answer
+   *   whether the branch is unknown, inactive or off-limits.
+   * - No header: the default branch (if the member may use it), else their only
+   *   branch, else none. Endpoints that need a branch then ask the caller to
+   *   pick one; a single-branch business never needs the header.
+   */
+  private pickBranch(
+    membership: MembershipRecord,
+    requested?: string,
+  ): string | undefined {
+    const operable = membership.operableBranches;
+
+    if (requested) {
+      if (!operable.some((b) => b.id === requested)) {
+        throw new ForbiddenException('You do not have access to this branch.');
+      }
+      return requested;
+    }
+    const preferred = operable.find((b) => b.isDefault);
+    if (preferred) return preferred.id;
+    return operable.length === 1 ? operable[0].id : undefined;
   }
 
   private async getMembership(userId: string, orgId: string) {

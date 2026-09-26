@@ -59,6 +59,11 @@ export const AUTH_API_OPERATIONS = {
     description:
       'Changes a member role. You cannot grant permissions you do not hold, change a member who outranks you, or remove the last owner. Requires role:assign.',
   },
+  SET_MEMBER_BRANCHES: {
+    operationId: 'setMemberBranches',
+    description:
+      'Limits a member to specific branches (an empty list lets them work in every branch). If you are limited yourself you can only manage members within your own branches. Requires member:manage.',
+  },
   REMOVE_MEMBER: {
     operationId: 'removeMember',
     description:

@@ -9,6 +9,8 @@ export enum PermissionType {
   // Business & access management
   BUSINESS_MANAGE = 'business:manage',
   BUSINESS_DELETE = 'business:delete',
+  BRANCH_READ = 'branch:read',
+  BRANCH_MANAGE = 'branch:manage',
   MEMBER_READ = 'member:read',
   MEMBER_MANAGE = 'member:manage',
   ROLE_READ = 'role:read',
@@ -71,13 +73,21 @@ export const PermissionTypeMetaData: Record<
     label: 'Delete Business',
     description: 'Permanently delete the business and all its data',
   },
+  [PermissionType.BRANCH_READ]: {
+    label: 'View Branches',
+    description: 'List the branches of the business',
+  },
+  [PermissionType.BRANCH_MANAGE]: {
+    label: 'Manage Branches',
+    description: 'Create, edit and deactivate branches',
+  },
   [PermissionType.MEMBER_READ]: {
     label: 'View Members',
     description: 'List members of the business',
   },
   [PermissionType.MEMBER_MANAGE]: {
     label: 'Manage Members',
-    description: 'Remove members from the business',
+    description: 'Remove members and set which branches they can work in',
   },
   [PermissionType.ROLE_READ]: {
     label: 'View Roles',

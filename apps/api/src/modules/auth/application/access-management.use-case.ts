@@ -109,6 +109,7 @@ export class AccessManagementUseCase {
         tx,
       );
       if (!target) throw new NotFoundException('Member not found.');
+      this.assertCanManageBranches(actor, target.restrictedBranchIds);
 
       const role = await this.requireAssignableRole(orgId, roleId, tx);
       this.assertCanGrant(actor, role.permissions);
@@ -132,6 +133,7 @@ export class AccessManagementUseCase {
         tx,
       );
       if (!target) throw new NotFoundException('Member not found.');
+      this.assertCanManageBranches(actor, target.restrictedBranchIds);
 
       this.assertCanGrant(actor, target.permissions);
       await this.assertOwnerRemains(orgId, target.roleKey, null, tx);
@@ -141,6 +143,66 @@ export class AccessManagementUseCase {
 
     this.access.invalidateMember(orgId, targetUserId);
     return { userId: targetUserId };
+  }
+
+  /**
+   * Limits a member to specific branches (empty = every branch).
+   *
+   * A member who is themselves limited to some branches can only manage members
+   * inside those branches and can never lift a restriction, so branch limits
+   * cannot be escaped by asking a limited colleague.
+   */
+  async setMemberBranches(
+    actor: AuthContext,
+    targetUserId: string,
+    branchIds: string[],
+  ) {
+    const orgId = actor.orgId!;
+
+    await this.repository.withBusinessLock(orgId, async (tx) => {
+      const target = await this.repository.findMembership(
+        targetUserId,
+        orgId,
+        tx,
+      );
+      if (!target) throw new NotFoundException('Member not found.');
+
+      this.assertCanGrant(actor, target.permissions);
+      this.assertCanManageBranches(actor, target.restrictedBranchIds);
+
+      if (actor.branchRestricted) {
+        if (branchIds.length === 0) {
+          throw new ForbiddenException(
+            'You are limited to specific branches and cannot give access to all branches.',
+          );
+        }
+        const outside = branchIds.filter((id) => !actor.canAccessBranch(id));
+        if (outside.length > 0) {
+          throw new ForbiddenException(
+            'You cannot grant access to branches you cannot work in yourself.',
+          );
+        }
+      }
+
+      const valid = await this.repository.branchIdsInBusiness(
+        actor.businessId!,
+        branchIds,
+        tx,
+      );
+      if (valid.length !== branchIds.length) {
+        throw new NotFoundException('Branch not found.');
+      }
+
+      await this.repository.setMemberBranches(
+        orgId,
+        targetUserId,
+        branchIds,
+        tx,
+      );
+    });
+
+    this.access.invalidateMember(orgId, targetUserId);
+    return { userId: targetUserId, branchIds };
   }
 
   // ── roles ─────────────────────────────────────────────────────────────────
@@ -215,6 +277,25 @@ export class AccessManagementUseCase {
   }
 
   // ── guards ────────────────────────────────────────────────────────────────
+
+  /**
+   * A branch-limited actor may only touch members who are limited to branches
+   * the actor can also work in; an unrestricted member is out of their reach.
+   */
+  private assertCanManageBranches(
+    actor: AuthContext,
+    targetRestrictedBranchIds: readonly string[] | null,
+  ) {
+    if (!actor.branchRestricted) return;
+    const withinReach =
+      targetRestrictedBranchIds !== null &&
+      targetRestrictedBranchIds.every((id) => actor.canAccessBranch(id));
+    if (!withinReach) {
+      throw new ForbiddenException(
+        'You can only manage members who work in your own branches.',
+      );
+    }
+  }
 
   /** Actor may only hand out / touch permissions they hold themselves. */
   private assertCanGrant(actor: AuthContext, permissions: readonly string[]) {

@@ -25,9 +25,11 @@ import {
   taxTypeEnum,
 } from '../../modules/tax/infrastructure/schema/tax.schema';
 import { users } from '../../modules/users/infrastructure/schema/user.schema';
+import { branches } from '../../modules/branch/infrastructure/schema/branch.schema';
 import {
   businessesRelations,
   businessUsers,
+  memberBranches,
   businessUsersRelations,
   usersRelations,
 } from './relations/business.user.schema';
@@ -88,6 +90,8 @@ export const RolesTable = roles;
 export const RolePermissionsTable = rolePermissions;
 export const BusinessTable = businesses;
 export const BusinessUsersTable = businessUsers;
+export const BranchesTable = branches;
+export const MemberBranchesTable = memberBranches;
 export const SuppliersTable = suppliers;
 export const OrdersTable = orders;
 export const ProductsTable = products;

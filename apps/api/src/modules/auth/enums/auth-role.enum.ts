@@ -34,6 +34,7 @@ export const SystemRoleMetaData: Record<SystemRole, SystemRoleMeta> = {
     label: 'Member',
     description: 'Day-to-day point-of-sale access',
     permissions: [
+      P.BRANCH_READ,
       P.PRODUCT_READ,
       P.CATEGORY_READ,
       P.BRAND_READ,

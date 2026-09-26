@@ -20,6 +20,7 @@ import { AdjustmentModule } from './modules/adjustment/adjustment.module';
 import { SaleModule } from './modules/sale/sale.module';
 import { ReturnModule } from './modules/return/return.module';
 import { CustomerModule } from './modules/customer/customer.module';
+import { BranchModule } from './modules/branch/branch.module';
 
 import { RootController } from './root.controller';
 
@@ -33,6 +34,7 @@ import { RootController } from './root.controller';
     UsersModule,
     AuthModule,
     BusinessModule,
+    BranchModule,
     SuppliersModule,
     ProductModule,
     DiscountModule,
