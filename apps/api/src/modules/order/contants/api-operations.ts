@@ -2,17 +2,22 @@ export const ORDER_API_OPERATIONS = {
   CREATE: {
     operationId: 'createOrder',
     description:
-      'Creates a new order in the system with the provided information including customer details, order items, totals, and payment information. As a business owner, you can create orders for your customers to track sales transactions. The order will be associated with your business and can include multiple order items, discounts, and tax calculations.',
+      'Creates a draft purchase order for one of your suppliers with an expected delivery date. The status is always draft and the total is calculated from the order items.',
   },
   UPDATE: {
     operationId: 'updateOrder',
     description:
-      'Updates an existing order by ID. As a business owner, you can modify order information such as order status, customer details, items, quantities, discounts, and payment information to reflect changes in the transaction. Only orders belonging to your business can be updated.',
+      'Changes the expected date of a draft order, or cancels it (status `cancel`). Only draft orders belonging to your business can be changed; use the receive endpoint to receive one.',
+  },
+  RECEIVE: {
+    operationId: 'receiveOrder',
+    description:
+      'Marks a draft purchase order as received: every line is added to stock and a purchase inventory movement is recorded, in one transaction. This is the only way purchased stock enters inventory. A received order cannot be changed, received again, or deleted.',
   },
   DELETE: {
     operationId: 'deleteOrder',
     description:
-      'Permanently deletes an order from the system by ID. As a business owner, you can remove orders that were created in error or are no longer needed. This operation will delete the order record and all associated order items. Only orders belonging to your business can be deleted.',
+      'Deletes a draft or cancelled order and its items and invoice. Received orders are stock history and cannot be deleted.',
   },
 } as const;
 

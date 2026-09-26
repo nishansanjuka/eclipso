@@ -9,6 +9,7 @@ import { ORDER_API_OPERATIONS } from '../contants/api-operations';
 import { CreateOrderDto, UpdateOrderDto } from '../dto/order.dto';
 import { OrderCreateUsecase } from '../application/order.create.usecase';
 import { OrderUpdateUsecase } from '../application/order.update.usecase';
+import { OrderReceiveUsecase } from '../application/order.receive.usecase';
 import { OrderDeleteUsecase } from '../application/order.delete.usecase';
 
 @Controller('order')
@@ -17,6 +18,7 @@ export class OrderController {
     private readonly orderCreateUsecase: OrderCreateUsecase,
     private readonly orderUpdateUseCase: OrderUpdateUsecase,
     private readonly orderDeleteUseCase: OrderDeleteUsecase,
+    private readonly orderReceiveUseCase: OrderReceiveUsecase,
   ) {}
 
   @ApiOperation({
@@ -28,14 +30,14 @@ export class OrderController {
   @Post('create')
   @CatchEntityErrors()
   createOrder(@Body() orderData: CreateOrderDto, @User() user: AuthUserObject) {
-    return this.orderCreateUsecase.execute(user.orgId!, orderData);
+    return this.orderCreateUsecase.execute(user.businessId!, orderData);
   }
 
   @ApiOperation({
     operationId: ORDER_API_OPERATIONS.UPDATE.operationId,
     description: ORDER_API_OPERATIONS.UPDATE.description,
   })
-  @ApiParam({ name: 'id', type: 'string', description: 'Supplier ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Order ID' })
   @ApiBody({ type: UpdateOrderDto })
   @RequirePermissions(PermissionType.ORDER_UPDATE)
   @Put('update/:id')
@@ -45,18 +47,30 @@ export class OrderController {
     @Body() orderData: UpdateOrderDto,
     @User() user: AuthUserObject,
   ) {
-    return this.orderUpdateUseCase.execute(id, user.orgId!, orderData);
+    return this.orderUpdateUseCase.execute(id, user.businessId!, orderData);
   }
 
   @ApiOperation({
     operationId: ORDER_API_OPERATIONS.DELETE.operationId,
     description: ORDER_API_OPERATIONS.DELETE.description,
   })
-  @ApiParam({ name: 'id', type: 'string', description: 'Supplier ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Order ID' })
   @RequirePermissions(PermissionType.ORDER_UPDATE)
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteOrder(@Param('id') id: string, @User() user: AuthUserObject) {
-    return this.orderDeleteUseCase.execute(id, user.orgId!);
+    return this.orderDeleteUseCase.execute(id, user.businessId!);
+  }
+
+  @ApiOperation({
+    operationId: ORDER_API_OPERATIONS.RECEIVE.operationId,
+    description: ORDER_API_OPERATIONS.RECEIVE.description,
+  })
+  @ApiParam({ name: 'id', type: 'string', description: 'Order ID' })
+  @RequirePermissions(PermissionType.ORDER_UPDATE)
+  @Post('receive/:id')
+  @CatchEntityErrors()
+  receiveOrder(@Param('id') id: string, @User() user: AuthUserObject) {
+    return this.orderReceiveUseCase.execute(id, user.businessId!);
   }
 }

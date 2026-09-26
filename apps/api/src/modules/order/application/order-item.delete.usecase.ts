@@ -1,36 +1,21 @@
-import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator';
-import { OrderItemService } from '../infrastructure/order-item.service';
-import { NotFoundException } from '@nestjs/common';
-import { InventoryMovementService } from '../../inventory/infrastructure/inventory.movements.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { OrderWorkflowRepository } from '../infrastructure/order-workflow.repository';
+import { assertDraft } from './order-guards';
 
-// as an business owner, I want to delete existing order item
+// as a business owner, I want to remove a line from a draft purchase order
 @Injectable()
 export class OrderItemDeleteUsecase {
-  constructor(
-    private readonly orderItemService: OrderItemService,
-    private readonly inventoryMovementService: InventoryMovementService,
-  ) {}
+  constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async execute(id: string, orgId: string) {
-    const res = await this.orderItemService.validateOrderItemOwnership(
-      id,
-      orgId,
-    );
+  async execute(id: string, businessId: string) {
+    return this.workflow.transaction(async (tx) => {
+      const order = await this.workflow.lockOrderOfItem(tx, businessId, id);
+      if (!order) throw new NotFoundException('Order item not found');
+      assertDraft(order);
 
-    if (!res) {
-      throw new NotFoundException(
-        'Order item not found for the authorized organization',
-      );
-    }
-
-    const orderItemRes = await this.orderItemService.getOrderItemsById(id);
-    const inventoryRes =
-      await this.inventoryMovementService.getByOrderAndProductId(
-        orderItemRes.orderId,
-        orderItemRes.productId,
-      );
-
-    await this.inventoryMovementService.delete(inventoryRes.id);
-    return await this.orderItemService.deleteOrderItem(id);
+      await this.workflow.deleteItem(tx, id);
+      await this.workflow.recomputeTotal(tx, order.id);
+      return { id };
+    });
   }
 }

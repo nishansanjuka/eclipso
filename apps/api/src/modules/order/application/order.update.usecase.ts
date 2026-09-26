@@ -1,33 +1,26 @@
-import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator';
-import { BusinessService } from '../../business/infrastructure/business.service';
-import { OrderService } from '../infrastructure/order.service';
-import { NotFoundException } from '@nestjs/common';
-import { OrderUpdateEntity } from '../domain/order.entity';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateOrderDto } from '../dto/order.dto';
+import { OrderUpdateEntity } from '../domain/order.entity';
+import { OrderWorkflowRepository } from '../infrastructure/order-workflow.repository';
+import { assertDraft } from './order-guards';
 
-// as an business owner, I want to update an existing order
+// as a business owner, I want to reschedule or cancel a draft order
 @Injectable()
 export class OrderUpdateUsecase {
-  constructor(
-    private readonly businessService: BusinessService,
-    private readonly orderService: OrderService,
-  ) {}
+  constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async execute(id: string, orgId: string, orderData: UpdateOrderDto) {
-    {
-      const res = await this.businessService.getBusinessWithUserByOrgId(orgId);
+  async execute(id: string, businessId: string, orderData: UpdateOrderDto) {
+    const data = new OrderUpdateEntity(orderData);
 
-      if (!res) {
-        throw new NotFoundException(`Business not found`);
-      } else {
-        const { id: businessId } = res;
+    return this.workflow.transaction(async (tx) => {
+      const order = await this.workflow.lockOrder(tx, businessId, id);
+      if (!order) throw new NotFoundException('Order not found');
+      assertDraft(order);
 
-        const data = new OrderUpdateEntity({
-          ...orderData,
-          businessId: businessId,
-        });
-        return this.orderService.updateOrder(id, data);
-      }
-    }
+      return this.workflow.updateOrder(tx, order.id, {
+        ...(data.expectedDate && { expectedDate: data.expectedDate }),
+        ...(data.status && { status: data.status }),
+      });
+    });
   }
 }

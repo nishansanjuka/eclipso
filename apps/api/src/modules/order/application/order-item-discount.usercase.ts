@@ -1,50 +1,63 @@
-import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator';
-import { OrderItemService } from '../infrastructure/order-item.service';
-import { NotFoundException } from '@nestjs/common';
-import { OrderItemDiscountEntity } from '../domain/orer.item.discount.entity';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { OrderItemDiscountDto } from '../dto/order-item.discount';
+import { OrderItemDiscountEntity } from '../domain/orer.item.discount.entity';
+import { OrderWorkflowRepository } from '../infrastructure/order-workflow.repository';
+import { assertDraft } from './order-guards';
 
-// as an business owner, I want to be able to add or remove discount records associated with an order item,
+// as a business owner, I want to add or remove discount records associated with a draft order item,
 // so that I can provide special offers or price reductions for specific items in an order.
 @Injectable()
 export class OrderItemDiscountsUpdateUsecase {
-  constructor(private readonly orderItemService: OrderItemService) {}
+  constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async add(orderDiscountData: OrderItemDiscountDto, orgId: string) {
-    const res = await this.orderItemService.validateOrderItemOwnership(
-      orderDiscountData.orderItemId,
-      orgId,
-    );
+  async add(orderDiscountData: OrderItemDiscountDto, businessId: string) {
+    const data = new OrderItemDiscountEntity(orderDiscountData);
 
-    if (!res) {
-      throw new NotFoundException(
-        'Order item not found for the authorized organization',
+    return this.workflow.transaction(async (tx) => {
+      const order = await this.workflow.lockOrderOfItem(
+        tx,
+        businessId,
+        data.orderItemId,
       );
-    }
+      if (!order) throw new NotFoundException('Order item not found');
+      assertDraft(order);
+      if (
+        !(await this.workflow.discountInBusiness(
+          tx,
+          businessId,
+          data.discountId,
+        ))
+      ) {
+        throw new NotFoundException('Discount not found');
+      }
 
-    const orderItem = new OrderItemDiscountEntity(orderDiscountData);
-    return await this.orderItemService.addDiscountRecordsToOrderItem(
-      orderItem.orderItemId,
-      [orderItem.discountId],
-    );
+      await this.workflow.addItemDiscount(
+        tx,
+        data.orderItemId,
+        data.discountId,
+      );
+      return { orderItemId: data.orderItemId, discountId: data.discountId };
+    });
   }
 
-  async remove(orderDiscountData: OrderItemDiscountDto, orgId: string) {
-    const res = await this.orderItemService.validateOrderItemOwnership(
-      orderDiscountData.orderItemId,
-      orgId,
-    );
+  async remove(orderDiscountData: OrderItemDiscountDto, businessId: string) {
+    const data = new OrderItemDiscountEntity(orderDiscountData);
 
-    if (!res) {
-      throw new NotFoundException(
-        'Order item not found for the authorized organization',
+    return this.workflow.transaction(async (tx) => {
+      const order = await this.workflow.lockOrderOfItem(
+        tx,
+        businessId,
+        data.orderItemId,
       );
-    }
+      if (!order) throw new NotFoundException('Order item not found');
+      assertDraft(order);
 
-    const orderItem = new OrderItemDiscountEntity(orderDiscountData);
-    return await this.orderItemService.removeDiscountRecordsFromOrderItem(
-      orderItem.orderItemId,
-      [orderItem.discountId],
-    );
+      await this.workflow.removeItemDiscount(
+        tx,
+        data.orderItemId,
+        data.discountId,
+      );
+      return { orderItemId: data.orderItemId, discountId: data.discountId };
+    });
   }
 }

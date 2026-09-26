@@ -1,50 +1,50 @@
-import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator';
-import { OrderItemService } from '../infrastructure/order-item.service';
-import { NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { OrderItemTaxDto } from '../dto/order-item.tax';
 import { OrderItemTaxEntity } from '../domain/orer.item.tax.entity';
+import { OrderWorkflowRepository } from '../infrastructure/order-workflow.repository';
+import { assertDraft } from './order-guards';
 
-// as an business owner, I want to be able to add or remove tax records associated with an order item,
+// as a business owner, I want to add or remove tax records associated with a draft order item,
 // so that I can ensure accurate tax calculations for each item in an order.
 @Injectable()
 export class OrderItemTaxRecordUpdateUsecase {
-  constructor(private readonly orderItemService: OrderItemService) {}
+  constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async add(orderTaxData: OrderItemTaxDto, orgId: string) {
-    const res = await this.orderItemService.validateOrderItemOwnership(
-      orderTaxData.orderItemId,
-      orgId,
-    );
+  async add(orderTaxData: OrderItemTaxDto, businessId: string) {
+    const data = new OrderItemTaxEntity(orderTaxData);
 
-    if (!res) {
-      throw new NotFoundException(
-        'Order item not found for the authorized organization',
+    return this.workflow.transaction(async (tx) => {
+      const order = await this.workflow.lockOrderOfItem(
+        tx,
+        businessId,
+        data.orderItemId,
       );
-    }
+      if (!order) throw new NotFoundException('Order item not found');
+      assertDraft(order);
+      if (!(await this.workflow.taxInBusiness(tx, businessId, data.taxId))) {
+        throw new NotFoundException('Tax not found');
+      }
 
-    const orderItem = new OrderItemTaxEntity(orderTaxData);
-    return await this.orderItemService.addTaxRecordsToOrderItem(
-      orderItem.orderItemId,
-      [orderItem.taxId],
-    );
+      await this.workflow.addItemTax(tx, data.orderItemId, data.taxId);
+      return { orderItemId: data.orderItemId, taxId: data.taxId };
+    });
   }
 
-  async remove(orderTaxData: OrderItemTaxDto, orgId: string) {
-    const res = await this.orderItemService.validateOrderItemOwnership(
-      orderTaxData.orderItemId,
-      orgId,
-    );
+  async remove(orderTaxData: OrderItemTaxDto, businessId: string) {
+    const data = new OrderItemTaxEntity(orderTaxData);
 
-    if (!res) {
-      throw new NotFoundException(
-        'Order item not found for the authorized organization',
+    return this.workflow.transaction(async (tx) => {
+      const order = await this.workflow.lockOrderOfItem(
+        tx,
+        businessId,
+        data.orderItemId,
       );
-    }
+      if (!order) throw new NotFoundException('Order item not found');
+      assertDraft(order);
 
-    const orderItem = new OrderItemTaxEntity(orderTaxData);
-    return await this.orderItemService.removeTaxRecordsFromOrderItem(
-      orderItem.orderItemId,
-      [orderItem.taxId],
-    );
+      // Only the tax that was asked for, not every tax on the item.
+      await this.workflow.removeItemTax(tx, data.orderItemId, data.taxId);
+      return { orderItemId: data.orderItemId, taxId: data.taxId };
+    });
   }
 }

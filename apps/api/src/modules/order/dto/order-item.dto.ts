@@ -1,21 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateOrderItemDto {
-  id?: string;
-  @ApiProperty()
+  @ApiProperty({ format: 'uuid' })
   orderId: string;
-  @ApiProperty()
+  @ApiProperty({ format: 'uuid' })
   productId: string;
-  @ApiProperty()
+  @ApiProperty({ minimum: 1 })
   qty: number;
-  @ApiProperty()
+  @ApiProperty({ description: 'Unit cost in minor units.', minimum: 0 })
   price: number;
 }
 
 export class UpdateOrderItemDto {
-  id?: string;
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional({ minimum: 1 })
   qty?: number;
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional({ minimum: 0 })
   price?: number;
 }

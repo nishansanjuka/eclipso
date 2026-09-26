@@ -1,40 +1,28 @@
-import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator';
-import { OrderItemService } from '../infrastructure/order-item.service';
-import { OrderItemUpdateEntity } from '../domain/order.item.entity';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateOrderItemDto } from '../dto/order-item.dto';
-import { NotFoundException } from '@nestjs/common';
-import { InventoryMovementService } from '../../inventory/infrastructure/inventory.movements.service';
+import { OrderItemUpdateEntity } from '../domain/order.item.entity';
+import { OrderWorkflowRepository } from '../infrastructure/order-workflow.repository';
+import { assertDraft } from './order-guards';
 
-// as an business owner, I want to update existing order item
+// as a business owner, I want to change the quantity or cost of a draft order line
 @Injectable()
 export class OrderItemUpdateUsecase {
-  constructor(
-    private readonly orderItemService: OrderItemService,
-    private readonly inventoryMovementService: InventoryMovementService,
-  ) {}
+  constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async execute(id: string, orgId: string, orderData: UpdateOrderItemDto) {
-    const res = await this.orderItemService.validateOrderItemOwnership(
-      id,
-      orgId,
-    );
+  async execute(id: string, businessId: string, orderData: UpdateOrderItemDto) {
+    const data = new OrderItemUpdateEntity(orderData);
 
-    if (!res) {
-      throw new NotFoundException(
-        'Order item not found for the authorized organization',
-      );
-    }
-    const orderItemRes = await this.orderItemService.getOrderItemsById(id);
-    const inventoryRes =
-      await this.inventoryMovementService.getByOrderAndProductId(
-        orderItemRes.orderId,
-        orderItemRes.productId,
-      );
+    return this.workflow.transaction(async (tx) => {
+      const order = await this.workflow.lockOrderOfItem(tx, businessId, id);
+      if (!order) throw new NotFoundException('Order item not found');
+      assertDraft(order);
 
-    const orderItem = new OrderItemUpdateEntity(orderData);
-    await this.inventoryMovementService.update(inventoryRes.id, {
-      qty: orderData.qty,
+      const item = await this.workflow.updateItem(tx, id, {
+        ...(data.qty !== undefined && { qty: data.qty }),
+        ...(data.price !== undefined && { price: data.price }),
+      });
+      await this.workflow.recomputeTotal(tx, order.id);
+      return item;
     });
-    return await this.orderItemService.updateOrderItem(id, orderItem);
   }
 }

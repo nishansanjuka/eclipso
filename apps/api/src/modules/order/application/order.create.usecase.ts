@@ -1,40 +1,37 @@
-import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator';
-import { BusinessService } from '../../business/infrastructure/business.service';
-import { InvoiceService } from '../../invoice/infrastructure/invoice.service';
-import { OrderService } from '../infrastructure/order.service';
-import { NotFoundException } from '@nestjs/common';
-import { OrderCreateEntity } from '../domain/order.entity';
-import { InvoiceCreateEntity } from '../../invoice/domain/invoice.entity';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from '../dto/order.dto';
+import { OrderCreateEntity } from '../domain/order.entity';
+import { OrderStatus } from '../infrastructure/enums/order.enum';
+import { OrderWorkflowRepository } from '../infrastructure/order-workflow.repository';
 
-// as an business owner, I want to create a new order
+// as a business owner, I want to create a purchase order for one of my suppliers
 @Injectable()
 export class OrderCreateUsecase {
-  constructor(
-    private readonly businessService: BusinessService,
-    private readonly invoiceService: InvoiceService,
-    private readonly orderService: OrderService,
-  ) {}
+  constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async execute(orgId: string, orderData: CreateOrderDto) {
-    {
-      const res = await this.businessService.getBusinessWithUserByOrgId(orgId);
+  async execute(businessId: string, orderData: CreateOrderDto) {
+    const data = new OrderCreateEntity(orderData);
 
-      if (!res) {
-        throw new NotFoundException(`Business not found`);
-      } else {
-        const { id } = res;
-
-        const invoiceData = new InvoiceCreateEntity({});
-        const invoice = await this.invoiceService.createInvoice(invoiceData);
-
-        const data = new OrderCreateEntity({
-          ...orderData,
-          businessId: id,
-          invoiceId: invoice.id,
-        });
-        return this.orderService.createOrder(data);
+    return this.workflow.transaction(async (tx) => {
+      if (
+        !(await this.workflow.supplierInBusiness(
+          tx,
+          businessId,
+          data.supplierId,
+        ))
+      ) {
+        throw new NotFoundException('Supplier not found');
       }
-    }
+
+      // Always a draft with a zero total; both change only through the items
+      // and the receive step, never through the request.
+      return this.workflow.insertOrderWithInvoice(tx, {
+        businessId,
+        supplierId: data.supplierId,
+        expectedDate: data.expectedDate,
+        status: OrderStatus.DRAFT,
+        totalAmount: 0,
+      });
+    });
   }
 }

@@ -1,37 +1,27 @@
-import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator';
-import { BusinessService } from '../../business/infrastructure/business.service';
-import { OrderService } from '../infrastructure/order.service';
-import { NotFoundException } from '@nestjs/common';
-import { InvoiceService } from '../../invoice/infrastructure/invoice.service';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { OrderStatus } from '../infrastructure/enums/order.enum';
+import { OrderWorkflowRepository } from '../infrastructure/order-workflow.repository';
 
-// as an business owner, I want to delete an order
+// as a business owner, I want to delete an order I created by mistake
 @Injectable()
 export class OrderDeleteUsecase {
-  constructor(
-    private readonly businessService: BusinessService,
-    private readonly orderService: OrderService,
-    private readonly invoiceService: InvoiceService,
-  ) {}
+  constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async execute(id: string, orgId: string) {
-    {
-      const businessRes =
-        await this.businessService.getBusinessWithUserByOrgId(orgId);
-
-      if (!businessRes) {
-        throw new NotFoundException(`Business not found`);
-      } else {
-        const { id: businessId } = businessRes;
-        const orderRes = await this.orderService.getOrder(id, businessId);
-
-        if (!orderRes) {
-          throw new NotFoundException('Order Not found');
-        }
-
-        await this.invoiceService.deleteInvoice(orderRes.invoiceId);
-
-        return this.orderService.deleteOrder(id, businessId);
+  async execute(id: string, businessId: string) {
+    return this.workflow.transaction(async (tx) => {
+      const order = await this.workflow.lockOrder(tx, businessId, id);
+      if (!order) throw new NotFoundException('Order not found');
+      // A received order is stock history and stays.
+      if (order.status === OrderStatus.RECEIVED) {
+        throw new ConflictException('A received order cannot be deleted');
       }
-    }
+
+      await this.workflow.deleteOrderWithInvoice(tx, order.id, order.invoiceId);
+      return { id: order.id };
+    });
   }
 }
