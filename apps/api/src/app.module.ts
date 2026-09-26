@@ -21,6 +21,7 @@ import { SaleModule } from './modules/sale/sale.module';
 import { ReturnModule } from './modules/return/return.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { BranchModule } from './modules/branch/branch.module';
+import { ReportModule } from './modules/report/report.module';
 
 import { RootController } from './root.controller';
 
@@ -35,6 +36,7 @@ import { RootController } from './root.controller';
     AuthModule,
     BusinessModule,
     BranchModule,
+    ReportModule,
     SuppliersModule,
     ProductModule,
     DiscountModule,

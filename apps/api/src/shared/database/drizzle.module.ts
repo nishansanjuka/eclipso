@@ -9,7 +9,13 @@ import * as schema from './schema';
     {
       provide: 'DRIZZLE_CLIENT',
       useFactory: () => {
-        const pool = new Pool({ connectionString: loadConfig().DATABASE_URL });
+        const pool = new Pool({
+          connectionString: loadConfig().DATABASE_URL,
+          // Timestamps are `timestamp without time zone`. Pinning the session
+          // to UTC makes `now()` defaults and JS dates agree, so reports that
+          // bucket by day mean the same thing wherever the database server is.
+          options: '-c timezone=UTC',
+        });
         const db = drizzle({
           client: pool,
           schema,
