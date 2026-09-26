@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
-import { appUrl, parseHost, tenancyConfig } from "@/lib/tenancy/host";
+import { appUrl, baseUrl, parseHost, tenancyConfig } from "@/lib/tenancy/host";
+import { workspaceExists } from "@/lib/tenancy/workspace-exists";
 
 /** Pages anyone may open, on every host. */
 const isPublicRoute = createRouteMatcher([
@@ -37,7 +38,15 @@ export default clerkMiddleware(async (auth, req) => {
   if (target.kind === "root") {
     return NextResponse.redirect(appUrl(pathname + search, config));
   }
-  if (target.kind === "unknown") return notFound(req);
+  // An address nobody can own (malformed, nested) goes to the base domain.
+  if (target.kind === "unknown") {
+    return NextResponse.redirect(baseUrl("/", config));
+  }
+  // A well-formed address that no business owns: nothing lives here, so send
+  // the visitor to the base domain instead of an empty shell.
+  if (target.kind === "org" && !(await workspaceExists(target.slug))) {
+    return NextResponse.redirect(baseUrl("/", config));
+  }
 
   if (isPublicRoute(req)) {
     // Invitation links live on the workspace host; keep the slug available so

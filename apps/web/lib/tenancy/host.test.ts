@@ -58,3 +58,12 @@ describe("urls", () => {
     expect(appUrl("/sign-in", config)).toBe("https://app.aperture.lk/sign-in");
   });
 });
+
+describe("baseUrl", () => {
+  it("points at the root domain", async () => {
+    const { baseUrl } = await import("./host");
+    expect(baseUrl("/", { rootDomain: "aperture.lk", protocol: "https" })).toBe(
+      "https://aperture.lk/",
+    );
+  });
+});

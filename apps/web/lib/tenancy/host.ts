@@ -72,3 +72,8 @@ export function orgUrl(
 export function appUrl(path = "/", config: TenancyConfig = tenancyConfig()) {
   return `${config.protocol}://${APP_SUBDOMAIN}.${config.rootDomain}${path}`;
 }
+
+/** Absolute URL on the base (root) domain. */
+export function baseUrl(path = "/", config: TenancyConfig = tenancyConfig()) {
+  return `${config.protocol}://${config.rootDomain}${path}`;
+}
