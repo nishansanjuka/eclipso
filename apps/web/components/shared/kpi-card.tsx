@@ -44,8 +44,8 @@ function TrendPill({ percent, label, invert }: KpiTrend) {
         flat
           ? "bg-muted text-muted-foreground"
           : good
-            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-            : "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+            ? "bg-ok-soft text-ok"
+            : "bg-bad-soft text-bad",
       )}
       title={label}
     >
@@ -85,15 +85,20 @@ export function KpiCard({
               </div>
             )}
             {sub && !loading && (
-              <div className="mt-0.5 text-xs text-muted-foreground truncate">{sub}</div>
+              <div className="mt-0.5 text-xs text-muted-foreground truncate">
+                {sub}
+              </div>
             )}
           </div>
-          <div className={cn("shrink-0 p-2.5 rounded-lg bg-primary/10 text-primary", iconClassName)}>
+          <div
+            className={cn(
+              "shrink-0 p-2.5 rounded-lg bg-accent-soft text-accent-text",
+              iconClassName,
+            )}
+          >
             <Icon className="size-4" />
           </div>
         </div>
-        {/* subtle accent bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/60 via-primary/20 to-transparent" />
       </CardContent>
     </Card>
   );

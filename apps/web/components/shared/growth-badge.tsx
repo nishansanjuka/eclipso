@@ -15,8 +15,8 @@ export function GrowthBadge({ percent }: { percent: number | null }) {
         flat
           ? "bg-muted text-muted-foreground"
           : percent > 0
-            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-            : "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+            ? "bg-ok-soft text-ok"
+            : "bg-bad-soft text-bad",
       )}
     >
       {!flat && <Icon className="size-3" />}

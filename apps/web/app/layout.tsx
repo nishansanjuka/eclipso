@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Nunito } from "next/font/google";
+import { Manrope } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
@@ -14,14 +14,14 @@ import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/query-provider";
 import "./globals.css";
 
-const nunito = Nunito({
-  variable: "--font-nunito-sans",
-  weight: ["400", "500", "600", "700"],
+const manrope = Manrope({
+  variable: "--font-manrope",
+  weight: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Eclipso — Point of Sale",
+  title: "Aperture — Point of sale and stock",
   description: "Sales, inventory and purchasing for your business.",
 };
 
@@ -36,17 +36,21 @@ export default function RootLayout({
         theme: [shadcn],
         signIn: { theme: shadcn },
         signUp: { theme: shadcn },
+        variables: {
+          borderRadius: "12px",
+          fontFamily: "var(--font-manrope), Segoe UI, sans-serif",
+        },
       }}
     >
       <html
         lang="en"
-        className={`${nunito.className} h-full antialiased`}
+        className={`${manrope.variable} ${manrope.className} h-full antialiased`}
         suppressHydrationWarning
       >
         <body className="min-h-full flex flex-col">
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
+            defaultTheme="light"
             enableSystem
             disableTransitionOnChange
           >
