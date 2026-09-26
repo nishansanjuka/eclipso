@@ -19,6 +19,10 @@ export class ProductCreateUseCase {
       throw new NotFoundException(`Business not found`);
     } else {
       const { id } = res;
+      await this.productService.assertReferencesInBusiness(id, {
+        supplierId: productData.supplierId,
+        brandId: productData.brandId,
+      });
       const data = new ProductCreateEntity({
         ...productData,
         businessId: id,

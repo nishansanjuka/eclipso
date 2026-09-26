@@ -12,6 +12,7 @@ describe('ProductCreateUseCase', () => {
   beforeEach(async () => {
     const mockProductService = {
       createProduct: jest.fn(),
+      assertReferencesInBusiness: jest.fn(),
     };
 
     const mockBusinessService = {
@@ -59,7 +60,25 @@ describe('ProductCreateUseCase', () => {
         orgId,
       );
       expect(productService.createProduct).toHaveBeenCalled();
+      expect(productService.assertReferencesInBusiness).toHaveBeenCalledWith(
+        'business-123',
+        { supplierId: 'supplier-123', brandId: undefined },
+      );
       expect(result).toEqual(mockProduct);
+    });
+
+    it('should refuse a supplier or brand from another business', async () => {
+      businessService.getBusinessWithUserByOrgId.mockResolvedValue(
+        mockBusiness as any,
+      );
+      productService.assertReferencesInBusiness.mockRejectedValue(
+        new NotFoundException('Supplier not found'),
+      );
+
+      await expect(usecase.execute(orgId, productData as any)).rejects.toThrow(
+        'Supplier not found',
+      );
+      expect(productService.createProduct).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when business not found', async () => {

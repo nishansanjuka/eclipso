@@ -3,10 +3,9 @@ import { Z } from '../../../shared/decorators/zod.validation';
 import { BaseModel } from '../../../shared/zod/base.model';
 import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
 
-export class ProductCreateEntity extends BaseModel {
-  @Z(z.string().nullable().optional())
-  public readonly id?: string;
+const metadata = z.record(z.string(), z.unknown());
 
+export class ProductCreateEntity extends BaseModel {
   @Z(
     z
       .string({ error: 'Invalid Business Id' })
@@ -35,13 +34,27 @@ export class ProductCreateEntity extends BaseModel {
   )
   public readonly sku: string;
 
-  @Z(z.number({ error: 'Invalid Product Price' }).optional())
+  @Z(
+    z
+      .number({ error: 'Invalid Product Price' })
+      .int('Price must be a whole number of minor units')
+      .min(0, 'Price must not be negative')
+      .max(2_000_000_000, 'Price is too large')
+      .optional(),
+  )
   public readonly price?: number;
 
-  @Z(z.number({ error: 'Invalid Product Stock Quantity' }).optional())
+  @Z(
+    z
+      .number({ error: 'Invalid Product Stock Quantity' })
+      .int('Stock quantity must be a whole number')
+      .min(0, 'Stock quantity must not be negative')
+      .max(2_000_000_000, 'Stock quantity is too large')
+      .optional(),
+  )
   public readonly stockQty?: number;
 
-  @Z(z.object({}).optional())
+  @Z(metadata.optional())
   public readonly metadata?: object;
 
   @Z(z.string().nullable().optional())
@@ -61,16 +74,6 @@ export class ProductCreateEntity extends BaseModel {
 }
 
 export class ProductUpdateEntity extends BaseModel {
-  @Z(z.string().nullable().optional())
-  public readonly id?: string;
-
-  @Z(
-    z
-      .string({ error: 'Invalid Business Id' })
-      .min(1, 'Business Id is required'),
-  )
-  public readonly businessId: string;
-
   @Z(
     z
       .string({ error: 'Invalid Product Name' })
@@ -89,33 +92,26 @@ export class ProductUpdateEntity extends BaseModel {
 
   @Z(
     z
-      .number({ error: 'Invalid Product Sku' })
-      .min(1, 'Product Sku is required')
+      .number({ error: 'Invalid Product Price' })
+      .int('Price must be a whole number of minor units')
+      .min(0, 'Price must not be negative')
+      .max(2_000_000_000, 'Price is too large')
       .optional(),
   )
   public readonly price?: number;
 
-  @Z(
-    z
-      .number({ error: 'Invalid Product Stock Quantity' })
-      .min(1, 'Product Stock Quantity is required')
-      .optional(),
-  )
-  public readonly stockQty?: number;
-
-  @Z(z.object({}).optional())
+  @Z(metadata.optional())
   public readonly metadata?: object;
 
   @Z(z.string().nullable().optional())
-  public readonly brandId?: string;
+  public readonly brandId?: string | null;
 
+  // Deliberately no stock field: stock only moves through the inventory ledger.
   constructor(params: UpdateProductDto) {
     super(params);
-    this.businessId = params.businessId;
     this.name = params.name;
     this.price = params.price;
     this.sku = params.sku;
-    this.stockQty = params.stockQty;
     this.metadata = params.metadata;
     this.brandId = params.brandId;
   }

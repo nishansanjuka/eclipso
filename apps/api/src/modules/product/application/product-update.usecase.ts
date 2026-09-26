@@ -19,11 +19,17 @@ export class ProductUpdateUseCase {
       throw new NotFoundException(`Business not found`);
     } else {
       const { id: businessId } = res;
-      const data = new ProductUpdateEntity({
-        ...productData,
-        businessId: businessId,
+      await this.productService.assertReferencesInBusiness(businessId, {
+        brandId: productData.brandId,
       });
-      return this.productService.updateProduct(id, businessId, data);
+      const data = new ProductUpdateEntity(productData);
+      const updated = await this.productService.updateProduct(
+        id,
+        businessId,
+        data,
+      );
+      if (!updated) throw new NotFoundException('Product not found');
+      return updated;
     }
   }
 }

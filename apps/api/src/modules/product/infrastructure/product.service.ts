@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProductRepository } from './product.repository';
 import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
 import { SQL } from 'drizzle-orm';
@@ -44,6 +44,20 @@ export class ProductService {
       businessId,
       stockQtyExpression,
     );
+  }
+
+  /** Throws unless the supplier/brand (when given) belong to this business. */
+  async assertReferencesInBusiness(
+    businessId: string,
+    refs: { supplierId?: string | null; brandId?: string | null },
+  ) {
+    const result = await this.productRepository.referencesBelongToBusiness(
+      businessId,
+      refs,
+    );
+    if (!result.ok) {
+      throw new NotFoundException(`${result.missing} not found`);
+    }
   }
 
   async getProductById(id: string, businessId: string) {
