@@ -1,15 +1,15 @@
 import "server-only";
 import ky from "ky";
 import { auth } from "@clerk/nextjs/server";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { AppError } from "@/lib/action-client";
 import {
   BRANCH_COOKIE,
   BRANCH_HEADER,
-  BUSINESS_COOKIE,
-  BUSINESS_HEADER,
   NO_BRANCH_MARKER,
   NO_SCOPE_MARKER,
+  ORG_SLUG_REQUEST_HEADER,
+  SLUG_HEADER,
 } from "@/lib/access/business-cookie";
 
 const API_BASE_URL =
@@ -20,10 +20,10 @@ const API_BASE_URL =
 /**
  * Server-side client for apps/api.
  *
- * Injects the caller's Clerk session token (identity only) plus the selected
- * business and branch (`X-Business-Id`, `X-Branch-Id`). The API resolves role,
- * permissions and branch access from its own database and re-validates both
- * selections on every request.
+ * Injects the caller's Clerk session token (identity only), the business named
+ * by the workspace host (`X-Business-Slug`) and the selected branch
+ * (`X-Branch-Id`). The API resolves role, permissions and branch access from
+ * its own database and re-validates both on every request.
  */
 export const backendApiClient = ky.create({
   prefix: API_BASE_URL,
@@ -41,16 +41,13 @@ export const backendApiClient = ky.create({
           const token = await getToken();
           if (token) request.headers.set("Authorization", `Bearer ${token}`);
 
-          const jar = await cookies();
-          const businessId = jar.get(BUSINESS_COOKIE)?.value;
-          if (
-            businessId &&
-            !skipScope &&
-            !request.headers.has(BUSINESS_HEADER)
-          ) {
-            request.headers.set(BUSINESS_HEADER, businessId);
+          if (!skipScope) {
+            const slug = (await headers()).get(ORG_SLUG_REQUEST_HEADER);
+            if (slug && !request.headers.has(SLUG_HEADER)) {
+              request.headers.set(SLUG_HEADER, slug);
+            }
           }
-          const branchId = jar.get(BRANCH_COOKIE)?.value;
+          const branchId = (await cookies()).get(BRANCH_COOKIE)?.value;
           if (branchId && !skipBranch && !request.headers.has(BRANCH_HEADER)) {
             request.headers.set(BRANCH_HEADER, branchId);
           }

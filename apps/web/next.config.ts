@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  allowedDevOrigins: ["dev.local:3001", "*.dev.local:3001"],
 };
 
 export default nextConfig;

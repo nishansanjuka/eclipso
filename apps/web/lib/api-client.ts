@@ -31,7 +31,10 @@ export const apiClient = ky.create({
           let errorCode = "HTTP_ERROR";
 
           try {
-            const body = (await response.json()) as { message?: string; code?: string };
+            const body = (await response.json()) as {
+              message?: string;
+              code?: string;
+            };
             if (body?.message) errorMessage = body.message;
             if (body?.code) errorCode = body.code;
           } catch {

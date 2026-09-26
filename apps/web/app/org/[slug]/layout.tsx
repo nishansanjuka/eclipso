@@ -6,7 +6,6 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandPalette } from "@/components/command-palette";
 import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb";
-import { EnsureActiveBusiness } from "@/components/providers/ensure-active-business";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -14,21 +13,43 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { accessQueryOptions } from "@/lib/query-options/access";
+import { redirect } from "next/navigation";
+import { getAccess } from "@/lib/actions/access";
+import { PERMISSIONS } from "@/lib/access/permissions";
+import { ACCESS_QUERY_KEY } from "@/lib/query-options/access";
+import { appUrl } from "@/lib/tenancy/host";
 
-export default async function DashboardLayout({
+export default async function WorkspaceLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ slug: string }>;
 }) {
-  // Prefetch the access surface once for the whole dashboard so the sidebar and
-  // every page resolve `can()` on first paint (no gated-UI flash).
+  const { slug } = await params;
+
+  // Resolve who the user is in THIS workspace once, for the whole tree, so the
+  // sidebar and every page know `can()` on first paint (no gated-UI flash).
+  const access = (await getAccess())?.data;
+  const business = access?.businesses.find((b) => b.slug === slug);
+
+  // Not a member of the workspace named by the address: back to the picker.
+  if (!access || !business || !access.activeBusinessId) {
+    redirect(appUrl(`/?no-access=${encodeURIComponent(slug)}`));
+  }
+  // The owner has not finished setting up yet: pick up where they left off.
+  if (
+    !business.onboardingCompletedAt &&
+    access.permissions.includes(PERMISSIONS.BUSINESS_MANAGE)
+  ) {
+    redirect(appUrl("/onboarding"));
+  }
+
   const queryClient = new QueryClient();
-  await Promise.allSettled([queryClient.prefetchQuery(accessQueryOptions)]);
+  queryClient.setQueryData(ACCESS_QUERY_KEY, access);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <EnsureActiveBusiness />
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>

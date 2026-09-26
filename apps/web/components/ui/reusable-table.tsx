@@ -170,7 +170,9 @@ export function ReusableTable<T>({
                         >
                           {col.cell
                             ? col.cell(item)
-                            : (item[col.accessorKey as keyof T] as React.ReactNode)}
+                            : (item[
+                                col.accessorKey as keyof T
+                              ] as React.ReactNode)}
                         </TableCell>
                       ))}
                     </TableRow>

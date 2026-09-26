@@ -9,6 +9,8 @@ export interface Branch {
   code: string;
   name: string;
   address: string | null;
+  kind: "store" | "warehouse";
+  registerCount: number;
   isDefault: boolean;
   isActive: boolean;
   createdAt: string;
@@ -96,4 +98,90 @@ export interface LowStock {
     sku: string;
     qty: number;
   }[];
+}
+
+export interface BusinessProfile {
+  orgId: string;
+  slug: string;
+  name: string;
+  businessType: "retail" | "service" | "manufacturing";
+  registeredName: string | null;
+  registrationNumber: string | null;
+  phone: string | null;
+  country: string;
+  addressLine: string | null;
+  city: string | null;
+  postalCode: string | null;
+  vatRegistered: boolean;
+  vatNumber: string | null;
+  currency: string;
+  rounding: "none" | "nearest_1" | "nearest_5";
+  onboardingCompletedAt: string | null;
+}
+
+export interface Role {
+  id: string;
+  businessId: string | null;
+  key: string;
+  name: string;
+  description: string | null;
+  isSystem: boolean;
+  permissions: string[];
+}
+
+export interface Member {
+  userId: string;
+  name: string;
+  roleId: string | null;
+  roleKey: string | null;
+  roleName: string | null;
+  joinedAt: string;
+  /** Empty = works in every branch. */
+  branchIds: string[];
+}
+
+export type InvitationStatus = "pending" | "accepted" | "revoked" | "expired";
+
+export interface Invitation {
+  id: string;
+  email: string;
+  roleId: string;
+  roleName: string;
+  branchIds: string[];
+  status: InvitationStatus;
+  invitedByName: string | null;
+  expiresAt: string;
+  lastSentAt: string | null;
+  sendCount: number;
+  createdAt: string;
+}
+
+export type InvitationResult =
+  | {
+      email: string;
+      ok: true;
+      id: string;
+      /** Fallback if the email could not be sent. */
+      inviteUrl: string;
+      emailSent: boolean;
+      emailError?: string;
+    }
+  | { email: string; ok: false; error: string };
+
+export interface InvitationLookup {
+  status: InvitationStatus;
+  email: string;
+  organizationName: string;
+  organizationSlug: string;
+  roleName: string;
+  branchNames: string[];
+  invitedByName: string | null;
+  sentAt: string;
+  expiresAt: string;
+}
+
+export interface ImportResult {
+  created: number;
+  total: number;
+  skipped: { row: number; sku: string | null; reason: string }[];
 }

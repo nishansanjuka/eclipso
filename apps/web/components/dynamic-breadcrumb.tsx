@@ -14,10 +14,7 @@ import {
 import { NAV_ROUTES } from "@/lib/access/navigation";
 
 const labelMap: Record<string, string> = Object.fromEntries(
-  NAV_ROUTES.filter((r) => r.url !== "/").map((r) => [
-    r.url.slice(1),
-    r.title,
-  ]),
+  NAV_ROUTES.filter((r) => r.url !== "/").map((r) => [r.url.slice(1), r.title]),
 );
 
 export function DynamicBreadcrumb() {

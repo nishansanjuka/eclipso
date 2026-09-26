@@ -48,7 +48,12 @@ export type ActionResponse<T> =
   | { success: true; data: T }
   | {
       success: false;
-      error: { code: string; status: number; message: string; details?: unknown };
+      error: {
+        code: string;
+        status: number;
+        message: string;
+        details?: unknown;
+      };
     };
 
 /**
