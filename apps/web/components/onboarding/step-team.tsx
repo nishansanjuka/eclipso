@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useClerk } from "@clerk/nextjs";
 import {
   CheckCircle2Icon,
   CopyIcon,
@@ -37,6 +38,20 @@ interface Row {
 
 export function StepTeam({ onBack }: { onBack: () => void }) {
   const { orgId, slug, roles, branches } = useOnboarding();
+  const { signOut } = useClerk();
+
+  /**
+   * Off to the workspace. Optionally sign out first (development Clerk
+   * instances keep a session per host, so the workspace address needs its own
+   * sign in; set NEXT_PUBLIC_SIGN_OUT_AFTER_ONBOARDING=true).
+   */
+  const goToWorkspace = async (address: string) => {
+    if (process.env.NEXT_PUBLIC_SIGN_OUT_AFTER_ONBOARDING === "true") {
+      await signOut({ redirectUrl: address });
+      return;
+    }
+    window.location.assign(address);
+  };
   const invitable = roles.filter((r) => r.key !== "owner");
   const stores = branches.filter((b) => b.isActive && b.kind === "store");
 
@@ -99,7 +114,7 @@ export function StepTeam({ onBack }: { onBack: () => void }) {
         await saveBusiness({ orgId, onboardingCompleted: true }),
       );
       if (!done.success) throw new Error(done.error.message);
-      window.location.assign(orgUrl(slug));
+      await goToWorkspace(orgUrl(slug));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not finish");
     } finally {
@@ -116,7 +131,7 @@ export function StepTeam({ onBack }: { onBack: () => void }) {
         await saveBusiness({ orgId, onboardingCompleted: true }),
       );
       if (!done.success) throw new Error(done.error.message);
-      window.location.assign(orgUrl(slug));
+      await goToWorkspace(orgUrl(slug));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not finish");
       setBusy(false);
