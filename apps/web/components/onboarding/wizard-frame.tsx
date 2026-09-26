@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
 import { CheckIcon } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 export const STEPS = [
@@ -77,14 +79,18 @@ export function WizardFrame({
             );
           })}
         </ol>
-        <Button
-          variant="ghost"
-          size="sm"
-          nativeButton={false}
-          render={<Link href="/" />}
-        >
-          Save and finish later
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            nativeButton={false}
+            render={<Link href="/" />}
+          >
+            Save and finish later
+          </Button>
+          <ThemeToggle />
+          <UserButton />
+        </div>
       </header>
       <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col gap-6 px-6 py-10">
         {children}
