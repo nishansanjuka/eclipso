@@ -182,6 +182,9 @@ export default async function InvitePage({
         <>
           <SignUp
             appearance={{ elements: clerkFormElements }}
+            // The page is /invite/<token>, not a catch-all route, so Clerk keeps its
+            // sign-up steps in the URL hash instead of extra path segments.
+            routing="hash"
             initialValues={{ emailAddress: invitation.email }}
             forceRedirectUrl={back}
             signInForceRedirectUrl={back}
