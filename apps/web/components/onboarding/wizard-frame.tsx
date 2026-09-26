@@ -77,7 +77,12 @@ export function WizardFrame({
             );
           })}
         </ol>
-        <Button variant="ghost" size="sm" render={<Link href="/" />}>
+        <Button
+          variant="ghost"
+          size="sm"
+          nativeButton={false}
+          render={<Link href="/" />}
+        >
           Save and finish later
         </Button>
       </header>

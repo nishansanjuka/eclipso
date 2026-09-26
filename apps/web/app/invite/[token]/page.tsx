@@ -91,7 +91,11 @@ export default async function InvitePage({
         title="This invitation link is not valid"
         text="It may have been mistyped or replaced by a newer one. Ask the person who invited you to send it again."
       >
-        <Button variant="outline" render={<Link href="/sign-in" />}>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/sign-in" />}
+        >
           Sign in instead
         </Button>
       </Notice>,
@@ -133,7 +137,10 @@ export default async function InvitePage({
         title="This invitation was already used"
         text={`Sign in to open ${org}.`}
       >
-        <Button render={<Link href={orgUrl(invitation.organizationSlug)} />}>
+        <Button
+          nativeButton={false}
+          render={<Link href={orgUrl(invitation.organizationSlug)} />}
+        >
           Open {org}
         </Button>
       </Notice>,

@@ -95,7 +95,11 @@ export default async function PickerPage({
         </ul>
 
         <div>
-          <Button variant="outline" render={<Link href="/onboarding?new=1" />}>
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/onboarding?new=1" />}
+          >
             <PlusIcon />
             Create a new business
           </Button>
