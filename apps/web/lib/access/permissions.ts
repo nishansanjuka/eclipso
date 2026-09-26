@@ -8,6 +8,8 @@
 export const PERMISSIONS = {
   BUSINESS_MANAGE: "business:manage",
   BUSINESS_DELETE: "business:delete",
+  BRANCH_READ: "branch:read",
+  BRANCH_MANAGE: "branch:manage",
   MEMBER_READ: "member:read",
   MEMBER_MANAGE: "member:manage",
   ROLE_READ: "role:read",

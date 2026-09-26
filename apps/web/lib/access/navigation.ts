@@ -117,6 +117,13 @@ export const NAV_ROUTES: NavRoute[] = [
     description: "Sales and stock reports.",
   },
   {
+    title: "Branches",
+    url: "/branches",
+    group: "business",
+    permissions: [P.BRANCH_READ, P.BRANCH_MANAGE],
+    description: "Locations of this business.",
+  },
+  {
     title: "Team",
     url: "/team",
     group: "business",

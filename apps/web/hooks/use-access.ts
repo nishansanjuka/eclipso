@@ -20,6 +20,8 @@ export function useAccess() {
     return wanted.some((p) => granted.has(p));
   }
 
+  const branches = data?.branches ?? [];
+
   return {
     can,
     isLoading,
@@ -28,5 +30,9 @@ export function useAccess() {
     activeBusinessId: data?.activeBusinessId ?? null,
     activeBusiness:
       data?.businesses.find((b) => b.orgId === data.activeBusinessId) ?? null,
+    branches,
+    activeBranchId: data?.activeBranchId ?? null,
+    activeBranch: branches.find((b) => b.id === data?.activeBranchId) ?? null,
+    branchRestricted: data?.branchRestricted ?? false,
   };
 }

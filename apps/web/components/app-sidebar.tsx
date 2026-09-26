@@ -21,8 +21,10 @@ import {
   WarehouseIcon,
   BarChart3Icon,
   ScrollTextIcon,
+  MapPinIcon,
   BadgePercentIcon,
 } from "lucide-react";
+import { BranchSwitcher } from "@/components/branch-switcher";
 import { BusinessSwitcher } from "@/components/business-switcher";
 import { NavMain } from "@/components/nav-main";
 import {
@@ -54,6 +56,7 @@ const ICONS: Record<string, React.ReactNode> = {
   "/orders": <ClipboardListIcon />,
   "/suppliers": <TruckIcon />,
   "/reports": <BarChart3Icon />,
+  "/branches": <MapPinIcon />,
   "/team": <BuildingIcon />,
   "/roles": <ShieldIcon />,
   "/audit-logs": <ScrollTextIcon />,
@@ -76,6 +79,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <BusinessSwitcher />
+        <BranchSwitcher />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={visible.filter((r) => r.group === "home")} />
