@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   },
   // Hostnames only (no port). Without these, the dev server blocks its own
   // client chunks and HMR socket on workspace hosts, so nothing hydrates.
-  allowedDevOrigins: ["dev.local", "*.dev.local", "*.localhost", "*.web-dev.nishansanjuka.me"],
+  allowedDevOrigins: ["dev.local", "*.dev.local", "*.localhost"],
 };
 
 export default nextConfig;
