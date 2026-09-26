@@ -55,7 +55,9 @@ type Availability =
   | { state: "idle" }
   | { state: "checking" }
   | { state: "ok" }
-  | { state: "bad"; reason: "invalid" | "taken" };
+  | { state: "bad"; reason: "invalid" | "taken" }
+  /** The check itself failed (API unreachable, ...). Not the owner's fault. */
+  | { state: "unknown" };
 
 export function StepBusiness({ onNext }: { onNext: () => void }) {
   const { orgId, business, hydrate, setCreated } = useOnboarding();
@@ -78,11 +80,16 @@ export function StepBusiness({ onNext }: { onNext: () => void }) {
   );
   // Until the owner types their own address, it follows the business name.
   const slug = typedSlug ?? suggestSlug(name);
-  const [checked, setChecked] = useState<{
-    slug: string;
-    available: boolean;
-    reason: "invalid" | "taken" | null;
-  } | null>(null);
+  const [checked, setChecked] = useState<
+    | {
+        slug: string;
+        failed?: false;
+        available: boolean;
+        reason: "invalid" | "taken" | null;
+      }
+    | { slug: string; failed: true }
+    | null
+  >(null);
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -95,7 +102,9 @@ export function StepBusiness({ onNext }: { onNext: () => void }) {
       const response = handleActionResponse(
         await checkWorkspaceAddress({ slug }),
       );
-      if (response.success) setChecked(response.data);
+      setChecked(
+        response.success ? { ...response.data, slug } : { slug, failed: true },
+      );
     }, 350);
     return () => clearTimeout(handle);
   }, [slug, business?.slug]);
@@ -104,9 +113,11 @@ export function StepBusiness({ onNext }: { onNext: () => void }) {
     !slug || slug === business?.slug
       ? { state: "idle" }
       : checked?.slug === slug
-        ? checked.available
-          ? { state: "ok" }
-          : { state: "bad", reason: checked.reason ?? "invalid" }
+        ? checked.failed
+          ? { state: "unknown" }
+          : checked.available
+            ? { state: "ok" }
+            : { state: "bad", reason: checked.reason ?? "invalid" }
         : { state: "checking" };
 
   const slugMessage = useMemo(() => {
@@ -114,6 +125,9 @@ export function StepBusiness({ onNext }: { onNext: () => void }) {
       return availability.reason === "taken"
         ? "That address is taken. Try another."
         : "Use 3-40 letters, digits or single hyphens. Some words are reserved.";
+    }
+    if (availability.state === "unknown") {
+      return null;
     }
     return null;
   }, [availability]);
@@ -124,10 +138,9 @@ export function StepBusiness({ onNext }: { onNext: () => void }) {
     if (!slug) next.slug = "Choose a workspace address";
     else if (availability.state === "bad")
       next.slug = slugMessage ?? "Not available";
-    else if (availability.state === "checking")
-      next.slug = "Checking that address…";
     setErrors(next);
-    return Object.keys(next).length === 0;
+    // Still checking: wait for the result rather than showing an error.
+    return Object.keys(next).length === 0 && availability.state !== "checking";
   }
 
   async function submit() {
@@ -226,6 +239,11 @@ export function StepBusiness({ onNext }: { onNext: () => void }) {
             </>
           }
           error={errors.slug ?? slugMessage}
+          warning={
+            availability.state === "unknown"
+              ? "We could not check this address right now. You can continue; it is confirmed when the business is created."
+              : undefined
+          }
         >
           <div className="relative">
             <Input
@@ -247,6 +265,9 @@ export function StepBusiness({ onNext }: { onNext: () => void }) {
                 <span className="flex items-center gap-1 text-ok">
                   <CheckIcon className="size-3.5" /> Available
                 </span>
+              )}
+              {availability.state === "unknown" && (
+                <span className="text-warn">Could not check</span>
               )}
               {availability.state === "bad" && (
                 <span className="flex items-center gap-1 text-bad">

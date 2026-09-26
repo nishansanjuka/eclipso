@@ -11,6 +11,7 @@ export function Field({
   label,
   hint,
   error,
+  warning,
   htmlFor,
   className,
   children,
@@ -18,6 +19,8 @@ export function Field({
   label: string;
   hint?: React.ReactNode;
   error?: string | null;
+  /** Something to know, not a blocker. */
+  warning?: string;
   htmlFor?: string;
   className?: string;
   children: React.ReactNode;
@@ -32,6 +35,11 @@ export function Field({
         <p className="flex items-center gap-1.5 text-xs font-semibold text-bad">
           <AlertCircleIcon className="size-3.5 shrink-0" />
           {error}
+        </p>
+      ) : warning ? (
+        <p className="flex items-center gap-1.5 text-xs font-semibold text-warn">
+          <AlertCircleIcon className="size-3.5 shrink-0" />
+          {warning}
         </p>
       ) : hint ? (
         <p className="text-xs text-muted-foreground">{hint}</p>
