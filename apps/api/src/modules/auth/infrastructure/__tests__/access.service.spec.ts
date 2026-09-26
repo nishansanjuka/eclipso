@@ -32,6 +32,9 @@ function serviceFor(record: MembershipRecord | null) {
   const repository = {
     findMembership: jest.fn().mockResolvedValue(record),
     listMembershipOrgIds: jest.fn().mockResolvedValue(['biz_1']),
+    orgIdBySlug: jest.fn((slug: string) =>
+      Promise.resolve(slug === 'keels' ? 'biz_1' : undefined),
+    ),
   };
   return new AccessService(repository as never);
 }
@@ -101,5 +104,48 @@ describe('AccessService branch resolution', () => {
     expect(ctx.branchId).toBeUndefined();
     expect(ctx.branchRestricted).toBe(true);
     expect(ctx.canAccessBranch(MAIN)).toBe(false);
+  });
+
+  describe('workspace address (X-Business-Slug)', () => {
+    it('resolves the business from the subdomain slug', async () => {
+      const ctx = await serviceFor(membership()).resolve(
+        'user_1',
+        undefined,
+        undefined,
+        'keels',
+      );
+      expect(ctx.orgId).toBe('biz_1');
+      expect(ctx.branchId).toBe(MAIN);
+    });
+
+    it('unknown slug and non-member get the same 403', async () => {
+      await expect(
+        serviceFor(membership()).resolve(
+          'user_1',
+          undefined,
+          undefined,
+          'nope',
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(
+        serviceFor(null).resolve('user_1', undefined, undefined, 'keels'),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('refuses both an id and a slug', async () => {
+      await expect(
+        serviceFor(membership()).resolve('user_1', 'biz_1', undefined, 'keels'),
+      ).rejects.toThrow(/not both/);
+    });
+  });
+
+  it('a user in several businesses with no header gets a business-less context', async () => {
+    const repository = {
+      findMembership: jest.fn(),
+      listMembershipOrgIds: jest.fn().mockResolvedValue(['a', 'b']),
+    };
+    const ctx = await new AccessService(repository as never).resolve('user_1');
+    expect(ctx.hasBusiness).toBe(false);
+    expect(repository.findMembership).not.toHaveBeenCalled();
   });
 });

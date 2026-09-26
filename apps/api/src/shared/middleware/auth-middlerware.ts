@@ -7,10 +7,12 @@ import {
 import { NextFunction, Request, Response } from 'express';
 import { clerkMiddleware, getAuth } from '@clerk/express';
 import 'dotenv/config';
+import { isValidSlug } from '../utils/slug';
 import { AccessService } from '../../modules/auth/infrastructure/access.service';
 
 export const BUSINESS_HEADER = 'x-business-id';
 export const BRANCH_HEADER = 'x-branch-id';
+export const SLUG_HEADER = 'x-business-slug';
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BUSINESS_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
@@ -40,15 +42,17 @@ class AuthMiddleware implements NestMiddleware {
 
       let requestedOrgId: string | undefined;
       let requestedBranchId: string | undefined;
+      let requestedSlug: string | undefined;
       try {
         requestedOrgId = this.readBusinessHeader(req);
         requestedBranchId = this.readBranchHeader(req);
+        requestedSlug = this.readSlugHeader(req);
       } catch (error) {
         return next(error);
       }
 
       this.access
-        .resolve(auth.userId, requestedOrgId, requestedBranchId)
+        .resolve(auth.userId, requestedOrgId, requestedBranchId, requestedSlug)
         .then((context) => {
           req.user = context;
           next();
@@ -62,6 +66,15 @@ class AuthMiddleware implements NestMiddleware {
     if (raw === undefined) return undefined;
     if (typeof raw !== 'string' || !BUSINESS_ID_PATTERN.test(raw)) {
       throw new BadRequestException('Invalid X-Business-Id header.');
+    }
+    return raw;
+  }
+
+  private readSlugHeader(req: Request): string | undefined {
+    const raw = req.headers[SLUG_HEADER];
+    if (raw === undefined) return undefined;
+    if (typeof raw !== 'string' || !isValidSlug(raw)) {
+      throw new BadRequestException('Invalid X-Business-Slug header.');
     }
     return raw;
   }

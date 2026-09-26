@@ -243,6 +243,14 @@ export class AccessRepository {
     };
   }
 
+  async orgIdBySlug(slug: string): Promise<string | undefined> {
+    const [row] = await this.db
+      .select({ orgId: businesses.orgId })
+      .from(businesses)
+      .where(eq(businesses.slug, slug));
+    return row?.orgId;
+  }
+
   async listMembershipOrgIds(userId: string): Promise<string[]> {
     const rows = await this.db
       .select({ orgId: businessUsers.businessId })

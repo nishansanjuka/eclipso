@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -40,8 +41,26 @@ export class AccessService implements OnModuleInit {
     userId: string,
     requestedOrgId?: string,
     requestedBranchId?: string,
+    requestedSlug?: string,
   ): Promise<AuthContext> {
     let orgId = requestedOrgId;
+
+    // The workspace address (subdomain) names the business too. Unknown slug
+    // and "not your business" give the same answer, so it cannot be used to
+    // probe which workspaces exist.
+    if (requestedSlug) {
+      if (requestedOrgId) {
+        throw new BadRequestException(
+          'Send either X-Business-Id or X-Business-Slug, not both.',
+        );
+      }
+      orgId = await this.repository.orgIdBySlug(requestedSlug);
+      if (!orgId) {
+        throw new ForbiddenException(
+          'You do not have access to this business.',
+        );
+      }
+    }
 
     if (!orgId) {
       const orgIds = await this.repository.listMembershipOrgIds(userId);
