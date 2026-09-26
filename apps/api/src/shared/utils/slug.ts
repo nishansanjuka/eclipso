@@ -52,7 +52,7 @@ export function slugify(name: string): string {
   return name
     .toLowerCase()
     .normalize('NFKD')
-    .replace(/[^\x00-\x7f]/g, '')
+    .replace(/p{M}/gu, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .replace(/-{2,}/g, '-')
