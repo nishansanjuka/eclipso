@@ -11,7 +11,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  allowedDevOrigins: ["dev.local:3001", "*.dev.local:3001"],
+  // Hostnames only (no port). Without these, the dev server blocks its own
+  // client chunks and HMR socket on workspace hosts, so nothing hydrates.
+  allowedDevOrigins: ["dev.local", "*.dev.local", "*.localhost"],
 };
 
 export default nextConfig;
