@@ -8,6 +8,7 @@ import { ProductDeleteUseCase } from './application/product-delete.usecase';
 import { ProductUpdateUseCase } from './application/product-update.usecase';
 import { BusinessService } from '../business/infrastructure/business.service';
 import { BusinessRepository } from '../business/infrastructure/business.repository';
+import { BranchStockRepository } from '../inventory/infrastructure/branch-stock.repository';
 import { CategoriesModule } from './product.category.module';
 
 @Module({
@@ -21,6 +22,7 @@ import { CategoriesModule } from './product.category.module';
     ProductUpdateUseCase,
     BusinessService,
     BusinessRepository,
+    BranchStockRepository,
   ],
 })
 export class ProductModule {}

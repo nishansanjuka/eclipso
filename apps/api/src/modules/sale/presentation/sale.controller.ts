@@ -9,6 +9,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import { requireBranchId } from '../../../shared/utils/require-branch';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
 import { SaleCreateUseCase } from '../application/sale-create.usecase';
@@ -50,6 +51,7 @@ export class SaleController {
   ) {
     return this.saleCreateUseCase.execute(
       user.businessId!,
+      requireBranchId(user),
       user.userId,
       saleData,
       idempotencyKey,
@@ -70,7 +72,7 @@ export class SaleController {
     @Body() saleData: UpdateSaleDto,
     @User() user: AuthUserObject,
   ) {
-    return this.saleUpdateUseCase.execute(id, user.businessId!, saleData);
+    return this.saleUpdateUseCase.execute(id, user.businessId!, saleData, user);
   }
 
   @ApiOperation({
@@ -92,6 +94,7 @@ export class SaleController {
       user.businessId!,
       user.userId,
       body,
+      user,
     );
   }
 
@@ -104,6 +107,6 @@ export class SaleController {
   @Get(':id')
   @CatchEntityErrors()
   getSale(@Param('id') id: string, @User() user: AuthUserObject) {
-    return this.saleGetUseCase.execute(id, user.orgId!);
+    return this.saleGetUseCase.execute(id, user.orgId!, user);
   }
 }

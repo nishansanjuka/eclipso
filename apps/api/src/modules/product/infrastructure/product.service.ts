@@ -1,14 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProductRepository } from './product.repository';
 import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
-import { SQL } from 'drizzle-orm';
 
 @Injectable()
 export class ProductService {
   constructor(private readonly productRepository: ProductRepository) {}
 
-  async createProduct(productData: CreateProductDto) {
-    return await this.productRepository.createProduct(productData);
+  async createProduct(productData: CreateProductDto, branchId?: string) {
+    return await this.productRepository.createProduct(productData, branchId);
   }
 
   async updateProduct(
@@ -32,18 +31,6 @@ export class ProductService {
 
   async getProductIdByIdAndOrgId(id: string, orgId: string) {
     return await this.productRepository.getProductIdByIdAndOrgId(id, orgId);
-  }
-
-  async updateProductStockBySql(
-    productId: string,
-    businessId: string,
-    stockQtyExpression: SQL,
-  ) {
-    return await this.productRepository.updateStockBySql(
-      productId,
-      businessId,
-      stockQtyExpression,
-    );
   }
 
   /** Throws unless the supplier/brand (when given) belong to this business. */

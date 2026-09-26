@@ -12,7 +12,11 @@ export class ProductCreateUseCase {
   ) {}
 
   // as business owner, create product category
-  async execute(orgId: string, productData: CreateProductDto) {
+  async execute(
+    orgId: string,
+    productData: CreateProductDto,
+    branchId?: string,
+  ) {
     const res = await this.businessService.getBusinessWithUserByOrgId(orgId);
 
     if (!res) {
@@ -27,7 +31,7 @@ export class ProductCreateUseCase {
         ...productData,
         businessId: id,
       });
-      return this.productService.createProduct(data);
+      return this.productService.createProduct(data, branchId);
     }
   }
 }

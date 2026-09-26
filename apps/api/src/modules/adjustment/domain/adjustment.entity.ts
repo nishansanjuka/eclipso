@@ -17,6 +17,9 @@ export class AdjustmentCreateEntity extends BaseModel {
   )
   public readonly businessId: string;
 
+  @Z(z.uuid({ message: 'Branch ID must be a valid UUID' }))
+  public readonly branchId: string;
+
   @Z(
     z
       .string({ error: 'User ID is required' })
@@ -38,6 +41,7 @@ export class AdjustmentCreateEntity extends BaseModel {
       this.id = props.id;
     }
     this.businessId = props.businessId;
+    this.branchId = props.branchId;
     this.userId = props.userId;
     this.reason = props.reason;
   }

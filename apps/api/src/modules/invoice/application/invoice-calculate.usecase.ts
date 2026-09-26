@@ -7,6 +7,7 @@ import { DiscountService } from '../../discount/infrastructure/discount.service'
 import { DiscountType } from '../../discount/enums/discount.types.enum';
 import { generateInvoicePDF } from '@eclipso/pdf';
 import { InvoiceData } from '@eclipso/types';
+import { type BranchScope } from '../../auth/domain/auth-context';
 
 @Injectable()
 export class InvoiceCalculateUsecase {
@@ -18,11 +19,11 @@ export class InvoiceCalculateUsecase {
     private readonly discountService: DiscountService,
   ) {}
 
-  async execute(orderId: string, orgId: string) {
+  async execute(orderId: string, orgId: string, scope: BranchScope) {
     // Validate order ownership
     const order = await this.orderService.getOrder(orderId, orgId);
 
-    if (!order) {
+    if (!order || !scope.canAccessBranch(order.branchId)) {
       throw new NotFoundException(
         'Order not found for the authorized organization',
       );

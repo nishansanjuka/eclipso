@@ -16,6 +16,7 @@ import { OrderItemCreateUsecase } from './application/order-item.create.usecase'
 import { OrderItemUpdateUsecase } from './application/order-item.update.usecase';
 import { OrderReceiveUsecase } from './application/order.receive.usecase';
 import { OrderWorkflowRepository } from './infrastructure/order-workflow.repository';
+import { BranchStockRepository } from '../inventory/infrastructure/branch-stock.repository';
 import { SaleCheckoutRepository } from '../sale/infrastructure/sale-checkout.repository';
 import { OrderItemDeleteUsecase } from './application/order-item.delete.usecase';
 import { ProductService } from '../product/infrastructure/product.service';
@@ -53,6 +54,7 @@ import { InventoryMovementsRepository } from '../inventory/infrastructure/invent
     OrderReceiveUsecase,
     OrderWorkflowRepository,
     SaleCheckoutRepository,
+    BranchStockRepository,
   ],
 })
 export class OrderModule {}

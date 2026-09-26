@@ -26,6 +26,7 @@ import {
   UpdateAdjustmentDto,
   CreateAdjustmentDto,
 } from '../dto/adjustment.dto';
+import { requireBranchId } from '../../../shared/utils/require-branch';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
@@ -53,7 +54,7 @@ export class AdjustmentController {
   @ApiBody({ type: CreateAdjustmentDto })
   @CatchEntityErrors()
   async createAdjustment(
-    @Query('qty') qty: number,
+    @Query('qty', ParseIntPipe) qty: number,
     @Param('productId') productId: string,
     @Body() dto: CreateAdjustmentDto,
     @User() user: AuthUserObject,
@@ -62,8 +63,9 @@ export class AdjustmentController {
       productId,
       qty,
       dto,
-      user.orgId!,
-      user.userId!,
+      user.businessId!,
+      requireBranchId(user),
+      user.userId,
     );
   }
 
@@ -82,6 +84,7 @@ export class AdjustmentController {
     const adjustment = await this.adjustmentService.findAdjustmentById(
       id,
       user.businessId!,
+      user,
     );
     if (!adjustment) throw new NotFoundException('Adjustment not found');
     return adjustment;
@@ -105,6 +108,7 @@ export class AdjustmentController {
     }
     return await this.adjustmentService.findAdjustmentsByBusinessId(
       user.businessId!,
+      user,
     );
   }
 
@@ -124,6 +128,7 @@ export class AdjustmentController {
     return await this.adjustmentService.findAdjustmentsByBusinessAndUser(
       user.businessId!,
       userId,
+      user,
     );
   }
 
@@ -141,6 +146,7 @@ export class AdjustmentController {
   ) {
     return await this.adjustmentService.getAllAdjustments(
       user.businessId!,
+      user,
       limit,
     );
   }
@@ -163,6 +169,7 @@ export class AdjustmentController {
       id,
       user.businessId!,
       dto,
+      user,
     );
     if (!updated) throw new NotFoundException('Adjustment not found');
     return updated;
@@ -180,6 +187,10 @@ export class AdjustmentController {
     @Param('id') id: string,
     @User() user: AuthUserObject,
   ) {
-    return await this.adjustmentService.deleteAdjustment(id, user.businessId!);
+    return await this.adjustmentService.deleteAdjustment(
+      id,
+      user.businessId!,
+      user,
+    );
   }
 }

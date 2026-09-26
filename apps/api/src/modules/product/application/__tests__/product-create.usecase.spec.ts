@@ -67,6 +67,20 @@ describe('ProductCreateUseCase', () => {
       expect(result).toEqual(mockProduct);
     });
 
+    it('passes the request branch on so opening stock lands there', async () => {
+      businessService.getBusinessWithUserByOrgId.mockResolvedValue(
+        mockBusiness as any,
+      );
+      productService.createProduct.mockResolvedValue(mockProduct as any);
+
+      await usecase.execute(orgId, productData as any, 'branch-1');
+
+      expect(productService.createProduct).toHaveBeenCalledWith(
+        expect.objectContaining({ businessId: 'business-123' }),
+        'branch-1',
+      );
+    });
+
     it('should refuse a supplier or brand from another business', async () => {
       businessService.getBusinessWithUserByOrgId.mockResolvedValue(
         mockBusiness as any,

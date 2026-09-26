@@ -7,6 +7,7 @@ import {
   discounts,
   discountTypeEnum,
 } from '../../modules/discount/infrastructure/schema/discount.schema';
+import { branchStock } from '../../modules/inventory/infrastructure/schema/branch-stock.schema';
 import {
   inventoryMovements,
   movementEnum,
@@ -98,6 +99,7 @@ export const ProductsTable = products;
 export const OrderItemsTable = orderItems;
 export const CategoriesTable = categories;
 export const InventoryMovementsTable = inventoryMovements;
+export const BranchStockTable = branchStock;
 export const InvoiceTable = invoices;
 export const ProductCategoryTable = productCategory;
 export const BrandTable = brands;

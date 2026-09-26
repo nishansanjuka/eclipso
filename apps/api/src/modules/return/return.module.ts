@@ -4,6 +4,7 @@ import { ReturnController } from './presentation/return.controller';
 import { ReturnService } from './infrastructure/return.service';
 import { ReturnRepository } from './infrastructure/return.repository';
 import { ReturnCheckoutRepository } from './infrastructure/return-checkout.repository';
+import { BranchStockRepository } from '../inventory/infrastructure/branch-stock.repository';
 import { SaleCheckoutRepository } from '../sale/infrastructure/sale-checkout.repository';
 import { ReturnCreateUseCase } from './application/return-create.usecase';
 import { BusinessService } from '../business/infrastructure/business.service';
@@ -25,6 +26,7 @@ import { PaymentRepository } from '../payment/infrastructure/payment.repository'
     ReturnRepository,
     ReturnCheckoutRepository,
     SaleCheckoutRepository,
+    BranchStockRepository,
     ReturnCreateUseCase,
     BusinessService,
     BusinessRepository,

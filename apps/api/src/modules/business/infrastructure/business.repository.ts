@@ -4,6 +4,7 @@ import { businesses } from './schema/business.schema';
 import { sales } from '../../sale/infrastructure/schema/sale.schema';
 import { orders } from '../../order/infrastructure/schema/order.schema';
 import { products } from '../../product/infrastructure/schema/product.schema';
+import { adjustments } from '../../adjustment/infrastructure/schema/adjustment.schema';
 import { eq } from 'drizzle-orm';
 import { BusinessDto } from '../dto/business.dto';
 
@@ -39,8 +40,13 @@ export class BusinessRepository {
       await tx.delete(sales).where(eq(sales.businessId, business.id));
       // order_items cascade from orders.
       await tx.delete(orders).where(eq(orders.businessId, business.id));
-      // inventory_movements cascade from products.
+      // inventory_movements and branch_stock cascade from products.
       await tx.delete(products).where(eq(products.businessId, business.id));
+      // adjustments reference branches (history is never orphaned), so they
+      // must go before the branches cascade away with the business.
+      await tx
+        .delete(adjustments)
+        .where(eq(adjustments.businessId, business.id));
       // suppliers, brands, customers, taxes, discounts, roles, memberships...
       await tx.delete(businesses).where(eq(businesses.id, business.id));
     });

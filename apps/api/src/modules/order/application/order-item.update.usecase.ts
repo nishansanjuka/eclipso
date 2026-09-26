@@ -1,3 +1,4 @@
+import { type BranchScope } from '../../auth/domain/auth-context';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateOrderItemDto } from '../dto/order-item.dto';
 import { OrderItemUpdateEntity } from '../domain/order.item.entity';
@@ -9,11 +10,21 @@ import { assertDraft } from './order-guards';
 export class OrderItemUpdateUsecase {
   constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async execute(id: string, businessId: string, orderData: UpdateOrderItemDto) {
+  async execute(
+    id: string,
+    businessId: string,
+    orderData: UpdateOrderItemDto,
+    scope: BranchScope,
+  ) {
     const data = new OrderItemUpdateEntity(orderData);
 
     return this.workflow.transaction(async (tx) => {
-      const order = await this.workflow.lockOrderOfItem(tx, businessId, id);
+      const order = await this.workflow.lockOrderOfItem(
+        tx,
+        businessId,
+        id,
+        scope,
+      );
       if (!order) throw new NotFoundException('Order item not found');
       assertDraft(order);
 

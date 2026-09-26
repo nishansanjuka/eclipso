@@ -1,3 +1,5 @@
+import { type BranchScope } from '../../auth/domain/auth-context';
+import { branchScopeCondition } from '../../../shared/utils/branch-filter';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
 import {
@@ -32,24 +34,41 @@ export class OrderWorkflowRepository {
    * Locks the order row (scoped to the business) until the transaction ends, so
    * item edits, status changes and receiving on one order run one at a time.
    */
-  async lockOrder(tx: DbExecutor, businessId: string, orderId: string) {
+  async lockOrder(
+    tx: DbExecutor,
+    businessId: string,
+    orderId: string,
+    scope: BranchScope,
+  ) {
     const [order] = await tx
       .select()
       .from(orders)
-      .where(and(eq(orders.id, orderId), eq(orders.businessId, businessId)))
+      .where(
+        and(
+          eq(orders.id, orderId),
+          eq(orders.businessId, businessId),
+          // A branch-limited member cannot see other branches' orders.
+          branchScopeCondition(orders.branchId, scope),
+        ),
+      )
       .for('update');
     return order;
   }
 
   /** Locks the order that owns an item; undefined if the item is not this business's. */
-  async lockOrderOfItem(tx: DbExecutor, businessId: string, itemId: string) {
+  async lockOrderOfItem(
+    tx: DbExecutor,
+    businessId: string,
+    itemId: string,
+    scope: BranchScope,
+  ) {
     const [row] = await tx
       .select({ orderId: orderItems.orderId })
       .from(orderItems)
       .innerJoin(orders, eq(orders.id, orderItems.orderId))
       .where(and(eq(orderItems.id, itemId), eq(orders.businessId, businessId)));
     if (!row) return undefined;
-    return this.lockOrder(tx, businessId, row.orderId);
+    return this.lockOrder(tx, businessId, row.orderId, scope);
   }
 
   async supplierInBusiness(

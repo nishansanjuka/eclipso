@@ -40,6 +40,7 @@ export class ReturnController {
       user.businessId!,
       user.userId,
       returnData,
+      user,
     );
   }
 
@@ -52,7 +53,11 @@ export class ReturnController {
   @Get(':id')
   @CatchEntityErrors()
   async getReturn(@Param('id') id: string, @User() user: AuthUserObject) {
-    const result = await this.returnService.getReturnById(id, user.businessId!);
+    const result = await this.returnService.getReturnById(
+      id,
+      user.businessId!,
+      user,
+    );
     if (!result) throw new NotFoundException('Return not found');
     return result;
   }

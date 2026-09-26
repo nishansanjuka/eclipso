@@ -3,6 +3,7 @@ import { DatabaseModule } from '../../shared/database/drizzle.module';
 import { SaleController } from './presentation/sale.controller';
 import { SaleService } from './infrastructure/sale.service';
 import { SaleRepository } from './infrastructure/sale.repository';
+import { BranchStockRepository } from '../inventory/infrastructure/branch-stock.repository';
 import { SaleCheckoutRepository } from './infrastructure/sale-checkout.repository';
 import { SaleCreateUseCase } from './application/sale-create.usecase';
 import { SaleUpdateUseCase } from './application/sale-update.usecase';
@@ -24,6 +25,7 @@ import { PaymentRepository } from '../payment/infrastructure/payment.repository'
     SaleService,
     SaleRepository,
     SaleCheckoutRepository,
+    BranchStockRepository,
     SaleCreateUseCase,
     SaleUpdateUseCase,
     SaleVoidUseCase,

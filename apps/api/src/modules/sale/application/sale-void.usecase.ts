@@ -7,6 +7,8 @@ import z from 'zod';
 import { BadRequestException } from '@nestjs/common';
 import { VoidSaleDto } from '../dto/sale.dto';
 import { SaleCheckoutRepository } from '../infrastructure/sale-checkout.repository';
+import { BranchStockRepository } from '../../inventory/infrastructure/branch-stock.repository';
+import { type BranchScope } from '../../auth/domain/auth-context';
 import { SaleStatusEnum } from '../infrastructure/enums/sale.enum';
 import { InventoryMovementTypeEnum } from '../../inventory/infrastructure/enums/inventory.movement.enum';
 
@@ -28,13 +30,17 @@ const voidSchema = z.object({
  */
 @Injectable()
 export class SaleVoidUseCase {
-  constructor(private readonly checkout: SaleCheckoutRepository) {}
+  constructor(
+    private readonly checkout: SaleCheckoutRepository,
+    private readonly stock: BranchStockRepository,
+  ) {}
 
   async execute(
     saleId: string,
     businessId: string,
     voidedByClerkId: string,
     body: VoidSaleDto,
+    scope: BranchScope,
   ) {
     const parsed = voidSchema.safeParse(body);
     if (!parsed.success) {
@@ -45,7 +51,10 @@ export class SaleVoidUseCase {
 
     return this.checkout.transaction(async (tx) => {
       const sale = await this.checkout.lockSale(tx, businessId, saleId);
-      if (!sale) throw new NotFoundException('Sale not found');
+      // Same answer for "missing" and "another branch's sale".
+      if (!sale || !scope.canAccessBranch(sale.branchId)) {
+        throw new NotFoundException('Sale not found');
+      }
       if (sale.status === SaleStatusEnum.VOIDED) {
         throw new ConflictException('Sale is already voided');
       }
@@ -65,9 +74,10 @@ export class SaleVoidUseCase {
       }
 
       for (const productId of [...qtyByProduct.keys()].sort()) {
-        const ok = await this.checkout.restock(
+        // The units go back to the branch they were sold from.
+        const ok = await this.stock.add(
           tx,
-          businessId,
+          sale.branchId,
           productId,
           qtyByProduct.get(productId)!,
         );
@@ -76,6 +86,7 @@ export class SaleVoidUseCase {
       const inventoryMovements = await this.checkout.insertMovements(
         tx,
         [...qtyByProduct.entries()].map(([productId, qty]) => ({
+          branchId: sale.branchId,
           productId,
           saleId: sale.id,
           qty,

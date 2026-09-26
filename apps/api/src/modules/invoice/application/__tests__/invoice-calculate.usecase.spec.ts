@@ -7,6 +7,8 @@ import { TaxService } from '../../../tax/infrastructure/tax.service';
 import { DiscountService } from '../../../discount/infrastructure/discount.service';
 import { NotFoundException } from '@nestjs/common';
 
+const scope = { canAccessBranch: () => true, restrictedBranchIds: null };
+
 describe('InvoiceCalculateUsecase', () => {
   let useCase: InvoiceCalculateUsecase;
   let invoiceService: jest.Mocked<InvoiceService>;
@@ -69,17 +71,25 @@ describe('InvoiceCalculateUsecase', () => {
 
     orderService.getOrder.mockResolvedValue(null as any);
 
-    await expect(useCase.execute(orderId, orgId)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(orderId, orgId, scope)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw NotFoundException when no order items found', async () => {
     const orderId = 'order-123';
     const orgId = 'org-123';
-    const order = { id: orderId, invoiceId: 'invoice-123' };
+    const order = {
+      id: orderId,
+      invoiceId: 'invoice-123',
+      branchId: 'br-1',
+    };
 
     orderService.getOrder.mockResolvedValue(order as any);
     orderItemService.getOrderItemsByOrderId.mockResolvedValue([]);
 
-    await expect(useCase.execute(orderId, orgId)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(orderId, orgId, scope)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

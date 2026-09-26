@@ -1,3 +1,4 @@
+import { type BranchScope } from '../../auth/domain/auth-context';
 import {
   ConflictException,
   Injectable,
@@ -11,9 +12,9 @@ import { OrderWorkflowRepository } from '../infrastructure/order-workflow.reposi
 export class OrderDeleteUsecase {
   constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async execute(id: string, businessId: string) {
+  async execute(id: string, businessId: string, scope: BranchScope) {
     return this.workflow.transaction(async (tx) => {
-      const order = await this.workflow.lockOrder(tx, businessId, id);
+      const order = await this.workflow.lockOrder(tx, businessId, id, scope);
       if (!order) throw new NotFoundException('Order not found');
       // A received order is stock history and stays.
       if (order.status === OrderStatus.RECEIVED) {

@@ -7,6 +7,8 @@ import { BusinessService } from '../business/infrastructure/business.service';
 import { BusinessRepository } from '../business/infrastructure/business.repository';
 import { InventoryMovementService } from '../inventory/infrastructure/inventory.movements.service';
 import { InventoryMovementsRepository } from '../inventory/infrastructure/inventory.movements.repository';
+import { BranchStockRepository } from '../inventory/infrastructure/branch-stock.repository';
+import { SaleCheckoutRepository } from '../sale/infrastructure/sale-checkout.repository';
 import { AdjustmentController } from './presentation/adjustment.controller';
 import { ProductService } from '../product/infrastructure/product.service';
 import { UserService } from '../users/infrastructure/user.service';
@@ -28,6 +30,8 @@ import { ProductRepository } from '../product/infrastructure/product.repository'
     UserRepository,
     ProductRepository,
     UserService,
+    SaleCheckoutRepository,
+    BranchStockRepository,
   ],
   exports: [AdjustmentService, AdjustmentCreateUsecase],
 })

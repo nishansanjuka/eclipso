@@ -3,6 +3,7 @@ import { SaleCreateUseCase } from '../sale-create.usecase';
 import { PaymentMethodEnum } from '../../../payment/infrastructure/enums/payment.enum';
 
 const BIZ = 'business-1';
+const BRANCH = 'branch-1';
 const P1 = '11111111-1111-4111-8111-111111111111';
 const P2 = '22222222-2222-4222-8222-222222222222';
 const TAX = '33333333-3333-4333-8333-333333333333';
@@ -18,6 +19,7 @@ const product = (id: string, price: number, name = 'Widget') => ({
 
 describe('SaleCreateUseCase', () => {
   let repo: Record<string, jest.Mock>;
+  let stock: Record<string, jest.Mock>;
   let useCase: SaleCreateUseCase;
 
   beforeEach(() => {
@@ -33,7 +35,6 @@ describe('SaleCreateUseCase', () => {
       loadDiscounts: jest.fn().mockResolvedValue([]),
       customerExists: jest.fn().mockResolvedValue(true),
       nextSaleNumber: jest.fn().mockResolvedValue(42),
-      takeStock: jest.fn().mockResolvedValue(true),
       insertSale: jest.fn((_tx, v) => Promise.resolve({ id: 'sale-1', ...v })),
       insertItems: jest.fn((_tx, v: any[]) =>
         Promise.resolve(v.map((x, i) => ({ id: `item-${i}`, ...x }))),
@@ -43,11 +44,15 @@ describe('SaleCreateUseCase', () => {
         Promise.resolve({ id: 'pay-1', ...v }),
       ),
     };
-    useCase = new SaleCreateUseCase(repo as any);
+    stock = {
+      assertBranchOperable: jest.fn().mockResolvedValue(undefined),
+      take: jest.fn().mockResolvedValue(true),
+    };
+    useCase = new SaleCreateUseCase(repo as any, stock as any);
   });
 
   const run = (data: any, key?: string) =>
-    useCase.execute(BIZ, 'clerk_1', data, key);
+    useCase.execute(BIZ, BRANCH, 'clerk_1', data, key);
 
   it('prices from the catalog and ignores client-sent money fields', async () => {
     const result = await run({
@@ -58,6 +63,7 @@ describe('SaleCreateUseCase', () => {
 
     expect(result.sale).toMatchObject({
       businessId: BIZ,
+      branchId: BRANCH,
       userId: 'user-uuid',
       receiptNumber: 'S-000042',
       subTotal: '20.00',
@@ -66,6 +72,7 @@ describe('SaleCreateUseCase', () => {
     });
     expect(result.items[0]).toMatchObject({ price: '10.00', qty: 2 });
     expect(result.inventoryMovements[0]).toMatchObject({
+      branchId: BRANCH,
       qty: -2,
       saleId: 'sale-1',
     });
@@ -118,7 +125,7 @@ describe('SaleCreateUseCase', () => {
         payment: { method: PaymentMethodEnum.CASH, amount: '0.01' },
       }),
     ).rejects.toThrow(/must equal the sale total \(10\.00\)/);
-    expect(repo.takeStock).not.toHaveBeenCalled();
+    expect(stock.take).not.toHaveBeenCalled();
     expect(repo.insertSale).not.toHaveBeenCalled();
   });
 
@@ -174,7 +181,7 @@ describe('SaleCreateUseCase', () => {
   });
 
   it('fails the whole sale when stock is short', async () => {
-    repo.takeStock.mockResolvedValue(false);
+    stock.take.mockResolvedValue(false);
     await expect(run({ items: [{ productId: P1, qty: 500 }] })).rejects.toThrow(
       BadRequestException,
     );
@@ -192,12 +199,28 @@ describe('SaleCreateUseCase', () => {
     });
 
     expect(repo.nextSaleNumber.mock.invocationCallOrder[0]).toBeLessThan(
-      repo.takeStock.mock.invocationCallOrder[0],
+      stock.take.mock.invocationCallOrder[0],
     );
-    expect(repo.takeStock.mock.calls.map((c) => [c[2], c[3]])).toEqual([
+    expect(stock.take.mock.calls.map((c) => [c[2], c[3]])).toEqual([
       [P1, 2],
       [P2, 4],
     ]);
+  });
+
+  it('takes stock from the request branch and checks it is operable first', async () => {
+    await run({ items: [{ productId: P1, qty: 2 }] });
+
+    expect(stock.assertBranchOperable).toHaveBeenCalledWith('tx', BIZ, BRANCH);
+    expect(stock.take).toHaveBeenCalledWith('tx', BRANCH, P1, 2);
+  });
+
+  it('sells nothing from an unavailable branch', async () => {
+    stock.assertBranchOperable.mockRejectedValue(new BadRequestException('x'));
+    await expect(run({ items: [{ productId: P1, qty: 1 }] })).rejects.toThrow(
+      BadRequestException,
+    );
+    expect(stock.take).not.toHaveBeenCalled();
+    expect(repo.insertSale).not.toHaveBeenCalled();
   });
 
   it('validates the request shape', async () => {
@@ -234,7 +257,7 @@ describe('SaleCreateUseCase', () => {
 
       expect(result.replayed).toBe(true);
       expect(result.sale.id).toBe('sale-old');
-      expect(repo.takeStock).not.toHaveBeenCalled();
+      expect(stock.take).not.toHaveBeenCalled();
       expect(repo.insertSale).not.toHaveBeenCalled();
     });
 

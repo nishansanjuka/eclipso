@@ -13,6 +13,8 @@ import { OrderItemDeleteUsecase } from '../order-item.delete.usecase';
 import { OrderItemTaxRecordUpdateUsecase } from '../order-item-tax.usercase';
 
 const BIZ = 'business-1';
+const BRANCH = 'branch-1';
+const scope = { canAccessBranch: () => true, restrictedBranchIds: null };
 const ORDER = '11111111-1111-4111-8111-111111111111';
 const SUPPLIER = '22222222-2222-4222-8222-222222222222';
 const PRODUCT = '33333333-3333-4333-8333-333333333333';
@@ -25,11 +27,13 @@ const draft = {
   status: 'draft',
   supplierId: SUPPLIER,
   invoiceId: 'inv-1',
+  branchId: BRANCH,
 };
 
 describe('order workflow', () => {
   let wf: Record<string, jest.Mock>;
   let inventory: Record<string, jest.Mock>;
+  let stock: Record<string, jest.Mock>;
 
   beforeEach(() => {
     wf = {
@@ -57,14 +61,21 @@ describe('order workflow', () => {
       removeItemTax: jest.fn(),
     };
     inventory = {
-      restock: jest.fn().mockResolvedValue(true),
       insertMovements: jest.fn((_tx, v) => Promise.resolve(v)),
+    };
+    stock = {
+      assertBranchOperable: jest.fn().mockResolvedValue(undefined),
+      add: jest.fn().mockResolvedValue(true),
     };
   });
 
   describe('create', () => {
     const run = (data: any) =>
-      new OrderCreateUsecase(wf as any).execute(BIZ, data);
+      new OrderCreateUsecase(wf as any, stock as any).execute(
+        BIZ,
+        BRANCH,
+        data,
+      );
 
     it('forces draft and a zero total, ignoring client status, total and invoice', async () => {
       const order: any = await run({
@@ -77,6 +88,7 @@ describe('order workflow', () => {
       });
       expect(order).toMatchObject({
         businessId: BIZ,
+        branchId: BRANCH,
         supplierId: SUPPLIER,
         status: 'draft',
         totalAmount: 0,
@@ -101,7 +113,7 @@ describe('order workflow', () => {
 
   describe('update', () => {
     const run = (data: any) =>
-      new OrderUpdateUsecase(wf as any).execute(ORDER, BIZ, data);
+      new OrderUpdateUsecase(wf as any).execute(ORDER, BIZ, data, scope);
 
     it('only sets the date and cancel; never business, total, invoice or received', async () => {
       await run({
@@ -137,7 +149,8 @@ describe('order workflow', () => {
   });
 
   describe('delete', () => {
-    const run = () => new OrderDeleteUsecase(wf as any).execute(ORDER, BIZ);
+    const run = () =>
+      new OrderDeleteUsecase(wf as any).execute(ORDER, BIZ, scope);
 
     it('deletes a draft and its invoice', async () => {
       await run();
@@ -161,7 +174,11 @@ describe('order workflow', () => {
 
   describe('receive', () => {
     const run = () =>
-      new OrderReceiveUsecase(wf as any, inventory as any).execute(ORDER, BIZ);
+      new OrderReceiveUsecase(
+        wf as any,
+        inventory as any,
+        stock as any,
+      ).execute(ORDER, BIZ, scope);
 
     it('adds stock and PURCHASE ledger entries once, then marks the order received', async () => {
       wf.itemsOf.mockResolvedValue([
@@ -171,14 +188,27 @@ describe('order workflow', () => {
       ]);
       const result: any = await run();
 
-      expect(inventory.restock.mock.calls.map((c) => [c[2], c[3]])).toEqual([
-        ['p1', 2],
-        ['p2', 6],
+      // Goods arrive at the branch the order was placed for.
+      expect(stock.add.mock.calls.map((c) => [c[1], c[2], c[3]])).toEqual([
+        [BRANCH, 'p1', 2],
+        [BRANCH, 'p2', 6],
       ]);
       expect(inventory.insertMovements.mock.calls[0][1]).toEqual(
         expect.arrayContaining([
-          { productId: 'p1', orderId: ORDER, qty: 2, movementType: 'purchase' },
-          { productId: 'p2', orderId: ORDER, qty: 6, movementType: 'purchase' },
+          {
+            branchId: BRANCH,
+            productId: 'p1',
+            orderId: ORDER,
+            qty: 2,
+            movementType: 'purchase',
+          },
+          {
+            branchId: BRANCH,
+            productId: 'p2',
+            orderId: ORDER,
+            qty: 6,
+            movementType: 'purchase',
+          },
         ]),
       );
       expect(result.order.status).toBe('received');
@@ -187,7 +217,7 @@ describe('order workflow', () => {
     it('cannot be received twice', async () => {
       wf.lockOrder.mockResolvedValue({ ...draft, status: 'received' });
       await expect(run()).rejects.toThrow(ConflictException);
-      expect(inventory.restock).not.toHaveBeenCalled();
+      expect(stock.add).not.toHaveBeenCalled();
     });
 
     it('refuses an empty order and other tenants orders', async () => {
@@ -198,7 +228,7 @@ describe('order workflow', () => {
 
     it('a failed restock aborts before the order is marked received', async () => {
       wf.itemsOf.mockResolvedValue([{ productId: 'p1', qty: 1 }]);
-      inventory.restock.mockResolvedValue(false);
+      stock.add.mockResolvedValue(false);
       await expect(run()).rejects.toThrow(NotFoundException);
       expect(wf.updateOrder).not.toHaveBeenCalled();
     });
@@ -206,7 +236,7 @@ describe('order workflow', () => {
 
   describe('order items', () => {
     const create = (data: any) =>
-      new OrderItemCreateUsecase(wf as any).execute(BIZ, data);
+      new OrderItemCreateUsecase(wf as any).execute(BIZ, data, scope);
     const body = { orderId: ORDER, productId: PRODUCT, qty: 3, price: 250 };
 
     it('adds a line and recomputes the total, without touching stock or the ledger', async () => {
@@ -218,7 +248,7 @@ describe('order workflow', () => {
         price: 250,
       });
       expect(wf.recomputeTotal).toHaveBeenCalledWith('tx', ORDER);
-      expect(inventory.restock).not.toHaveBeenCalled();
+      expect(stock.add).not.toHaveBeenCalled();
     });
 
     it('proves the order is the callers before adding to it', async () => {
@@ -254,13 +284,18 @@ describe('order workflow', () => {
     });
 
     it('update only sets qty/price, scoped through the order', async () => {
-      await new OrderItemUpdateUsecase(wf as any).execute(ITEM, BIZ, {
-        qty: 9,
-        price: 5,
-        orderId: 'move-me',
-        productId: 'swap',
-      } as any);
-      expect(wf.lockOrderOfItem).toHaveBeenCalledWith('tx', BIZ, ITEM);
+      await new OrderItemUpdateUsecase(wf as any).execute(
+        ITEM,
+        BIZ,
+        {
+          qty: 9,
+          price: 5,
+          orderId: 'move-me',
+          productId: 'swap',
+        } as any,
+        scope,
+      );
+      expect(wf.lockOrderOfItem).toHaveBeenCalledWith('tx', BIZ, ITEM, scope);
       expect(wf.updateItem).toHaveBeenCalledWith('tx', ITEM, {
         qty: 9,
         price: 5,
@@ -271,21 +306,26 @@ describe('order workflow', () => {
     it('update and delete 404 for an item of another business, and refuse non-draft orders', async () => {
       wf.lockOrderOfItem.mockResolvedValue(undefined);
       await expect(
-        new OrderItemUpdateUsecase(wf as any).execute(ITEM, BIZ, { qty: 1 }),
+        new OrderItemUpdateUsecase(wf as any).execute(
+          ITEM,
+          BIZ,
+          { qty: 1 },
+          scope,
+        ),
       ).rejects.toThrow(NotFoundException);
       await expect(
-        new OrderItemDeleteUsecase(wf as any).execute(ITEM, BIZ),
+        new OrderItemDeleteUsecase(wf as any).execute(ITEM, BIZ, scope),
       ).rejects.toThrow(NotFoundException);
 
       wf.lockOrderOfItem.mockResolvedValue({ ...draft, status: 'received' });
       await expect(
-        new OrderItemDeleteUsecase(wf as any).execute(ITEM, BIZ),
+        new OrderItemDeleteUsecase(wf as any).execute(ITEM, BIZ, scope),
       ).rejects.toThrow(ConflictException);
       expect(wf.deleteItem).not.toHaveBeenCalled();
     });
 
     it('delete removes the line and recomputes the total, with no ledger writes', async () => {
-      await new OrderItemDeleteUsecase(wf as any).execute(ITEM, BIZ);
+      await new OrderItemDeleteUsecase(wf as any).execute(ITEM, BIZ, scope);
       expect(wf.deleteItem).toHaveBeenCalledWith('tx', ITEM);
       expect(wf.recomputeTotal).toHaveBeenCalledWith('tx', ORDER);
     });
@@ -297,14 +337,41 @@ describe('order workflow', () => {
     it('refuses a tax from another business', async () => {
       wf.taxInBusiness.mockResolvedValue(false);
       await expect(
-        uc().add({ orderItemId: ITEM, taxId: TAX }, BIZ),
+        uc().add({ orderItemId: ITEM, taxId: TAX }, BIZ, scope),
       ).rejects.toThrow(/Tax not found/);
       expect(wf.addItemTax).not.toHaveBeenCalled();
     });
 
     it('removes only the requested tax', async () => {
-      await uc().remove({ orderItemId: ITEM, taxId: TAX }, BIZ);
+      await uc().remove({ orderItemId: ITEM, taxId: TAX }, BIZ, scope);
       expect(wf.removeItemTax).toHaveBeenCalledWith('tx', ITEM, TAX);
+    });
+  });
+
+  describe('branches', () => {
+    it('creates an order for the request branch after checking it is operable', async () => {
+      await new OrderCreateUsecase(wf as any, stock as any).execute(
+        BIZ,
+        BRANCH,
+        { supplierId: SUPPLIER, expectedDate: FUTURE },
+      );
+      expect(stock.assertBranchOperable).toHaveBeenCalledWith(
+        'tx',
+        BIZ,
+        BRANCH,
+      );
+    });
+
+    it('locks orders through the caller scope, so other branches orders 404', async () => {
+      const limited = {
+        canAccessBranch: (id: string) => id === 'mine',
+        restrictedBranchIds: ['mine'],
+      };
+      wf.lockOrder.mockResolvedValue(undefined);
+      await expect(
+        new OrderDeleteUsecase(wf as any).execute(ORDER, BIZ, limited),
+      ).rejects.toThrow(NotFoundException);
+      expect(wf.lockOrder).toHaveBeenCalledWith('tx', BIZ, ORDER, limited);
     });
   });
 });

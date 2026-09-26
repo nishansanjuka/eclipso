@@ -1,3 +1,4 @@
+import { type BranchScope } from '../../auth/domain/auth-context';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { OrderWorkflowRepository } from '../infrastructure/order-workflow.repository';
 import { assertDraft } from './order-guards';
@@ -7,9 +8,14 @@ import { assertDraft } from './order-guards';
 export class OrderItemDeleteUsecase {
   constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async execute(id: string, businessId: string) {
+  async execute(id: string, businessId: string, scope: BranchScope) {
     return this.workflow.transaction(async (tx) => {
-      const order = await this.workflow.lockOrderOfItem(tx, businessId, id);
+      const order = await this.workflow.lockOrderOfItem(
+        tx,
+        businessId,
+        id,
+        scope,
+      );
       if (!order) throw new NotFoundException('Order item not found');
       assertDraft(order);
 

@@ -27,7 +27,7 @@ export class InvoicesController {
   @Get(':id')
   @CatchEntityErrors()
   getInvoice(@User() user: AuthUserObject, @Param('id') invoiceId: string) {
-    return this.invoiceGetUsecase.execute(invoiceId, user.orgId!);
+    return this.invoiceGetUsecase.execute(invoiceId, user.orgId!, user);
   }
 
   @ApiOperation({
@@ -58,6 +58,7 @@ export class InvoicesController {
     const pdfBuffer = await this.invoiceCalculateUsecase.execute(
       orderId,
       user.orgId!,
+      user,
     );
 
     res.set({

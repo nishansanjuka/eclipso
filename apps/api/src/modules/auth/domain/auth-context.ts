@@ -20,6 +20,8 @@ export interface AuthContextInit {
 export interface BranchScope {
   /** True when the caller may read or act on data belonging to this branch. */
   canAccessBranch(branchId: string): boolean;
+  /** The branches a restricted caller is limited to; null = every branch. */
+  readonly restrictedBranchIds: readonly string[] | null;
 }
 
 /**

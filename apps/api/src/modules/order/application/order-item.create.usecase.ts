@@ -1,3 +1,4 @@
+import { type BranchScope } from '../../auth/domain/auth-context';
 import {
   BadRequestException,
   ConflictException,
@@ -14,12 +15,21 @@ import { assertDraft } from './order-guards';
 export class OrderItemCreateUsecase {
   constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async execute(businessId: string, orderData: CreateOrderItemDto) {
+  async execute(
+    businessId: string,
+    orderData: CreateOrderItemDto,
+    scope: BranchScope,
+  ) {
     const data = new OrderItemCreateEntity(orderData);
 
     return this.workflow.transaction(async (tx) => {
       // The order comes from the request, so it must be proven to be ours.
-      const order = await this.workflow.lockOrder(tx, businessId, data.orderId);
+      const order = await this.workflow.lockOrder(
+        tx,
+        businessId,
+        data.orderId,
+        scope,
+      );
       if (!order) throw new NotFoundException('Order not found');
       assertDraft(order);
 

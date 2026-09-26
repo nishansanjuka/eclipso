@@ -134,32 +134,17 @@ export class SaleCheckoutRepository {
     return row.saleSeq;
   }
 
-  /**
-   * Atomically takes `qty` units. The `stock_qty >= qty` predicate is what
-   * prevents overselling under concurrent checkouts; false means not enough
-   * stock (or the product isn't in this business).
-   */
-  async takeStock(
+  async setSaleCustomer(
     tx: DbExecutor,
-    businessId: string,
-    productId: string,
-    qty: number,
-  ): Promise<boolean> {
-    const rows = await tx
-      .update(products)
-      .set({
-        stockQty: sql`${products.stockQty} - ${qty}`,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(products.id, productId),
-          eq(products.businessId, businessId),
-          sql`${products.stockQty} >= ${qty}`,
-        ),
-      )
-      .returning({ id: products.id });
-    return rows.length === 1;
+    saleId: string,
+    customerId: string | null,
+  ) {
+    const [sale] = await tx
+      .update(sales)
+      .set({ customerId, updatedAt: new Date() })
+      .where(eq(sales.id, saleId))
+      .returning();
+    return sale;
   }
 
   async insertSale(tx: DbExecutor, values: typeof sales.$inferInsert) {
@@ -201,26 +186,6 @@ export class SaleCheckoutRepository {
 
   loadSaleItems(tx: DbExecutor, saleId: string) {
     return tx.select().from(saleItems).where(eq(saleItems.saleId, saleId));
-  }
-
-  /** Puts `qty` units back on the shelf (business-scoped). */
-  async restock(
-    tx: DbExecutor,
-    businessId: string,
-    productId: string,
-    qty: number,
-  ) {
-    const rows = await tx
-      .update(products)
-      .set({
-        stockQty: sql`${products.stockQty} + ${qty}`,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(eq(products.id, productId), eq(products.businessId, businessId)),
-      )
-      .returning({ id: products.id });
-    return rows.length === 1;
   }
 
   async countLiveReturns(tx: DbExecutor, saleId: string): Promise<number> {

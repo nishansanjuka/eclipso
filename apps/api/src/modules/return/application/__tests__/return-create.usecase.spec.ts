@@ -33,15 +33,18 @@ const lines = [
 describe('ReturnCreateUseCase', () => {
   let sales: Record<string, jest.Mock>;
   let returnsRepo: Record<string, jest.Mock>;
+  let stock: Record<string, jest.Mock>;
+  let scope: { canAccessBranch: jest.Mock; restrictedBranchIds: null };
   let useCase: ReturnCreateUseCase;
 
   beforeEach(() => {
     sales = {
       transaction: jest.fn((fn: (tx: unknown) => unknown) => fn('tx')),
-      lockSale: jest.fn().mockResolvedValue({ id: SALE, status: 'completed' }),
+      lockSale: jest
+        .fn()
+        .mockResolvedValue({ id: SALE, status: 'completed', branchId: 'br-1' }),
       loadSaleItems: jest.fn().mockResolvedValue(lines),
       findUserIdByClerkId: jest.fn().mockResolvedValue('user-uuid'),
-      restock: jest.fn().mockResolvedValue(true),
       insertMovements: jest.fn((_tx, v) => Promise.resolve(v)),
     };
     returnsRepo = {
@@ -50,10 +53,19 @@ describe('ReturnCreateUseCase', () => {
       insertItems: jest.fn((_tx, v) => Promise.resolve(v)),
       insertRefund: jest.fn((_tx, v) => Promise.resolve({ id: 'ref-1', ...v })),
     };
-    useCase = new ReturnCreateUseCase(sales as any, returnsRepo as any);
+    stock = { add: jest.fn().mockResolvedValue(true) };
+    scope = {
+      canAccessBranch: jest.fn().mockReturnValue(true),
+      restrictedBranchIds: null,
+    };
+    useCase = new ReturnCreateUseCase(
+      sales as any,
+      returnsRepo as any,
+      stock as any,
+    );
   });
 
-  const run = (data: any) => useCase.execute(BIZ, 'clerk_1', data);
+  const run = (data: any) => useCase.execute(BIZ, 'clerk_1', data, scope);
   const base = {
     saleId: SALE,
     reason: ReturnReasonEnum.DEFECTIVE,
@@ -87,7 +99,7 @@ describe('ReturnCreateUseCase', () => {
       ],
     });
 
-    expect(sales.restock.mock.calls.map((c) => [c[2], c[3]])).toEqual([
+    expect(stock.add.mock.calls.map((c) => [c[2], c[3]])).toEqual([
       ['p-a', 1],
       ['p-b', 2],
     ]);
@@ -119,14 +131,18 @@ describe('ReturnCreateUseCase', () => {
       run({ ...base, items: [{ saleItemId: ITEM_A, qtyReturned: 2 }] }),
     ).rejects.toThrow(/3 sold, 2 already returned, 1 left/);
     expect(returnsRepo.insertReturn).not.toHaveBeenCalled();
-    expect(sales.restock).not.toHaveBeenCalled();
+    expect(stock.add).not.toHaveBeenCalled();
   });
 
   it('404s for a sale from another business or an item not on the sale', async () => {
     sales.lockSale.mockResolvedValue(undefined);
     await expect(run(base)).rejects.toThrow(NotFoundException);
 
-    sales.lockSale.mockResolvedValue({ id: SALE, status: 'completed' });
+    sales.lockSale.mockResolvedValue({
+      id: SALE,
+      status: 'completed',
+      branchId: 'br-1',
+    });
     await expect(
       run({
         ...base,
@@ -141,7 +157,11 @@ describe('ReturnCreateUseCase', () => {
   });
 
   it('refuses returns on a voided sale', async () => {
-    sales.lockSale.mockResolvedValue({ id: SALE, status: 'voided' });
+    sales.lockSale.mockResolvedValue({
+      id: SALE,
+      status: 'voided',
+      branchId: 'br-1',
+    });
     await expect(run(base)).rejects.toThrow(ConflictException);
   });
 
@@ -170,7 +190,22 @@ describe('ReturnCreateUseCase', () => {
   });
 
   it('a stock restore failure aborts the whole return', async () => {
-    sales.restock.mockResolvedValue(false);
+    stock.add.mockResolvedValue(false);
     await expect(run(base)).rejects.toThrow(NotFoundException);
+  });
+
+  it("restocks the branch the sale was made at, not the caller's", async () => {
+    await run(base);
+    expect(stock.add.mock.calls[0].slice(1, 3)).toEqual(['br-1', 'p-b']);
+    expect(sales.insertMovements.mock.calls[0][1][0]).toMatchObject({
+      branchId: 'br-1',
+    });
+  });
+
+  it('404s for a sale in a branch the caller may not work in', async () => {
+    scope.canAccessBranch.mockReturnValue(false);
+    await expect(run(base)).rejects.toThrow(NotFoundException);
+    expect(returnsRepo.insertReturn).not.toHaveBeenCalled();
+    expect(stock.add).not.toHaveBeenCalled();
   });
 });

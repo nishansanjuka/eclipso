@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 import { businesses } from '../../../business/infrastructure/schema/business.schema';
+import { branches } from '../../../branch/infrastructure/schema/branch.schema';
 import { users } from '../../../users/infrastructure/schema/user.schema';
 
 export const adjustments = pgTable('adjustments', {
@@ -9,6 +10,9 @@ export const adjustments = pgTable('adjustments', {
     .references(() => businesses.id, {
       onDelete: 'cascade',
     }),
+  branchId: uuid('branch_id')
+    .notNull()
+    .references(() => branches.id, { onDelete: 'no action' }),
   userId: text('user_id').references(() => users.clerkId, {
     onDelete: 'set null',
   }),

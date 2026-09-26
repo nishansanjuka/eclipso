@@ -6,6 +6,8 @@ import {
 import { OrderStatus } from '../infrastructure/enums/order.enum';
 import { OrderWorkflowRepository } from '../infrastructure/order-workflow.repository';
 import { SaleCheckoutRepository } from '../../sale/infrastructure/sale-checkout.repository';
+import { BranchStockRepository } from '../../inventory/infrastructure/branch-stock.repository';
+import { type BranchScope } from '../../auth/domain/auth-context';
 import { InventoryMovementTypeEnum } from '../../inventory/infrastructure/enums/inventory.movement.enum';
 import { assertDraft } from './order-guards';
 
@@ -20,13 +22,16 @@ export class OrderReceiveUsecase {
   constructor(
     private readonly workflow: OrderWorkflowRepository,
     private readonly inventory: SaleCheckoutRepository,
+    private readonly stock: BranchStockRepository,
   ) {}
 
-  async execute(id: string, businessId: string) {
+  async execute(id: string, businessId: string, scope: BranchScope) {
     return this.workflow.transaction(async (tx) => {
-      const order = await this.workflow.lockOrder(tx, businessId, id);
+      const order = await this.workflow.lockOrder(tx, businessId, id, scope);
       if (!order) throw new NotFoundException('Order not found');
       assertDraft(order);
+      // The goods arrive at the branch the order was placed for.
+      await this.stock.assertBranchOperable(tx, businessId, order.branchId);
 
       const items = await this.workflow.itemsOf(tx, order.id);
       if (items.length === 0) {
@@ -45,9 +50,9 @@ export class OrderReceiveUsecase {
 
       // Product-id order keeps the lock order consistent with checkouts.
       for (const productId of [...qtyByProduct.keys()].sort()) {
-        const ok = await this.inventory.restock(
+        const ok = await this.stock.add(
           tx,
-          businessId,
+          order.branchId,
           productId,
           qtyByProduct.get(productId)!,
         );
@@ -57,6 +62,7 @@ export class OrderReceiveUsecase {
       const inventoryMovements = await this.inventory.insertMovements(
         tx,
         [...qtyByProduct.entries()].map(([productId, qty]) => ({
+          branchId: order.branchId,
           productId,
           orderId: order.id,
           qty,

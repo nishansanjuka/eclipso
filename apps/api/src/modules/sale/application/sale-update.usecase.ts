@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateSaleDto } from '../dto/sale.dto';
-import { SaleService } from '../infrastructure/sale.service';
 import { SaleCheckoutRepository } from '../infrastructure/sale-checkout.repository';
 import { SaleUpdateEntity } from '../domain/sale.entity';
+import { SaleStatusEnum } from '../infrastructure/enums/sale.enum';
+import { type BranchScope } from '../../auth/domain/auth-context';
 
 /**
  * Only the customer attached to a sale can be changed after the fact. Totals,
@@ -11,28 +12,40 @@ import { SaleUpdateEntity } from '../domain/sale.entity';
  */
 @Injectable()
 export class SaleUpdateUseCase {
-  constructor(
-    private readonly saleService: SaleService,
-    private readonly checkout: SaleCheckoutRepository,
-  ) {}
+  constructor(private readonly checkout: SaleCheckoutRepository) {}
 
-  async execute(id: string, businessId: string, saleData: UpdateSaleDto) {
+  async execute(
+    id: string,
+    businessId: string,
+    saleData: UpdateSaleDto,
+    scope: BranchScope,
+  ) {
     const data = new SaleUpdateEntity(saleData);
 
-    if (data.customerId) {
-      const customerId = data.customerId;
-      const exists = await this.checkout.transaction((tx) =>
-        this.checkout.customerExists(tx, businessId, customerId),
-      );
-      if (!exists) {
-        throw new NotFoundException(`Customer with ID ${customerId} not found`);
+    return this.checkout.transaction(async (tx) => {
+      const sale = await this.checkout.lockSale(tx, businessId, id);
+      // Same answer for "missing" and "another branch's sale".
+      if (
+        !sale ||
+        !scope.canAccessBranch(sale.branchId) ||
+        sale.status !== SaleStatusEnum.COMPLETED
+      ) {
+        throw new NotFoundException('Sale not found');
       }
-    }
 
-    const [updated] = await this.saleService.updateSale(id, businessId, {
-      customerId: data.customerId,
+      // Nothing to change (an explicit null detaches the customer).
+      if (data.customerId === undefined) return sale;
+
+      if (
+        data.customerId &&
+        !(await this.checkout.customerExists(tx, businessId, data.customerId))
+      ) {
+        throw new NotFoundException(
+          `Customer with ID ${data.customerId} not found`,
+        );
+      }
+
+      return this.checkout.setSaleCustomer(tx, sale.id, data.customerId);
     });
-    if (!updated) throw new NotFoundException('Sale not found');
-    return updated;
   }
 }

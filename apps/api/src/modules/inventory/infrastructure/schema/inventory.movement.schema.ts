@@ -7,6 +7,7 @@ import { InventoryMovementTypeEnum } from '../enums/inventory.movement.enum';
 import { orders } from '../../../order/infrastructure/schema/order.schema';
 import { adjustments } from '../../../adjustment/infrastructure/schema/adjustment.schema';
 import { sales } from '../../../sale/infrastructure/schema/sale.schema';
+import { branches } from '../../../branch/infrastructure/schema/branch.schema';
 
 export const movementEnum = pgEnum(
   'movement_type_enum',
@@ -20,6 +21,10 @@ export const inventoryMovements = pgTable('inventory_movements', {
     .references(() => products.id, {
       onDelete: 'cascade',
     }),
+  /** Branch whose stock moved. History keeps pointing at it (no delete). */
+  branchId: uuid('branch_id')
+    .notNull()
+    .references(() => branches.id, { onDelete: 'no action' }),
   qty: integer('quantity').notNull().default(0),
   movementType: movementEnum('movement_type')
     .notNull()

@@ -10,6 +10,8 @@ import { refundForReturnMinor } from '../domain/refund-pricing';
 import { ReturnCheckoutRepository } from '../infrastructure/return-checkout.repository';
 import { ReturnStatusEnum } from '../infrastructure/enums/return.enum';
 import { SaleCheckoutRepository } from '../../sale/infrastructure/sale-checkout.repository';
+import { BranchStockRepository } from '../../inventory/infrastructure/branch-stock.repository';
+import { type BranchScope } from '../../auth/domain/auth-context';
 import { SaleStatusEnum } from '../../sale/infrastructure/enums/sale.enum';
 import { toDecimal } from '../../sale/domain/sale-pricing';
 import { InventoryMovementTypeEnum } from '../../inventory/infrastructure/enums/inventory.movement.enum';
@@ -28,18 +30,22 @@ export class ReturnCreateUseCase {
   constructor(
     private readonly sales: SaleCheckoutRepository,
     private readonly returnsRepo: ReturnCheckoutRepository,
+    private readonly stock: BranchStockRepository,
   ) {}
 
   async execute(
     businessId: string,
     cashierClerkId: string,
     returnData: CreateReturnDto,
+    scope: BranchScope,
   ) {
     const entity = new ReturnCreateEntity(returnData);
 
     return this.sales.transaction(async (tx) => {
       const sale = await this.sales.lockSale(tx, businessId, entity.saleId);
-      if (!sale) throw new NotFoundException('Sale not found');
+      if (!sale || !scope.canAccessBranch(sale.branchId)) {
+        throw new NotFoundException('Sale not found');
+      }
       if (sale.status === SaleStatusEnum.VOIDED) {
         throw new ConflictException(
           'This sale was voided and cannot be returned',
@@ -106,9 +112,10 @@ export class ReturnCreateUseCase {
         );
       }
       for (const productId of [...qtyByProduct.keys()].sort()) {
-        const ok = await this.sales.restock(
+        // Returned units go back to the branch the sale was made at.
+        const ok = await this.stock.add(
           tx,
-          businessId,
+          sale.branchId,
           productId,
           qtyByProduct.get(productId)!,
         );
@@ -118,6 +125,7 @@ export class ReturnCreateUseCase {
       const inventoryMovements = await this.sales.insertMovements(
         tx,
         [...qtyByProduct.entries()].map(([productId, qty]) => ({
+          branchId: sale.branchId,
           productId,
           saleId: sale.id,
           qty,

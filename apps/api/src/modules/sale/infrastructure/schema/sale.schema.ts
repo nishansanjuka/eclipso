@@ -9,6 +9,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { businesses } from '../../../business/infrastructure/schema/business.schema';
+import { branches } from '../../../branch/infrastructure/schema/branch.schema';
 import { customers } from '../../../customer/infrastructure/schema/customer.schema';
 import { users } from '../../../users/infrastructure/schema/user.schema';
 
@@ -25,6 +26,10 @@ export const sales = pgTable(
         onDelete: 'cascade',
       })
       .notNull(),
+    /** Branch the sale was rung at; its stock was taken from there. */
+    branchId: uuid('branch_id')
+      .notNull()
+      .references(() => branches.id, { onDelete: 'no action' }),
     // Deleting a customer must not delete the sales they appear on.
     customerId: uuid('customer_id').references(() => customers.id, {
       onDelete: 'set null',

@@ -1,25 +1,45 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { type DrizzleClient } from '../../../shared/database/drizzle.module';
 import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
 import { products } from './schema/product.schema';
-import { and, eq, SQL } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { businesses } from '../../business/infrastructure/schema/business.schema';
 import { suppliers } from '../../suppliers/infrastructure/schema/supplier.schema';
 import { brands } from '../../brand/infrastructure/schema/brand.schema';
 import { inventoryMovements } from '../../inventory/infrastructure/schema/inventory.movement.schema';
 import { InventoryMovementTypeEnum } from '../../inventory/infrastructure/enums/inventory.movement.enum';
+import { BranchStockRepository } from '../../inventory/infrastructure/branch-stock.repository';
 
 @Injectable()
 export class ProductRepository {
-  constructor(@Inject('DRIZZLE_CLIENT') private readonly db: DrizzleClient) {}
+  constructor(
+    @Inject('DRIZZLE_CLIENT') private readonly db: DrizzleClient,
+    private readonly stock: BranchStockRepository,
+  ) {}
 
   /**
-   * Explicit columns only (no client-chosen id or business). Opening stock is
-   * written together with a ledger entry, so the ledger always explains the
-   * stock on hand.
+   * Explicit columns only (no client-chosen id or business). The product
+   * belongs to the whole business; its opening stock (if any) goes on the
+   * shelf of the branch the request operates in, together with a ledger entry,
+   * so the ledger always explains the stock on hand.
    */
-  async createProduct(productData: CreateProductDto) {
+  async createProduct(productData: CreateProductDto, branchId?: string) {
+    const opening = productData.stockQty ?? 0;
+    if (opening > 0 && !branchId) {
+      throw new BadRequestException(
+        'Opening stock is placed in a branch. Send the X-Branch-Id header.',
+      );
+    }
+
     return await this.db.transaction(async (tx) => {
+      if (opening > 0) {
+        await this.stock.assertBranchOperable(
+          tx,
+          productData.businessId,
+          branchId!,
+        );
+      }
+
       const rows = await tx
         .insert(products)
         .values({
@@ -29,14 +49,14 @@ export class ProductRepository {
           name: productData.name,
           sku: productData.sku,
           price: productData.price ?? 0,
-          stockQty: productData.stockQty ?? 0,
           metadata: productData.metadata ?? {},
         })
         .returning();
 
-      const opening = rows[0].stockQty;
       if (opening > 0) {
+        await this.stock.add(tx, branchId!, rows[0].id, opening);
         await tx.insert(inventoryMovements).values({
+          branchId: branchId!,
           productId: rows[0].id,
           qty: opening,
           movementType: InventoryMovementTypeEnum.ADJUSTMENT,
@@ -89,25 +109,6 @@ export class ProductRepository {
       .where(and(eq(products.id, id), eq(businesses.orgId, orgId)));
 
     return res;
-  }
-
-  async updateStockBySql(
-    productId: string,
-    businessId: string,
-    stockQtyExpression: SQL,
-  ) {
-    const [result] = await this.db
-      .update(products)
-      .set({
-        stockQty: stockQtyExpression,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(eq(products.id, productId), eq(products.businessId, businessId)),
-      )
-      .returning();
-
-    return result;
   }
 
   /**

@@ -10,15 +10,18 @@ import { sales } from '../../sale/infrastructure/schema/sale.schema';
 export class ReturnRepository {
   constructor(@Inject('DRIZZLE_CLIENT') private readonly db: DrizzleClient) {}
 
-  /** Scoped through the sale: a return belongs to the business that made the sale. */
+  /**
+   * Scoped through the sale: a return belongs to the business (and branch)
+   * that made the sale. `branchId` is the sale's branch.
+   */
   async getReturnById(id: string, businessId: string) {
     const [result] = await this.db
-      .select({ returnRecord: returns })
+      .select({ returnRecord: returns, branchId: sales.branchId })
       .from(returns)
       .innerJoin(sales, eq(sales.id, returns.saleId))
       .where(and(eq(returns.id, id), eq(sales.businessId, businessId)))
       .limit(1);
-    return result?.returnRecord;
+    return result && { ...result.returnRecord, branchId: result.branchId };
   }
 
   async getReturnItemsByReturnId(returnId: string) {

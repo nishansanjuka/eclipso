@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { SaleService } from '../infrastructure/sale.service';
 import { BusinessService } from '../../business/infrastructure/business.service';
+import { type BranchScope } from '../../auth/domain/auth-context';
 
 @Injectable()
 export class SaleGetUseCase {
@@ -9,7 +10,7 @@ export class SaleGetUseCase {
     private readonly businessService: BusinessService,
   ) {}
 
-  async execute(id: string, orgId: string) {
+  async execute(id: string, orgId: string, scope: BranchScope) {
     const res = await this.businessService.getBusinessWithUserByOrgId(orgId);
 
     if (!res) {
@@ -18,7 +19,7 @@ export class SaleGetUseCase {
       const { id: businessId } = res;
       const sale = await this.saleService.getSaleById(id, businessId);
 
-      if (!sale) {
+      if (!sale || !scope.canAccessBranch(sale.branchId)) {
         throw new NotFoundException(`Sale not found`);
       }
 

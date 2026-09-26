@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InvoiceService } from '../infrastructure/invoice.service';
 import { OrderService } from '../../order/infrastructure/order.service';
+import { type BranchScope } from '../../auth/domain/auth-context';
 
 @Injectable()
 export class InvoiceGetUsecase {
@@ -9,11 +10,12 @@ export class InvoiceGetUsecase {
     private readonly orderService: OrderService,
   ) {}
 
-  async execute(invoiceId: string, orgId: string) {
+  async execute(invoiceId: string, orgId: string, scope: BranchScope) {
     // Validate order ownership
     const order = await this.orderService.getOrderByInvoiceId(invoiceId, orgId);
 
-    if (!order.id) {
+    // Same answer for "missing" and "another branch's order".
+    if (!order || !scope.canAccessBranch(order.branchId)) {
       throw new NotFoundException(
         'Order not found for the authorized organization',
       );

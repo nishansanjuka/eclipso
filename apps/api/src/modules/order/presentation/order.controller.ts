@@ -1,6 +1,7 @@
 import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
 import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
+import { requireBranchId } from '../../../shared/utils/require-branch';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
@@ -30,7 +31,11 @@ export class OrderController {
   @Post('create')
   @CatchEntityErrors()
   createOrder(@Body() orderData: CreateOrderDto, @User() user: AuthUserObject) {
-    return this.orderCreateUsecase.execute(user.businessId!, orderData);
+    return this.orderCreateUsecase.execute(
+      user.businessId!,
+      requireBranchId(user),
+      orderData,
+    );
   }
 
   @ApiOperation({
@@ -47,7 +52,12 @@ export class OrderController {
     @Body() orderData: UpdateOrderDto,
     @User() user: AuthUserObject,
   ) {
-    return this.orderUpdateUseCase.execute(id, user.businessId!, orderData);
+    return this.orderUpdateUseCase.execute(
+      id,
+      user.businessId!,
+      orderData,
+      user,
+    );
   }
 
   @ApiOperation({
@@ -59,7 +69,7 @@ export class OrderController {
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteOrder(@Param('id') id: string, @User() user: AuthUserObject) {
-    return this.orderDeleteUseCase.execute(id, user.businessId!);
+    return this.orderDeleteUseCase.execute(id, user.businessId!, user);
   }
 
   @ApiOperation({
@@ -71,6 +81,6 @@ export class OrderController {
   @Post('receive/:id')
   @CatchEntityErrors()
   receiveOrder(@Param('id') id: string, @User() user: AuthUserObject) {
-    return this.orderReceiveUseCase.execute(id, user.businessId!);
+    return this.orderReceiveUseCase.execute(id, user.businessId!, user);
   }
 }

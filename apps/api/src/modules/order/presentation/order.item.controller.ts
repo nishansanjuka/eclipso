@@ -31,7 +31,11 @@ export class OrderItemController {
     @Body() orderData: CreateOrderItemDto,
     @User() user: AuthUserObject,
   ) {
-    return this.orderItemCreateUsecase.execute(user.businessId!, orderData);
+    return this.orderItemCreateUsecase.execute(
+      user.businessId!,
+      orderData,
+      user,
+    );
   }
 
   @ApiOperation({
@@ -48,7 +52,12 @@ export class OrderItemController {
     @Body() orderData: UpdateOrderItemDto,
     @User() user: AuthUserObject,
   ) {
-    return this.orderItemUpdateUseCase.execute(id, user.businessId!, orderData);
+    return this.orderItemUpdateUseCase.execute(
+      id,
+      user.businessId!,
+      orderData,
+      user,
+    );
   }
 
   @ApiOperation({
@@ -60,6 +69,6 @@ export class OrderItemController {
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteOrderItem(@Param('id') id: string, @User() user: AuthUserObject) {
-    return this.orderItemDeleteUseCase.execute(id, user.businessId!);
+    return this.orderItemDeleteUseCase.execute(id, user.businessId!, user);
   }
 }

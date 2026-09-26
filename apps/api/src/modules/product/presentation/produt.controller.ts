@@ -32,7 +32,11 @@ export class ProductsController {
     @Body() productData: CreateProductDto,
     @User() user: AuthUserObject,
   ) {
-    return this.productCreateUseCase.execute(user.orgId!, productData);
+    return this.productCreateUseCase.execute(
+      user.orgId!,
+      productData,
+      user.branchId,
+    );
   }
 
   @ApiOperation({

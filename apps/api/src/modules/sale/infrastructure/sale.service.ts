@@ -9,18 +9,6 @@ export class SaleService {
     private readonly paymentService: PaymentService,
   ) {}
 
-  async updateSale(
-    id: string,
-    businessId: string,
-    saleData: { customerId?: string | null },
-  ) {
-    return await this.saleRepository.updateSaleWithBusinessId(
-      id,
-      businessId,
-      saleData,
-    );
-  }
-
   async getSaleById(id: string, businessId: string) {
     const [sale] = await this.saleRepository.getSaleById(id, businessId);
     if (!sale) return null;

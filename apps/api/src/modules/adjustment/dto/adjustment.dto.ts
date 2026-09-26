@@ -5,6 +5,9 @@ export class CreateAdjustmentDto {
 
   businessId: string;
 
+  branchId: string;
+
+  /** Clerk id of the user who made the adjustment. */
   userId: string;
 
   @ApiProperty()

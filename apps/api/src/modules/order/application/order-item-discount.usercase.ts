@@ -1,3 +1,4 @@
+import { type BranchScope } from '../../auth/domain/auth-context';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { OrderItemDiscountDto } from '../dto/order-item.discount';
 import { OrderItemDiscountEntity } from '../domain/orer.item.discount.entity';
@@ -10,7 +11,11 @@ import { assertDraft } from './order-guards';
 export class OrderItemDiscountsUpdateUsecase {
   constructor(private readonly workflow: OrderWorkflowRepository) {}
 
-  async add(orderDiscountData: OrderItemDiscountDto, businessId: string) {
+  async add(
+    orderDiscountData: OrderItemDiscountDto,
+    businessId: string,
+    scope: BranchScope,
+  ) {
     const data = new OrderItemDiscountEntity(orderDiscountData);
 
     return this.workflow.transaction(async (tx) => {
@@ -18,6 +23,7 @@ export class OrderItemDiscountsUpdateUsecase {
         tx,
         businessId,
         data.orderItemId,
+        scope,
       );
       if (!order) throw new NotFoundException('Order item not found');
       assertDraft(order);
@@ -40,7 +46,11 @@ export class OrderItemDiscountsUpdateUsecase {
     });
   }
 
-  async remove(orderDiscountData: OrderItemDiscountDto, businessId: string) {
+  async remove(
+    orderDiscountData: OrderItemDiscountDto,
+    businessId: string,
+    scope: BranchScope,
+  ) {
     const data = new OrderItemDiscountEntity(orderDiscountData);
 
     return this.workflow.transaction(async (tx) => {
@@ -48,6 +58,7 @@ export class OrderItemDiscountsUpdateUsecase {
         tx,
         businessId,
         data.orderItemId,
+        scope,
       );
       if (!order) throw new NotFoundException('Order item not found');
       assertDraft(order);

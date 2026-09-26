@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateSaleDto } from '../dto/sale.dto';
 import { SaleCheckoutRepository } from '../infrastructure/sale-checkout.repository';
+import { BranchStockRepository } from '../../inventory/infrastructure/branch-stock.repository';
 import { SaleCreateEntity } from '../domain/sale.entity';
 import {
   PricingLineInput,
@@ -28,10 +29,14 @@ const IDEMPOTENCY_INDEX = 'sales_business_idempotency_uq';
  */
 @Injectable()
 export class SaleCreateUseCase {
-  constructor(private readonly checkout: SaleCheckoutRepository) {}
+  constructor(
+    private readonly checkout: SaleCheckoutRepository,
+    private readonly stock: BranchStockRepository,
+  ) {}
 
   async execute(
     businessId: string,
+    branchId: string,
     cashierClerkId: string,
     saleData: CreateSaleDto,
     idempotencyKey?: string,
@@ -46,7 +51,14 @@ export class SaleCreateUseCase {
 
     try {
       return await this.checkout.transaction((tx) =>
-        this.run(tx, businessId, cashierClerkId, entity, idempotencyKey),
+        this.run(
+          tx,
+          businessId,
+          branchId,
+          cashierClerkId,
+          entity,
+          idempotencyKey,
+        ),
       );
     } catch (error) {
       // Two identical requests raced past the pre-check: the loser hits the
@@ -76,6 +88,7 @@ export class SaleCreateUseCase {
   private async run(
     tx: DbExecutor,
     businessId: string,
+    branchId: string,
     cashierClerkId: string,
     entity: SaleCreateEntity,
     idempotencyKey?: string,
@@ -163,6 +176,7 @@ export class SaleCreateUseCase {
 
     // ── 3. Write. Lock order is always business row, then products (sorted
     //       by id), so concurrent checkouts cannot deadlock. ────────────────
+    await this.stock.assertBranchOperable(tx, businessId, branchId);
     const cashierId = await this.checkout.findUserIdByClerkId(
       tx,
       cashierClerkId,
@@ -178,7 +192,7 @@ export class SaleCreateUseCase {
     }
     for (const productId of [...qtyByProduct.keys()].sort()) {
       const qty = qtyByProduct.get(productId)!;
-      if (!(await this.checkout.takeStock(tx, businessId, productId, qty))) {
+      if (!(await this.stock.take(tx, branchId, productId, qty))) {
         const product = productById.get(productId)!;
         throw new BadRequestException(
           `Insufficient stock for product ${product.name}. Required: ${qty}`,
@@ -188,6 +202,7 @@ export class SaleCreateUseCase {
 
     const sale = await this.checkout.insertSale(tx, {
       businessId,
+      branchId,
       customerId: entity.customerId ?? null,
       userId: cashierId ?? null,
       receiptNumber: `S-${String(seq).padStart(6, '0')}`,
@@ -216,6 +231,7 @@ export class SaleCreateUseCase {
     const movements = await this.checkout.insertMovements(
       tx,
       items.map((item) => ({
+        branchId,
         productId: item.productId,
         saleId: sale.id,
         qty: -item.qty,
