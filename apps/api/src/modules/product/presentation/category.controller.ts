@@ -1,3 +1,5 @@
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
@@ -23,6 +25,7 @@ export class CategoriesController {
     description: CATEGORY_API_OPERATIONS.CREATE_CATEGORY.description,
   })
   @ApiBody({ type: CreateCategoryDto })
+  @RequirePermissions(PermissionType.CATEGORY_MANAGE)
   @Post('create')
   @CatchEntityErrors()
   createCategory(
@@ -38,6 +41,7 @@ export class CategoriesController {
   })
   @ApiBody({ type: UpdateCategoryDto })
   @ApiParam({ name: 'id', type: 'string', description: 'Category ID' })
+  @RequirePermissions(PermissionType.CATEGORY_MANAGE)
   @Put('update/:id')
   @CatchEntityErrors()
   updateCategory(
@@ -53,6 +57,7 @@ export class CategoriesController {
     description: CATEGORY_API_OPERATIONS.DELETE_CATEGORY.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Category ID' })
+  @RequirePermissions(PermissionType.CATEGORY_MANAGE)
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteCategory(@Param('id') id: string, @User() user: AuthUserObject) {

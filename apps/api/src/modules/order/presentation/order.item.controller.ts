@@ -1,3 +1,5 @@
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
@@ -22,6 +24,7 @@ export class OrderItemController {
     description: ORDER_ITEM_API_OPERATIONS.CREATE.description,
   })
   @ApiBody({ type: CreateOrderItemDto })
+  @RequirePermissions(PermissionType.ORDER_CREATE)
   @Post('create')
   @CatchEntityErrors()
   createOrderItem(
@@ -37,6 +40,7 @@ export class OrderItemController {
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Order Item ID' })
   @ApiBody({ type: UpdateOrderItemDto })
+  @RequirePermissions(PermissionType.ORDER_UPDATE)
   @Put('update/:id')
   @CatchEntityErrors()
   updateOrderItem(
@@ -52,6 +56,7 @@ export class OrderItemController {
     description: ORDER_ITEM_API_OPERATIONS.DELETE.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Order Item ID' })
+  @RequirePermissions(PermissionType.ORDER_UPDATE)
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteOrderItem(@Param('id') id: string, @User() user: AuthUserObject) {

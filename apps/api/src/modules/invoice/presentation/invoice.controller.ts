@@ -1,3 +1,5 @@
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import { Controller, Get, Param, Res } from '@nestjs/common';
 import { type Response } from 'express';
 import { User } from '../../../shared/decorators/auth.decorator';
@@ -21,6 +23,7 @@ export class InvoicesController {
     description: INVOICE_API_OPERATIONS.GET.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Invoice ID' })
+  @RequirePermissions(PermissionType.INVOICE_READ)
   @Get(':id')
   @CatchEntityErrors()
   getInvoice(@User() user: AuthUserObject, @Param('id') invoiceId: string) {
@@ -44,6 +47,7 @@ export class InvoicesController {
       },
     },
   })
+  @RequirePermissions(PermissionType.INVOICE_MANAGE)
   @Get('calculate/:id')
   @CatchEntityErrors()
   async calculateInvoice(

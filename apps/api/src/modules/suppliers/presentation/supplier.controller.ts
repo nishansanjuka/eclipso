@@ -1,3 +1,5 @@
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
@@ -22,6 +24,7 @@ export class SupplierController {
     description: SUPPLIER_API_OPERATIONS.CREATE.description,
   })
   @ApiBody({ type: CreateSupplierDto })
+  @RequirePermissions(PermissionType.SUPPLIER_MANAGE)
   @Post('create')
   @CatchEntityErrors()
   createSupplier(
@@ -37,6 +40,7 @@ export class SupplierController {
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Supplier ID' })
   @ApiBody({ type: CreateSupplierDto })
+  @RequirePermissions(PermissionType.SUPPLIER_MANAGE)
   @Put('update/:id')
   @CatchEntityErrors()
   updateSupplier(
@@ -52,6 +56,7 @@ export class SupplierController {
     description: SUPPLIER_API_OPERATIONS.DELETE.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Supplier ID' })
+  @RequirePermissions(PermissionType.SUPPLIER_MANAGE)
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteSupplier(@Param('id') id: string, @User() user: AuthUserObject) {

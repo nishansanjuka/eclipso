@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
 import { ReturnCreateUseCase } from '../application/return-create.usecase';
@@ -20,6 +29,7 @@ export class ReturnController {
     description: RETURN_API_OPERATIONS.CREATE.description,
   })
   @ApiBody({ type: CreateReturnDto })
+  @RequirePermissions(PermissionType.RETURN_CREATE)
   @Post('create')
   @CatchEntityErrors()
   createReturn(
@@ -38,9 +48,12 @@ export class ReturnController {
     description: RETURN_API_OPERATIONS.GET.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Return ID' })
+  @RequirePermissions(PermissionType.RETURN_READ)
   @Get(':id')
   @CatchEntityErrors()
-  getReturn(@Param('id') id: string) {
-    return this.returnService.getReturnById(id);
+  async getReturn(@Param('id') id: string, @User() user: AuthUserObject) {
+    const result = await this.returnService.getReturnById(id, user.businessId!);
+    if (!result) throw new NotFoundException('Return not found');
+    return result;
   }
 }

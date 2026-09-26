@@ -1,3 +1,5 @@
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import {
   Controller,
   Post,
@@ -8,6 +10,8 @@ import {
   Delete,
   Query,
   ParseIntPipe,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -39,6 +43,7 @@ export class AdjustmentController {
     operationId: ADJUSTMENT_API_OPERATIONS.CREATE.operationId,
     description: ADJUSTMENT_API_OPERATIONS.CREATE.description,
   })
+  @RequirePermissions(PermissionType.INVENTORY_ADJUST)
   @Post(':productId')
   @ApiParam({ name: 'productId', description: 'Product ID' })
   @ApiQuery({
@@ -67,10 +72,19 @@ export class AdjustmentController {
     description: ADJUSTMENT_API_OPERATIONS.GET_BY_ID.description,
   })
   @ApiParam({ name: 'id', description: 'Adjustment ID' })
+  @RequirePermissions(PermissionType.INVENTORY_READ)
   @Get(':id')
   @CatchEntityErrors()
-  async getAdjustmentById(@Param('id') id: string) {
-    return await this.adjustmentService.findAdjustmentById(id);
+  async getAdjustmentById(
+    @Param('id') id: string,
+    @User() user: AuthUserObject,
+  ) {
+    const adjustment = await this.adjustmentService.findAdjustmentById(
+      id,
+      user.businessId!,
+    );
+    if (!adjustment) throw new NotFoundException('Adjustment not found');
+    return adjustment;
   }
 
   @ApiOperation({
@@ -78,10 +92,20 @@ export class AdjustmentController {
     description: ADJUSTMENT_API_OPERATIONS.GET_BY_BUSINESS.description,
   })
   @ApiParam({ name: 'businessId', description: 'Business ID' })
+  @RequirePermissions(PermissionType.INVENTORY_READ)
   @Get('business/:businessId')
   @CatchEntityErrors()
-  async getAdjustmentsByBusinessId(@Param('businessId') businessId: string) {
-    return await this.adjustmentService.findAdjustmentsByBusinessId(businessId);
+  async getAdjustmentsByBusinessId(
+    @Param('businessId') businessId: string,
+    @User() user: AuthUserObject,
+  ) {
+    // The path id is untrusted: only the caller's own business is readable.
+    if (businessId !== user.businessId && businessId !== user.orgId) {
+      throw new ForbiddenException('You do not have access to this business.');
+    }
+    return await this.adjustmentService.findAdjustmentsByBusinessId(
+      user.businessId!,
+    );
   }
 
   @ApiOperation({
@@ -89,10 +113,18 @@ export class AdjustmentController {
     description: ADJUSTMENT_API_OPERATIONS.GET_BY_USER.description,
   })
   @ApiParam({ name: 'userId', description: 'User clerk ID' })
+  @RequirePermissions(PermissionType.INVENTORY_READ)
   @Get('user/:userId')
   @CatchEntityErrors()
-  async getAdjustmentsByUserId(@Param('userId') userId: string) {
-    return await this.adjustmentService.findAdjustmentsByUserId(userId);
+  async getAdjustmentsByUserId(
+    @Param('userId') userId: string,
+    @User() user: AuthUserObject,
+  ) {
+    // Only adjustments made inside the caller's business.
+    return await this.adjustmentService.findAdjustmentsByBusinessAndUser(
+      user.businessId!,
+      userId,
+    );
   }
 
   @ApiOperation({
@@ -101,12 +133,16 @@ export class AdjustmentController {
   })
   @ApiQuery({ name: 'limit', required: false, description: 'Limit results' })
   @CatchEntityErrors()
+  @RequirePermissions(PermissionType.INVENTORY_READ)
   @Get()
   async getAllAdjustments(
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @User() user: AuthUserObject = {} as AuthUserObject,
   ) {
-    return await this.adjustmentService.getAllAdjustments(user.orgId!, limit);
+    return await this.adjustmentService.getAllAdjustments(
+      user.businessId!,
+      limit,
+    );
   }
 
   @ApiOperation({
@@ -115,13 +151,21 @@ export class AdjustmentController {
   })
   @ApiParam({ name: 'id', description: 'Adjustment ID' })
   @ApiBody({ type: UpdateAdjustmentDto })
+  @RequirePermissions(PermissionType.INVENTORY_ADJUST)
   @Put(':id')
   @CatchEntityErrors()
   async updateAdjustment(
     @Param('id') id: string,
     @Body() dto: UpdateAdjustmentDto,
+    @User() user: AuthUserObject,
   ) {
-    return await this.adjustmentService.updateAdjustment(id, dto);
+    const updated = await this.adjustmentService.updateAdjustment(
+      id,
+      user.businessId!,
+      dto,
+    );
+    if (!updated) throw new NotFoundException('Adjustment not found');
+    return updated;
   }
 
   @ApiOperation({
@@ -129,12 +173,13 @@ export class AdjustmentController {
     description: ADJUSTMENT_API_OPERATIONS.DELETE.description,
   })
   @ApiParam({ name: 'id', description: 'Adjustment ID' })
+  @RequirePermissions(PermissionType.INVENTORY_ADJUST)
   @Delete(':id')
   @CatchEntityErrors()
   async deleteAdjustment(
     @Param('id') id: string,
     @User() user: AuthUserObject,
   ) {
-    return await this.adjustmentService.deleteAdjustment(id, user.orgId!);
+    return await this.adjustmentService.deleteAdjustment(id, user.businessId!);
   }
 }

@@ -7,5 +7,6 @@ import { BusinessService } from './infrastructure/business.service';
   imports: [DatabaseModule],
   controllers: [],
   providers: [BusinessRepository, BusinessService],
+  exports: [BusinessService],
 })
 export class BusinessModule {}

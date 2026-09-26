@@ -8,7 +8,8 @@ import {
   CreateReturnDto,
   CreateReturnItemDto,
 } from '../dto/return.dto';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
+import { sales } from '../../sale/infrastructure/schema/sale.schema';
 
 @Injectable()
 export class ReturnRepository {
@@ -53,13 +54,15 @@ export class ReturnRepository {
     return await this.db.delete(returns).where(eq(returns.id, id));
   }
 
-  async getReturnById(id: string) {
+  /** Scoped through the sale: a return belongs to the business that made the sale. */
+  async getReturnById(id: string, businessId: string) {
     const [result] = await this.db
-      .select()
+      .select({ returnRecord: returns })
       .from(returns)
-      .where(eq(returns.id, id))
+      .innerJoin(sales, eq(sales.id, returns.saleId))
+      .where(and(eq(returns.id, id), eq(sales.businessId, businessId)))
       .limit(1);
-    return result;
+    return result?.returnRecord;
   }
 
   async getReturnItemsByReturnId(returnId: string) {

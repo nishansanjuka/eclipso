@@ -1,37 +1,67 @@
 export const AUTH_API_OPERATIONS = {
-  CREATE_ORGANIZATION: {
-    operationId: 'createOrganization',
+  GET_ME: {
+    operationId: 'getMyAccess',
     description:
-      'Creates a new organization in the system with the provided name and business type. The authenticated user will become the owner/administrator of the newly created organization and will be automatically associated with it.',
+      'Returns the authenticated user, the business the request is scoped to (X-Business-Id header, or the only business the user belongs to), their role and the permissions they hold there. Permissions are read from the database, not from the session token.',
   },
-  UPDATE_ORGANIZATION: {
-    operationId: 'updateOrganization',
+  LIST_MY_BUSINESSES: {
+    operationId: 'listMyBusinesses',
     description:
-      "Updates the organization information including name and business type. Only users with appropriate permissions within the organization can perform this operation. Changes apply to the user's current organization.",
+      'Lists every business the authenticated user belongs to, with their role in each. Use the returned orgId as the X-Business-Id header on other requests.',
   },
-  DELETE_ORGANIZATION: {
-    operationId: 'deleteOrganization',
+  CREATE_BUSINESS: {
+    operationId: 'createBusiness',
     description:
-      'Permanently deletes the organization and all associated data from the system. This operation removes all users, invitations, and organization-specific data. This action is irreversible and requires appropriate administrative permissions.',
+      'Creates a new business. The authenticated user becomes its owner.',
   },
-  INVITE_USER: {
-    operationId: 'inviteUserToOrganization',
+  UPDATE_BUSINESS: {
+    operationId: 'updateBusiness',
     description:
-      'Sends invitation emails to one or more users to join the organization with a specified role. The invited users will receive an email with instructions to accept the invitation and join the organization. Only existing organization members with appropriate permissions can send invitations.',
+      'Updates the name and/or business type of the current business. Requires business:manage.',
   },
-  RESEND_INVITATION: {
-    operationId: 'resendInvitationToUser',
+  DELETE_BUSINESS: {
+    operationId: 'deleteBusiness',
     description:
-      'Resends an existing invitation email to a user who was previously invited to join the organization. This is useful when the original invitation email was not received or has expired. The invitation must already exist for the specified email address.',
+      'Permanently deletes the current business with its roles and memberships. Irreversible. Requires business:delete (owners only).',
   },
-  REVOKE_INVITATION: {
-    operationId: 'revokeInviteToUser',
+  LIST_PERMISSIONS: {
+    operationId: 'listPermissions',
     description:
-      'Cancels a pending invitation to join the organization by invitation ID. Once revoked, the invitation link becomes invalid and the invited user will no longer be able to accept the invitation. Only users with appropriate permissions can revoke invitations.',
+      'Lists the permission catalog that roles can be composed from. Requires role:read.',
   },
-  REMOVE_USER: {
-    operationId: 'deleteUserFromOrganization',
+  LIST_ROLES: {
+    operationId: 'listRoles',
     description:
-      "Removes a user from the organization by user ID. This operation will revoke the user's access to all organization resources and data. The removed user will no longer be able to access organization-specific content. Administrative permissions are required for this operation.",
+      'Lists built-in roles and the current business custom roles with their permissions. Requires role:read.',
+  },
+  CREATE_ROLE: {
+    operationId: 'createRole',
+    description:
+      'Creates a custom role for the current business. You can only include permissions you hold yourself. Requires role:manage.',
+  },
+  UPDATE_ROLE: {
+    operationId: 'updateRole',
+    description:
+      'Edits a custom role. Built-in roles cannot be modified, and you can only grant permissions you hold. Requires role:manage.',
+  },
+  DELETE_ROLE: {
+    operationId: 'deleteRole',
+    description:
+      'Deletes a custom role that no member is using. Requires role:manage.',
+  },
+  LIST_MEMBERS: {
+    operationId: 'listMembers',
+    description:
+      'Lists members of the current business with their roles. Requires member:read.',
+  },
+  ASSIGN_ROLE: {
+    operationId: 'assignMemberRole',
+    description:
+      'Changes a member role. You cannot grant permissions you do not hold, change a member who outranks you, or remove the last owner. Requires role:assign.',
+  },
+  REMOVE_MEMBER: {
+    operationId: 'removeMember',
+    description:
+      'Removes a member from the current business. You cannot remove a member who outranks you or the last owner. Requires member:manage.',
   },
 } as const;

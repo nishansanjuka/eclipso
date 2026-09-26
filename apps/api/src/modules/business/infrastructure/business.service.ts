@@ -6,10 +6,6 @@ import { BusinessRepository } from './business.repository';
 export class BusinessService {
   constructor(private readonly businessRepository: BusinessRepository) {}
 
-  async createBusiness(businessData: BusinessDto) {
-    return this.businessRepository.createBusiness(businessData);
-  }
-
   async updateBusiness(businessData: Partial<BusinessDto>) {
     return this.businessRepository.updateBusiness(businessData);
   }

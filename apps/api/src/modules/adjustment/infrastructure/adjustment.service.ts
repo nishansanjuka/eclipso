@@ -13,8 +13,8 @@ export class AdjustmentService {
     return this.adjustmentRepository.create(adjustmentData);
   }
 
-  async findAdjustmentById(id: string) {
-    return this.adjustmentRepository.findById(id);
+  async findAdjustmentById(id: string, businessId: string) {
+    return this.adjustmentRepository.findById(id, businessId);
   }
 
   async findAdjustmentsByBusinessId(businessId: string) {
@@ -29,8 +29,12 @@ export class AdjustmentService {
     return this.adjustmentRepository.findByBusinessAndUser(businessId, userId);
   }
 
-  async updateAdjustment(id: string, adjustmentData: UpdateAdjustmentDto) {
-    return this.adjustmentRepository.update(id, adjustmentData);
+  async updateAdjustment(
+    id: string,
+    businessId: string,
+    adjustmentData: UpdateAdjustmentDto,
+  ) {
+    return this.adjustmentRepository.update(id, businessId, adjustmentData);
   }
 
   async deleteAdjustment(id: string, businessId: string) {

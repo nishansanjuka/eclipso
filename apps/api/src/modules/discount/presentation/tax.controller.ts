@@ -1,3 +1,5 @@
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
@@ -22,6 +24,7 @@ export class DiscountController {
     description: DISCOUNT_API_OPERATIONS.CREATE.description,
   })
   @ApiBody({ type: CreateDiscountDto })
+  @RequirePermissions(PermissionType.DISCOUNT_MANAGE)
   @Post('create')
   @CatchEntityErrors()
   createDiscount(
@@ -37,6 +40,7 @@ export class DiscountController {
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Supplier ID' })
   @ApiBody({ type: UpdateDiscountDto })
+  @RequirePermissions(PermissionType.DISCOUNT_MANAGE)
   @Put('update/:id')
   @CatchEntityErrors()
   updateDiscount(
@@ -52,6 +56,7 @@ export class DiscountController {
     description: DISCOUNT_API_OPERATIONS.DELETE.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Discount ID' })
+  @RequirePermissions(PermissionType.DISCOUNT_MANAGE)
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteDiscount(@Param('id') id: string, @User() user: AuthUserObject) {

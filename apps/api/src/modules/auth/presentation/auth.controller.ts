@@ -2,161 +2,225 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Put,
 } from '@nestjs/common';
-import { AuthUseCase } from '../application/auth-use-case';
 import {
-  CreateOrganizationDto,
-  InviteUserDto,
-  UpdateOrganizationDto,
+  ApiBody,
+  ApiHeader,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { AccessManagementUseCase } from '../application/access-management.use-case';
+import {
+  AssignRoleDto,
+  assignRoleSchema,
+  CreateBusinessDto,
+  createBusinessSchema,
+  CreateRoleDto,
+  createRoleSchema,
+  parseBody,
+  UpdateBusinessDto,
+  updateBusinessSchema,
+  UpdateRoleDto,
+  updateRoleSchema,
 } from '../dto/auth.dto';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
 import {
-  CreateOrganizationEntity,
-  DeleteOrganizationEntity,
-  InviteUserEntity,
-  UpdateOrganizationEntity,
-} from '../domain/organization.entity';
-import { CatchEntityErrors } from '../../../shared/decorators/exception.catcher';
-import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+  AllowWithoutBusiness,
+  RequirePermissions,
+} from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../enums/auth-permissions.enum';
 import { AUTH_API_OPERATIONS } from '../constants/api-operations';
 
-@Controller('/auth/clerk')
+@ApiTags('Access')
+@ApiHeader({
+  name: 'X-Business-Id',
+  required: false,
+  description:
+    'Business to act in. Optional when the user belongs to exactly one business.',
+})
+@Controller('/auth')
 export class AuthController {
-  constructor(private readonly authUseCase: AuthUseCase) {}
+  constructor(private readonly useCase: AccessManagementUseCase) {}
+
+  // ── identity & businesses (no business context required) ─────────────────
 
   @ApiOperation({
-    operationId: AUTH_API_OPERATIONS.CREATE_ORGANIZATION.operationId,
-    description: AUTH_API_OPERATIONS.CREATE_ORGANIZATION.description,
+    operationId: AUTH_API_OPERATIONS.GET_ME.operationId,
+    description: AUTH_API_OPERATIONS.GET_ME.description,
   })
-  @ApiBody({ type: CreateOrganizationDto })
-  @Post('organization')
-  @CatchEntityErrors()
-  async createOrganization(
-    @User() user: AuthUserObject,
-    @Body() body: CreateOrganizationDto,
-  ) {
-    const { businessType, name } = new CreateOrganizationEntity(body);
-    return this.authUseCase.createOrganization(
-      name,
-      user.userId!,
-      businessType,
+  @AllowWithoutBusiness()
+  @Get('me')
+  getMe(@User() user: AuthUserObject) {
+    return {
+      userId: user.userId,
+      orgId: user.orgId ?? null,
+      roleKey: user.roleKey ?? null,
+      permissions: user.permissions,
+    };
+  }
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.LIST_MY_BUSINESSES.operationId,
+    description: AUTH_API_OPERATIONS.LIST_MY_BUSINESSES.description,
+  })
+  @AllowWithoutBusiness()
+  @Get('businesses')
+  listMyBusinesses(@User() user: AuthUserObject) {
+    return this.useCase.listMyBusinesses(user);
+  }
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.CREATE_BUSINESS.operationId,
+    description: AUTH_API_OPERATIONS.CREATE_BUSINESS.description,
+  })
+  @ApiBody({ type: CreateBusinessDto })
+  @AllowWithoutBusiness()
+  @Post('businesses')
+  createBusiness(@User() user: AuthUserObject, @Body() body: unknown) {
+    return this.useCase.createBusiness(
+      user,
+      parseBody(createBusinessSchema, body),
+    );
+  }
+
+  // ── current business ──────────────────────────────────────────────────────
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.UPDATE_BUSINESS.operationId,
+    description: AUTH_API_OPERATIONS.UPDATE_BUSINESS.description,
+  })
+  @ApiBody({ type: UpdateBusinessDto })
+  @RequirePermissions(PermissionType.BUSINESS_MANAGE)
+  @Put('business')
+  updateBusiness(@User() user: AuthUserObject, @Body() body: unknown) {
+    return this.useCase.updateBusiness(
+      user,
+      parseBody(updateBusinessSchema, body),
     );
   }
 
   @ApiOperation({
-    operationId: AUTH_API_OPERATIONS.UPDATE_ORGANIZATION.operationId,
-    description: AUTH_API_OPERATIONS.UPDATE_ORGANIZATION.description,
+    operationId: AUTH_API_OPERATIONS.DELETE_BUSINESS.operationId,
+    description: AUTH_API_OPERATIONS.DELETE_BUSINESS.description,
   })
-  @ApiBody({ type: UpdateOrganizationDto })
-  @Put('organization')
-  @CatchEntityErrors()
-  async updateOrganization(
-    @User() user: AuthUserObject,
-    @Body() body: UpdateOrganizationDto,
-  ) {
-    const { businessType, name, orgId } = new UpdateOrganizationEntity({
-      ...body,
-      orgId: user.orgId,
-    });
-    return this.authUseCase.updateOrganization(name, businessType, orgId);
+  @RequirePermissions(PermissionType.BUSINESS_DELETE)
+  @Delete('business')
+  deleteBusiness(@User() user: AuthUserObject) {
+    return this.useCase.deleteBusiness(user);
+  }
+
+  // ── permissions & roles ───────────────────────────────────────────────────
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.LIST_PERMISSIONS.operationId,
+    description: AUTH_API_OPERATIONS.LIST_PERMISSIONS.description,
+  })
+  @RequirePermissions(PermissionType.ROLE_READ)
+  @Get('permissions')
+  listPermissions() {
+    return this.useCase.listPermissionCatalog();
   }
 
   @ApiOperation({
-    operationId: AUTH_API_OPERATIONS.DELETE_ORGANIZATION.operationId,
-    description: AUTH_API_OPERATIONS.DELETE_ORGANIZATION.description,
+    operationId: AUTH_API_OPERATIONS.LIST_ROLES.operationId,
+    description: AUTH_API_OPERATIONS.LIST_ROLES.description,
   })
-  @Delete('organization')
-  @CatchEntityErrors()
-  async deleteOrganization(@User() user: AuthUserObject) {
-    const { orgId } = new DeleteOrganizationEntity({ orgId: user.orgId! });
-    return this.authUseCase.deleteOrganization(orgId);
+  @RequirePermissions(PermissionType.ROLE_READ)
+  @Get('roles')
+  listRoles(@User() user: AuthUserObject) {
+    return this.useCase.listRoles(user);
   }
 
   @ApiOperation({
-    operationId: AUTH_API_OPERATIONS.INVITE_USER.operationId,
-    description: AUTH_API_OPERATIONS.INVITE_USER.description,
+    operationId: AUTH_API_OPERATIONS.CREATE_ROLE.operationId,
+    description: AUTH_API_OPERATIONS.CREATE_ROLE.description,
   })
-  @ApiBody({ type: InviteUserDto })
-  @Post('organization/invite')
-  @CatchEntityErrors()
-  async inviteUserToOrganization(
+  @ApiBody({ type: CreateRoleDto })
+  @RequirePermissions(PermissionType.ROLE_MANAGE)
+  @Post('roles')
+  createRole(@User() user: AuthUserObject, @Body() body: unknown) {
+    return this.useCase.createRole(user, parseBody(createRoleSchema, body));
+  }
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.UPDATE_ROLE.operationId,
+    description: AUTH_API_OPERATIONS.UPDATE_ROLE.description,
+  })
+  @ApiParam({ name: 'roleId', type: String })
+  @ApiBody({ type: UpdateRoleDto })
+  @RequirePermissions(PermissionType.ROLE_MANAGE)
+  @Put('roles/:roleId')
+  updateRole(
     @User() user: AuthUserObject,
-    @Body() body: InviteUserDto,
+    @Param('roleId', ParseUUIDPipe) roleId: string,
+    @Body() body: unknown,
   ) {
-    const { emails, role, orgId, inviterUserId } = new InviteUserEntity({
-      ...body,
-      orgId: user.orgId!,
-      inviterUserId: user.userId!,
-    });
-    return this.authUseCase.inviteUserToOrganization(
-      emails,
-      orgId!,
-      role!,
-      inviterUserId!,
+    return this.useCase.updateRole(
+      user,
+      roleId,
+      parseBody(updateRoleSchema, body),
     );
   }
 
   @ApiOperation({
-    operationId: AUTH_API_OPERATIONS.RESEND_INVITATION.operationId,
-    description: AUTH_API_OPERATIONS.RESEND_INVITATION.description,
+    operationId: AUTH_API_OPERATIONS.DELETE_ROLE.operationId,
+    description: AUTH_API_OPERATIONS.DELETE_ROLE.description,
   })
-  @ApiParam({ name: 'email', type: String, required: true })
-  @Patch('organization/invite/resend/:email')
-  @CatchEntityErrors()
-  async resendInvitation(
-    @Param('email') email: string,
+  @ApiParam({ name: 'roleId', type: String })
+  @RequirePermissions(PermissionType.ROLE_MANAGE)
+  @Delete('roles/:roleId')
+  deleteRole(
     @User() user: AuthUserObject,
+    @Param('roleId', ParseUUIDPipe) roleId: string,
   ) {
-    const { emails, orgId, inviterUserId } = new InviteUserEntity({
-      emails: [email],
-      orgId: user.orgId!,
-      inviterUserId: user.userId!,
-    });
+    return this.useCase.deleteRole(user, roleId);
+  }
 
-    return await this.authUseCase.resendInviteToUser(
-      emails[0],
-      orgId!,
-      inviterUserId!,
-    );
+  // ── members ───────────────────────────────────────────────────────────────
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.LIST_MEMBERS.operationId,
+    description: AUTH_API_OPERATIONS.LIST_MEMBERS.description,
+  })
+  @RequirePermissions(PermissionType.MEMBER_READ)
+  @Get('members')
+  listMembers(@User() user: AuthUserObject) {
+    return this.useCase.listMembers(user);
   }
 
   @ApiOperation({
-    operationId: AUTH_API_OPERATIONS.REVOKE_INVITATION.operationId,
-    description: AUTH_API_OPERATIONS.REVOKE_INVITATION.description,
+    operationId: AUTH_API_OPERATIONS.ASSIGN_ROLE.operationId,
+    description: AUTH_API_OPERATIONS.ASSIGN_ROLE.description,
   })
-  @ApiParam({ name: 'invitationId', type: String, required: true })
-  @Delete('organization/invite/revoke/:invitationId')
-  @CatchEntityErrors()
-  async revokeInviteToUser(
-    @Param('invitationId') invitationId: string,
+  @ApiParam({ name: 'userId', type: String })
+  @ApiBody({ type: AssignRoleDto })
+  @RequirePermissions(PermissionType.ROLE_ASSIGN)
+  @Patch('members/:userId/role')
+  assignRole(
     @User() user: AuthUserObject,
-  ) {
-    return await this.authUseCase.revokeInviteToUser(
-      invitationId,
-      user.orgId!,
-      user.userId!,
-    );
-  }
-
-  @ApiOperation({
-    operationId: AUTH_API_OPERATIONS.REMOVE_USER.operationId,
-    description: AUTH_API_OPERATIONS.REMOVE_USER.description,
-  })
-  @ApiParam({ name: 'userId', type: String, required: true })
-  @Delete('organization/user/:userId')
-  @CatchEntityErrors()
-  async removeUserFromOrganization(
     @Param('userId') userId: string,
-    @User() user: AuthUserObject,
+    @Body() body: unknown,
   ) {
-    return await this.authUseCase.removeUserFromOrganization(
-      userId,
-      user.orgId!,
-    );
+    const { roleId } = parseBody(assignRoleSchema, body);
+    return this.useCase.assignRole(user, userId, roleId);
+  }
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.REMOVE_MEMBER.operationId,
+    description: AUTH_API_OPERATIONS.REMOVE_MEMBER.description,
+  })
+  @ApiParam({ name: 'userId', type: String })
+  @RequirePermissions(PermissionType.MEMBER_MANAGE)
+  @Delete('members/:userId')
+  removeMember(@User() user: AuthUserObject, @Param('userId') userId: string) {
+    return this.useCase.removeMember(user, userId);
   }
 }

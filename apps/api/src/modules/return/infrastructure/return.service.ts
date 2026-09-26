@@ -43,8 +43,11 @@ export class ReturnService {
     return await this.returnRepository.deleteReturn(id);
   }
 
-  async getReturnById(id: string) {
-    const returnRecord = await this.returnRepository.getReturnById(id);
+  async getReturnById(id: string, businessId: string) {
+    const returnRecord = await this.returnRepository.getReturnById(
+      id,
+      businessId,
+    );
     if (!returnRecord) return null;
 
     const items = await this.returnRepository.getReturnItemsByReturnId(

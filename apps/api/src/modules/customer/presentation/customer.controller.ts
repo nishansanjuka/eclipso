@@ -1,3 +1,5 @@
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
@@ -22,6 +24,7 @@ export class CustomerController {
     description: CUSTOMER_API_OPERATIONS.CREATE.description,
   })
   @ApiBody({ type: CreateCustomerDto })
+  @RequirePermissions(PermissionType.CUSTOMER_MANAGE)
   @Post('create')
   @CatchEntityErrors()
   createCustomer(
@@ -37,6 +40,7 @@ export class CustomerController {
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Customer ID' })
   @ApiBody({ type: CreateCustomerDto })
+  @RequirePermissions(PermissionType.CUSTOMER_MANAGE)
   @Put('update/:id')
   @CatchEntityErrors()
   updateCustomer(
@@ -52,6 +56,7 @@ export class CustomerController {
     description: CUSTOMER_API_OPERATIONS.DELETE.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Customer ID' })
+  @RequirePermissions(PermissionType.CUSTOMER_MANAGE)
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteCustomer(@Param('id') id: string, @User() user: AuthUserObject) {

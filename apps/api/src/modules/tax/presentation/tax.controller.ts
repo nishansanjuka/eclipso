@@ -1,3 +1,5 @@
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { TaxCreateUsecase } from '../application/tax-create.usecase';
 import { TaxUpdateUsecase } from '../application/tax-update.usecase';
@@ -22,6 +24,7 @@ export class TaxController {
     description: TAX_API_OPERATIONS.CREATE.description,
   })
   @ApiBody({ type: CreateTaxDto })
+  @RequirePermissions(PermissionType.TAX_MANAGE)
   @Post('create')
   @CatchEntityErrors()
   createTax(@Body() taxData: CreateTaxDto, @User() user: AuthUserObject) {
@@ -34,6 +37,7 @@ export class TaxController {
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Supplier ID' })
   @ApiBody({ type: UpdateTaxDto })
+  @RequirePermissions(PermissionType.TAX_MANAGE)
   @Put('update/:id')
   @CatchEntityErrors()
   updateTax(
@@ -49,6 +53,7 @@ export class TaxController {
     description: TAX_API_OPERATIONS.DELETE.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Tax ID' })
+  @RequirePermissions(PermissionType.TAX_MANAGE)
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteTax(@Param('id') id: string, @User() user: AuthUserObject) {

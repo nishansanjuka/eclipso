@@ -1,3 +1,5 @@
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import {
   Body,
   Controller,
@@ -32,6 +34,7 @@ export class SaleController {
     description: SALE_API_OPERATIONS.CREATE.description,
   })
   @ApiBody({ type: CreateSaleDto })
+  @RequirePermissions(PermissionType.SALE_CREATE)
   @Post('create')
   @CatchEntityErrors()
   createSale(@Body() saleData: CreateSaleDto, @User() user: AuthUserObject) {
@@ -44,6 +47,7 @@ export class SaleController {
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Sale ID' })
   @ApiBody({ type: CreateSaleDto })
+  @RequirePermissions(PermissionType.SALE_MANAGE)
   @Put('update/:id')
   @CatchEntityErrors()
   updateSale(
@@ -59,6 +63,7 @@ export class SaleController {
     description: SALE_API_OPERATIONS.DELETE.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Sale ID' })
+  @RequirePermissions(PermissionType.SALE_MANAGE)
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteSale(@Param('id') id: string, @User() user: AuthUserObject) {
@@ -70,6 +75,7 @@ export class SaleController {
     description: SALE_API_OPERATIONS.GET.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Sale ID' })
+  @RequirePermissions(PermissionType.SALE_READ)
   @Get(':id')
   @CatchEntityErrors()
   getSale(@Param('id') id: string, @User() user: AuthUserObject) {

@@ -1,21 +1,13 @@
-import {
-  OrganizationJSON,
-  OrganizationMembershipWebhookEvent,
-  OrganizationWebhookEvent,
-  UserJSON,
-  UserWebhookEvent,
-} from '@clerk/express';
+import { UserJSON, UserWebhookEvent } from '@clerk/express';
 import { Injectable } from '@nestjs/common';
 import { UserService } from '../../users/infrastructure/user.service';
-import { BusinessService } from '../../business/infrastructure/business.service';
-import { BusinessPublicMetadata } from '@eclipso/types/auth';
-import { BusinessType } from '../enums/business-type.enum';
+import { AccessService } from './access.service';
 
 @Injectable()
 export class ClerkWebhookService {
   constructor(
     private readonly userService: UserService,
-    private readonly businessService: BusinessService,
+    private readonly access: AccessService,
   ) {}
 
   async handleUserCreated(event: UserWebhookEvent) {
@@ -27,51 +19,12 @@ export class ClerkWebhookService {
     });
   }
 
-  async handleOrganizationCreated(event: OrganizationWebhookEvent) {
-    const { id, name, created_by, public_metadata } =
-      event.data as OrganizationJSON & {
-        id: string;
-        created_by: string;
-        public_metadata: BusinessPublicMetadata<BusinessType>;
-      };
+  async handleUserDeleted(event: UserWebhookEvent) {
+    const { id } = event.data as { id?: string };
+    if (!id) return;
 
-    await this.businessService.createBusiness({
-      businessType: public_metadata.businessType,
-      orgId: id,
-      createdBy: created_by,
-      name,
-    });
-  }
-
-  async handleOrganizationUpdated(event: OrganizationWebhookEvent) {
-    const { id, name, public_metadata } = event.data as OrganizationJSON & {
-      id: string;
-      created_by: string;
-      public_metadata: BusinessPublicMetadata<BusinessType>;
-    };
-
-    await this.businessService.updateBusiness({
-      businessType: public_metadata.businessType,
-      orgId: id,
-      name,
-    });
-  }
-
-  async handleOrganizationDeleted(event: OrganizationWebhookEvent) {
-    const { id } = event.data as OrganizationJSON & {
-      id: string;
-    };
-
-    await this.businessService.deleteBusiness(id);
-  }
-
-  async handleOrganizationMembershipDeleted(
-    event: OrganizationMembershipWebhookEvent,
-  ) {
-    const {
-      public_user_data: { user_id },
-    } = event.data;
-
-    await this.userService.deleteUser(user_id);
+    // Memberships cascade with the user row; drop any cached access too.
+    await this.userService.deleteUser(id);
+    this.access.invalidateUser(id);
   }
 }

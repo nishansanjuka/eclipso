@@ -16,11 +16,13 @@ export class AdjustmentRepository {
     return result;
   }
 
-  async findById(id: string) {
+  async findById(id: string, businessId: string) {
     const [result] = await this.db
       .select()
       .from(adjustments)
-      .where(eq(adjustments.id, id))
+      .where(
+        and(eq(adjustments.id, id), eq(adjustments.businessId, businessId)),
+      )
       .limit(1)
       .execute();
     return result;
@@ -58,11 +60,13 @@ export class AdjustmentRepository {
       .execute();
   }
 
-  async update(id: string, data: UpdateAdjustmentDto) {
+  async update(id: string, businessId: string, data: UpdateAdjustmentDto) {
     const [result] = await this.db
       .update(adjustments)
       .set({ ...data, updatedAt: new Date() })
-      .where(eq(adjustments.id, id))
+      .where(
+        and(eq(adjustments.id, id), eq(adjustments.businessId, businessId)),
+      )
       .returning();
     return result;
   }

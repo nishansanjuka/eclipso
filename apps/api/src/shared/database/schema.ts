@@ -73,7 +73,16 @@ import {
   returnStatusEnum,
 } from '../../modules/return/infrastructure/schema/return.schema';
 
+import {
+  permissions,
+  rolePermissions,
+  roles,
+} from '../../modules/auth/infrastructure/schema/access.schema';
+
 export const UsersTable = users;
+export const PermissionsTable = permissions;
+export const RolesTable = roles;
+export const RolePermissionsTable = rolePermissions;
 export const BusinessTable = businesses;
 export const BusinessUsersTable = businessUsers;
 export const SuppliersTable = suppliers;

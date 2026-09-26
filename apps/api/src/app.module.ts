@@ -3,7 +3,8 @@ import { configuration } from './shared/config';
 import { ConfigService } from './shared/services/config.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { PermissionsGuard } from './shared/guards/permissions.guard';
 import { UsersModule } from './modules/users/user.module';
 import { BusinessModule } from './modules/business/business.module';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
@@ -47,6 +48,10 @@ import { RootController } from './root.controller';
   controllers: [RootController],
   providers: [
     ConfigService,
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,

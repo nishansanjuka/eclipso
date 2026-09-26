@@ -1,3 +1,5 @@
+import { RequirePermissions } from '../../../shared/decorators/require-permissions.decorator';
+import { PermissionType } from '../../auth/enums/auth-permissions.enum';
 import { Body, Controller, Delete, Param, Post, Put } from '@nestjs/common';
 import { User } from '../../../shared/decorators/auth.decorator';
 import { type AuthUserObject } from '../../../../globals';
@@ -23,6 +25,7 @@ export class ProductsController {
     description: PRODUCT_API_OPERATIONS.CREATE_PRODUCT.description,
   })
   @ApiBody({ type: CreateProductDto })
+  @RequirePermissions(PermissionType.PRODUCT_CREATE)
   @Post('create')
   @CatchEntityErrors()
   createProduct(
@@ -38,6 +41,7 @@ export class ProductsController {
   })
   @ApiBody({ type: UpdateProductDto })
   @ApiParam({ name: 'id', type: 'string', description: 'Product ID' })
+  @RequirePermissions(PermissionType.PRODUCT_UPDATE)
   @Put('update/:id')
   @CatchEntityErrors()
   updateProduct(
@@ -53,6 +57,7 @@ export class ProductsController {
     description: PRODUCT_API_OPERATIONS.DELETE_PRODUCT.description,
   })
   @ApiParam({ name: 'id', type: 'string', description: 'Product ID' })
+  @RequirePermissions(PermissionType.PRODUCT_DELETE)
   @Delete('delete/:id')
   @CatchEntityErrors()
   deleteProduct(@Param('id') id: string, @User() user: AuthUserObject) {
