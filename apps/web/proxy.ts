@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
-import { appUrl, baseUrl, parseHost, tenancyConfig } from "@/lib/tenancy/host";
+import { baseUrl, parseHost, tenancyConfig } from "@/lib/tenancy/host";
 import { workspaceExists } from "@/lib/tenancy/workspace-exists";
 
 /** Pages anyone may open, on every host. */
@@ -34,9 +34,9 @@ export default clerkMiddleware(async (auth, req) => {
   const headers = new Headers(req.headers);
   headers.delete(SLUG_HEADER);
 
-  // Marketing host: this app only serves the product, so send people there.
-  if (target.kind === "root") {
-    return NextResponse.redirect(appUrl(pathname + search, config));
+  // www.<root> is just an alias of the root domain.
+  if (target.kind === "www") {
+    return NextResponse.redirect(baseUrl(pathname + search, config));
   }
   // An address nobody can own (malformed, nested) goes to the base domain.
   if (target.kind === "unknown") {
@@ -71,7 +71,7 @@ export default clerkMiddleware(async (auth, req) => {
 
   if (target.kind === "org") {
     if (isAppOnlyRoute(req)) {
-      return NextResponse.redirect(appUrl(pathname + search, config));
+      return NextResponse.redirect(baseUrl(pathname + search, config));
     }
     headers.set(SLUG_HEADER, target.slug);
     const url = req.nextUrl.clone();
@@ -79,7 +79,7 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.rewrite(url, { request: { headers } });
   }
 
-  // App host (or plain localhost): picker, onboarding.
+  // Root domain (or plain localhost): picker, onboarding.
   return NextResponse.next({ request: { headers } });
 });
 

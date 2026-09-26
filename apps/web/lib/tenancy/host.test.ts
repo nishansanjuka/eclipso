@@ -4,10 +4,11 @@ import { appUrl, orgUrl, parseHost } from "./host";
 const ROOT = "aperture.lk";
 
 describe("parseHost", () => {
-  it("recognises the root, the app host and workspaces", () => {
+  it("recognises the root, www and workspaces", () => {
     expect(parseHost("aperture.lk", ROOT)).toEqual({ kind: "root" });
-    expect(parseHost("www.aperture.lk", ROOT)).toEqual({ kind: "root" });
-    expect(parseHost("app.aperture.lk", ROOT)).toEqual({ kind: "app" });
+    expect(parseHost("www.aperture.lk", ROOT)).toEqual({ kind: "www" });
+    // "app" is reserved: it is not a workspace and not a host of its own.
+    expect(parseHost("app.aperture.lk", ROOT)).toEqual({ kind: "unknown" });
     expect(parseHost("def-org.aperture.lk", ROOT)).toEqual({
       kind: "org",
       slug: "def-org",
@@ -16,7 +17,7 @@ describe("parseHost", () => {
 
   it("works with a port, as in local development", () => {
     const root = "dev.local:3001";
-    expect(parseHost("app.dev.local:3001", root)).toEqual({ kind: "app" });
+    expect(parseHost("dev.local:3001", root)).toEqual({ kind: "root" });
     expect(parseHost("kottawa.dev.local:3001", root)).toEqual({
       kind: "org",
       slug: "kottawa",
@@ -55,7 +56,7 @@ describe("urls", () => {
     expect(orgUrl("keels", "/reports", config)).toBe(
       "https://keels.aperture.lk/reports",
     );
-    expect(appUrl("/sign-in", config)).toBe("https://app.aperture.lk/sign-in");
+    expect(appUrl("/sign-in", config)).toBe("https://aperture.lk/sign-in");
   });
 });
 

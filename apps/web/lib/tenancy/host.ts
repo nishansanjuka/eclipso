@@ -1,8 +1,9 @@
 /**
  * Host-based multi-tenancy.
  *
- *   <root domain>            marketing site (a separate app); we send people on
- *   app.<root domain>        sign in, sign up, onboarding, workspace picker
+ *   <root domain>            sign in, sign up, onboarding, workspace picker
+ *   www.<root domain>        alias of the root (the marketing site, if you host
+ *                            it there, is a separate deployment)
  *   <slug>.<root domain>     one business's workspace
  *
  * A single wildcard DNS record (`*.<root domain>`) serves every workspace, so
@@ -12,8 +13,10 @@
  */
 
 export type HostKind =
+  /** The root domain: the product's front door. */
   | { kind: "root" }
-  | { kind: "app" }
+  /** `www.<root>`: an alias that just goes to the root. */
+  | { kind: "www" }
   | { kind: "org"; slug: string }
   /** A host that is not under the root domain (e.g. plain localhost). */
   | { kind: "external" }
@@ -22,10 +25,8 @@ export type HostKind =
 
 const LABEL = /^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$/;
 
-export const APP_SUBDOMAIN = "app";
-
 /** Subdomains that are never workspaces (mirrors the API's reserved words). */
-const NOT_WORKSPACES = new Set([APP_SUBDOMAIN, "www"]);
+const NOT_WORKSPACES = new Set(["app", "www"]);
 
 export function parseHost(
   hostHeader: string | null | undefined,
@@ -35,8 +36,8 @@ export function parseHost(
   const root = rootDomain.trim().toLowerCase();
   if (!host || !root) return { kind: "external" };
 
-  if (host === root || host === `www.${root}`) return { kind: "root" };
-  if (host === `${APP_SUBDOMAIN}.${root}`) return { kind: "app" };
+  if (host === root) return { kind: "root" };
+  if (host === `www.${root}`) return { kind: "www" };
   if (!host.endsWith(`.${root}`)) return { kind: "external" };
 
   const label = host.slice(0, -(root.length + 1));
@@ -68,12 +69,10 @@ export function orgUrl(
   return `${config.protocol}://${slug}.${config.rootDomain}${path}`;
 }
 
-/** Absolute URL on the app host (sign in, onboarding, picker). */
-export function appUrl(path = "/", config: TenancyConfig = tenancyConfig()) {
-  return `${config.protocol}://${APP_SUBDOMAIN}.${config.rootDomain}${path}`;
-}
-
-/** Absolute URL on the base (root) domain. */
+/** Absolute URL on the root domain (sign in, onboarding, picker). */
 export function baseUrl(path = "/", config: TenancyConfig = tenancyConfig()) {
   return `${config.protocol}://${config.rootDomain}${path}`;
 }
+
+/** Same as `baseUrl`: the app lives on the root domain. */
+export const appUrl = baseUrl;
