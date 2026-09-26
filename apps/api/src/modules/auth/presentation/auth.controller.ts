@@ -100,6 +100,26 @@ export class AuthController {
   // ── current business ──────────────────────────────────────────────────────
 
   @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.GET_BUSINESS.operationId,
+    description: AUTH_API_OPERATIONS.GET_BUSINESS.description,
+  })
+  @Get('business')
+  getBusiness(@User() user: AuthUserObject) {
+    return this.useCase.getBusiness(user);
+  }
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.SLUG_AVAILABILITY.operationId,
+    description: AUTH_API_OPERATIONS.SLUG_AVAILABILITY.description,
+  })
+  @ApiParam({ name: 'slug', type: String })
+  @AllowWithoutBusiness()
+  @Get('slugs/:slug')
+  slugAvailability(@Param('slug') slug: string) {
+    return this.useCase.slugAvailability(slug);
+  }
+
+  @ApiOperation({
     operationId: AUTH_API_OPERATIONS.UPDATE_BUSINESS.operationId,
     description: AUTH_API_OPERATIONS.UPDATE_BUSINESS.description,
   })

@@ -22,6 +22,34 @@ export class CreateProductDto {
   metadata?: object;
 }
 
+export class ImportProductRowDto {
+  @ApiProperty()
+  name: string;
+  @ApiProperty()
+  sku: string;
+  @ApiProperty({ required: false })
+  barcode?: string;
+  @ApiProperty({ description: 'Selling price in major units, e.g. "1250.50"' })
+  price: string;
+  @ApiProperty({ required: false, description: 'Cost price in major units' })
+  costPrice?: string;
+  @ApiProperty({ required: false, description: 'Created if it does not exist' })
+  category?: string;
+  @ApiProperty({
+    required: false,
+    description: 'Opening stock, placed in the request branch',
+  })
+  qty?: number;
+}
+
+export class ImportProductsDto {
+  @ApiProperty({
+    type: [ImportProductRowDto],
+    description: 'At most 5000 rows',
+  })
+  rows: ImportProductRowDto[];
+}
+
 /** Stock is not editable here: use an inventory adjustment. */
 export class UpdateProductDto {
   @ApiProperty({ required: false })

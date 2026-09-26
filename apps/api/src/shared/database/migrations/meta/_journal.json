@@ -43,6 +43,13 @@
       "when": 1790456341494,
       "tag": "0005_branch_stock",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790458324738,
+      "tag": "0006_orgs_and_invitations",
+      "breakpoints": true
     }
   ]
 }

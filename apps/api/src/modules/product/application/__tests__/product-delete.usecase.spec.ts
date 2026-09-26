@@ -38,13 +38,20 @@ describe('ProductDeleteUseCase', () => {
     const orgId = 'org-123';
     const business = { id: 'business-123' };
 
-    businessService.getBusinessWithUserByOrgId.mockResolvedValue(business as any);
+    businessService.getBusinessWithUserByOrgId.mockResolvedValue(
+      business as any,
+    );
     productService.deleteProduct.mockResolvedValue({} as any);
 
     await useCase.execute(productId, orgId);
 
-    expect(businessService.getBusinessWithUserByOrgId).toHaveBeenCalledWith(orgId);
-    expect(productService.deleteProduct).toHaveBeenCalledWith(productId, business.id);
+    expect(businessService.getBusinessWithUserByOrgId).toHaveBeenCalledWith(
+      orgId,
+    );
+    expect(productService.deleteProduct).toHaveBeenCalledWith(
+      productId,
+      business.id,
+    );
   });
 
   it('should throw NotFoundException when business not found', async () => {
@@ -53,6 +60,8 @@ describe('ProductDeleteUseCase', () => {
 
     businessService.getBusinessWithUserByOrgId.mockResolvedValue(undefined);
 
-    await expect(useCase.execute(productId, orgId)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(productId, orgId)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

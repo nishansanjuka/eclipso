@@ -26,7 +26,14 @@ import {
   taxTypeEnum,
 } from '../../modules/tax/infrastructure/schema/tax.schema';
 import { users } from '../../modules/users/infrastructure/schema/user.schema';
-import { branches } from '../../modules/branch/infrastructure/schema/branch.schema';
+import {
+  branches,
+  branchKindEnum,
+} from '../../modules/branch/infrastructure/schema/branch.schema';
+import {
+  invitations,
+  invitationStatusEnum,
+} from '../../modules/invitation/infrastructure/schema/invitation.schema';
 import {
   businessesRelations,
   businessUsers,
@@ -92,6 +99,9 @@ export const RolePermissionsTable = rolePermissions;
 export const BusinessTable = businesses;
 export const BusinessUsersTable = businessUsers;
 export const BranchesTable = branches;
+export const InvitationsTable = invitations;
+export const BranchKindEnum = branchKindEnum;
+export const InvitationStatusEnum = invitationStatusEnum;
 export const MemberBranchesTable = memberBranches;
 export const SuppliersTable = suppliers;
 export const OrdersTable = orders;

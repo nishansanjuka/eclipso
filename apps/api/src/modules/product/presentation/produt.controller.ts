@@ -8,7 +8,16 @@ import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ProductCreateUseCase } from '../application/product-create.usecase';
 import { ProductUpdateUseCase } from '../application/product-update.usecase';
 import { ProductDeleteUseCase } from '../application/product-delete.usecase';
-import { CreateProductDto, UpdateProductDto } from '../dto/product.dto';
+import {
+  CreateProductDto,
+  ImportProductsDto,
+  UpdateProductDto,
+} from '../dto/product.dto';
+import {
+  ProductImportUseCase,
+  importProductsSchema,
+} from '../application/product-import.usecase';
+import { parseBody } from '../../auth/dto/auth.dto';
 import { PRODUCT_API_OPERATIONS } from '../constant/api-operations.product';
 
 @ApiTags('Product')
@@ -18,6 +27,7 @@ export class ProductsController {
     private readonly productCreateUseCase: ProductCreateUseCase,
     private readonly productUpdateUseCase: ProductUpdateUseCase,
     private readonly productDeleteUseCase: ProductDeleteUseCase,
+    private readonly productImportUseCase: ProductImportUseCase,
   ) {}
 
   @ApiOperation({
@@ -36,6 +46,24 @@ export class ProductsController {
       user.orgId!,
       productData,
       user.branchId,
+    );
+  }
+
+  @ApiOperation({
+    operationId: 'importProducts',
+    description:
+      'Bulk-creates products (e.g. from a CSV of the old till). Existing SKUs and duplicate or invalid rows are skipped and reported; nothing is overwritten. Prices are in major units. Opening stock goes into the request branch. Requires product:create.',
+  })
+  @ApiBody({ type: ImportProductsDto })
+  @RequirePermissions(PermissionType.PRODUCT_CREATE)
+  @Post('import')
+  @CatchEntityErrors()
+  importProducts(@Body() body: unknown, @User() user: AuthUserObject) {
+    const { rows } = parseBody(importProductsSchema, body);
+    return this.productImportUseCase.execute(
+      user.businessId!,
+      user.branchId,
+      rows,
     );
   }
 

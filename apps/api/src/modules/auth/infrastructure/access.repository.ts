@@ -255,8 +255,10 @@ export class AccessRepository {
     return this.db
       .select({
         orgId: businesses.orgId,
+        slug: businesses.slug,
         name: businesses.name,
         businessType: businesses.businessType,
+        onboardingCompletedAt: businesses.onboardingCompletedAt,
         roleKey: roles.key,
       })
       .from(businessUsers)
@@ -382,8 +384,10 @@ export class AccessRepository {
 
   async createBusinessWithOwner(params: {
     orgId: string;
+    slug: string;
     name: string;
     businessType: BusinessType;
+    profile?: Partial<typeof businesses.$inferInsert>;
     ownerUserId: string;
     ownerRoleId: string;
   }) {
@@ -391,7 +395,9 @@ export class AccessRepository {
       const [business] = await tx
         .insert(businesses)
         .values({
+          ...params.profile,
           orgId: params.orgId,
+          slug: params.slug,
           name: params.name,
           businessType: params.businessType,
         })

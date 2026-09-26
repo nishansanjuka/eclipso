@@ -9,6 +9,8 @@ import { ProductUpdateUseCase } from './application/product-update.usecase';
 import { BusinessService } from '../business/infrastructure/business.service';
 import { BusinessRepository } from '../business/infrastructure/business.repository';
 import { BranchStockRepository } from '../inventory/infrastructure/branch-stock.repository';
+import { ProductImportRepository } from './infrastructure/product-import.repository';
+import { ProductImportUseCase } from './application/product-import.usecase';
 import { CategoriesModule } from './product.category.module';
 
 @Module({
@@ -23,6 +25,8 @@ import { CategoriesModule } from './product.category.module';
     BusinessService,
     BusinessRepository,
     BranchStockRepository,
+    ProductImportRepository,
+    ProductImportUseCase,
   ],
 })
 export class ProductModule {}

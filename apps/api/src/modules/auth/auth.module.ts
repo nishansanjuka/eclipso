@@ -32,6 +32,7 @@ import { InvoicesController } from '../invoice/presentation/invoice.controller';
 import { SaleController } from '../sale/presentation/sale.controller';
 import { BranchController } from '../branch/presentation/branch.controller';
 import { ReportController } from '../report/presentation/report.controller';
+import { InvitationsController } from '../invitation/presentation/invitation.controller';
 
 @Module({
   imports: [DatabaseModule, UsersModule, BusinessModule],
@@ -44,7 +45,7 @@ import { ReportController } from '../report/presentation/report.controller';
     ClerkWebhookService,
     ClerkWebhookUseCase,
   ],
-  exports: [AccessService],
+  exports: [AccessService, AccessRepository],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
@@ -54,6 +55,7 @@ export class AuthModule implements NestModule {
         AuthController,
         BranchController,
         ReportController,
+        InvitationsController,
         SupplierController,
         TaxController,
         InvoicesController,

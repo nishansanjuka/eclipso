@@ -10,6 +10,22 @@ export class BusinessService {
     return this.businessRepository.updateBusiness(businessData);
   }
 
+  async getProfile(orgId: string) {
+    return this.businessRepository.findProfile(orgId);
+  }
+
+  async slugTaken(slug: string) {
+    return this.businessRepository.slugTaken(slug);
+  }
+
+  async updateProfile(
+    orgId: string,
+    patch: Partial<BusinessDto>,
+    vatRate?: string,
+  ) {
+    return this.businessRepository.updateProfile(orgId, patch, vatRate);
+  }
+
   async deleteBusiness(businessId: string) {
     return this.businessRepository.deleteBusiness(businessId);
   }

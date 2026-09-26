@@ -14,13 +14,23 @@ const code = z
   .regex(/^[A-Z0-9_-]{2,16}$/, 'Code must be 2-16 letters, digits, "_" or "-"');
 
 const address = z.string().trim().max(255).nullish();
+const kind = z.enum(['store', 'warehouse']);
+const registerCount = z.number().int().min(0).max(50);
 
-export const createBranchSchema = z.object({ name, code, address });
+export const createBranchSchema = z.object({
+  name,
+  code,
+  address,
+  kind: kind.default('store'),
+  /** Tills running at once; a warehouse has none. */
+  registerCount: registerCount.optional(),
+});
 
 export const updateBranchSchema = z.object({
   name: name.optional(),
   code: code.optional(),
   address,
+  registerCount: registerCount.optional(),
   isActive: z.boolean().optional(),
   isDefault: z.boolean().optional(),
 });
@@ -38,6 +48,10 @@ export class CreateBranchDto {
   code: string;
   @ApiPropertyOptional()
   address?: string | null;
+  @ApiPropertyOptional({ enum: ['store', 'warehouse'] })
+  kind?: 'store' | 'warehouse';
+  @ApiPropertyOptional({ description: 'Registers (tills) running at once' })
+  registerCount?: number;
 }
 
 export class UpdateBranchDto {
@@ -47,6 +61,8 @@ export class UpdateBranchDto {
   code?: string;
   @ApiPropertyOptional()
   address?: string | null;
+  @ApiPropertyOptional()
+  registerCount?: number;
   @ApiPropertyOptional({
     description:
       'Deactivate a closed branch. Its history is kept; the default branch cannot be deactivated.',

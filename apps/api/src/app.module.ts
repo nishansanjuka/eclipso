@@ -22,6 +22,7 @@ import { ReturnModule } from './modules/return/return.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { BranchModule } from './modules/branch/branch.module';
 import { ReportModule } from './modules/report/report.module';
+import { InvitationModule } from './modules/invitation/invitation.module';
 
 import { RootController } from './root.controller';
 
@@ -37,6 +38,7 @@ import { RootController } from './root.controller';
     BusinessModule,
     BranchModule,
     ReportModule,
+    InvitationModule,
     SuppliersModule,
     ProductModule,
     DiscountModule,

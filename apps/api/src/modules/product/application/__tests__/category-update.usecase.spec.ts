@@ -36,16 +36,24 @@ describe('CategoryUpdateUseCase', () => {
   it('should update category successfully', async () => {
     const categoryId = 'category-123';
     const orgId = 'org-123';
-    const categoryData = { id: categoryId, name: 'Updated Electronics', businessId: 'business-123' };
+    const categoryData = {
+      id: categoryId,
+      name: 'Updated Electronics',
+      businessId: 'business-123',
+    };
     const business = { id: 'business-123' };
     const updatedCategory = { ...categoryData };
 
-    businessService.getBusinessWithUserByOrgId.mockResolvedValue(business as any);
+    businessService.getBusinessWithUserByOrgId.mockResolvedValue(
+      business as any,
+    );
     categoryService.updateCategory.mockResolvedValue(updatedCategory as any);
 
     const result = await useCase.execute(categoryId, orgId, categoryData);
 
-    expect(businessService.getBusinessWithUserByOrgId).toHaveBeenCalledWith(orgId);
+    expect(businessService.getBusinessWithUserByOrgId).toHaveBeenCalledWith(
+      orgId,
+    );
     expect(categoryService.updateCategory).toHaveBeenCalled();
     expect(result).toEqual(updatedCategory);
   });
@@ -53,10 +61,16 @@ describe('CategoryUpdateUseCase', () => {
   it('should throw NotFoundException when business not found', async () => {
     const categoryId = 'category-123';
     const orgId = 'org-123';
-    const categoryData = { id: categoryId, name: 'Updated Electronics', businessId: 'business-123' };
+    const categoryData = {
+      id: categoryId,
+      name: 'Updated Electronics',
+      businessId: 'business-123',
+    };
 
     businessService.getBusinessWithUserByOrgId.mockResolvedValue(undefined);
 
-    await expect(useCase.execute(categoryId, orgId, categoryData)).rejects.toThrow(NotFoundException);
+    await expect(
+      useCase.execute(categoryId, orgId, categoryData),
+    ).rejects.toThrow(NotFoundException);
   });
 });

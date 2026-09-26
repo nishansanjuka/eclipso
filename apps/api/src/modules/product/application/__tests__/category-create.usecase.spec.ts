@@ -39,12 +39,16 @@ describe('CategoryCreateUseCase', () => {
     const business = { id: 'business-123' };
     const createdCategory = { id: 'category-123', ...categoryData };
 
-    businessService.getBusinessWithUserByOrgId.mockResolvedValue(business as any);
+    businessService.getBusinessWithUserByOrgId.mockResolvedValue(
+      business as any,
+    );
     categoryService.createCategory.mockResolvedValue(createdCategory as any);
 
     const result = await useCase.execute(orgId, categoryData);
 
-    expect(businessService.getBusinessWithUserByOrgId).toHaveBeenCalledWith(orgId);
+    expect(businessService.getBusinessWithUserByOrgId).toHaveBeenCalledWith(
+      orgId,
+    );
     expect(categoryService.createCategory).toHaveBeenCalled();
     expect(result).toEqual(createdCategory);
   });
@@ -55,6 +59,8 @@ describe('CategoryCreateUseCase', () => {
 
     businessService.getBusinessWithUserByOrgId.mockResolvedValue(undefined);
 
-    await expect(useCase.execute(orgId, categoryData)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(orgId, categoryData)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

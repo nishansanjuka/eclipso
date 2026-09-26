@@ -3,6 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 import z from 'zod';
 import { BusinessType } from '../enums/business-type.enum';
 import { PermissionType } from '../enums/auth-permissions.enum';
+import { isValidSlug } from '../../../shared/utils/slug';
 
 // ── request schemas (validated with zod, see `parseBody`) ───────────────────
 
@@ -20,16 +21,68 @@ const permissionList = z
   )
   .transform((list) => [...new Set(list)]);
 
+const slug = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .refine(
+    isValidSlug,
+    'Address must be 3-40 letters, digits or single hyphens, and not a reserved word',
+  );
+
+const optionalText = (max: number) => z.string().trim().max(max).nullish();
+
+/** Business profile shown on receipts and reports (onboarding step 1). */
+const profileShape = {
+  registeredName: optionalText(150),
+  registrationNumber: optionalText(60),
+  phone: optionalText(30),
+  country: z.string().trim().toUpperCase().length(2).optional(),
+  addressLine: optionalText(200),
+  city: optionalText(80),
+  postalCode: optionalText(20),
+};
+
+/** Tax and money settings (onboarding step 2). */
+const taxShape = {
+  vatRegistered: z.boolean().optional(),
+  vatNumber: optionalText(40),
+  /** Standard VAT rate in percent, e.g. "18" or "12.5". */
+  vatRate: z
+    .string()
+    .trim()
+    .regex(
+      /^\d{1,3}(\.\d{1,2})?$/,
+      'VAT rate must be a percentage like 18 or 12.5',
+    )
+    .optional(),
+  currency: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]{3}$/, 'Currency must be a 3-letter code')
+    .optional(),
+  rounding: z.enum(['none', 'nearest_1', 'nearest_5']).optional(),
+};
+
 export const createBusinessSchema = z.object({
   name,
+  /** Workspace address (`<slug>.<domain>`); generated from the name if omitted. */
+  slug: slug.optional(),
   businessType: z.enum(BusinessType, {
     error: `Business type must be one of: ${Object.values(BusinessType).join(', ')}`,
   }),
+  ...profileShape,
 });
 
 export const updateBusinessSchema = z.object({
   name: name.optional(),
+  slug: slug.optional(),
   businessType: z.enum(BusinessType).optional(),
+  ...profileShape,
+  ...taxShape,
+  /** Marks onboarding as finished. */
+  onboardingCompleted: z.literal(true).optional(),
 });
 
 export const createRoleSchema = z.object({
@@ -67,15 +120,45 @@ export function parseBody<S extends z.ZodType>(
 export class CreateBusinessDto {
   @ApiProperty()
   name: string;
+  @ApiPropertyOptional({
+    description: 'Workspace address, e.g. "keels" for keels.example.com',
+  })
+  slug?: string;
   @ApiProperty({ enum: BusinessType })
   businessType: BusinessType;
+  @ApiPropertyOptional()
+  registeredName?: string | null;
+  @ApiPropertyOptional()
+  registrationNumber?: string | null;
+  @ApiPropertyOptional()
+  phone?: string | null;
+  @ApiPropertyOptional({ description: 'ISO 3166-1 alpha-2, e.g. LK' })
+  country?: string;
+  @ApiPropertyOptional()
+  addressLine?: string | null;
+  @ApiPropertyOptional()
+  city?: string | null;
+  @ApiPropertyOptional()
+  postalCode?: string | null;
 }
 
-export class UpdateBusinessDto {
+export class UpdateBusinessDto extends CreateBusinessDto {
   @ApiPropertyOptional()
-  name?: string;
+  declare name: string;
   @ApiPropertyOptional({ enum: BusinessType })
-  businessType?: BusinessType;
+  declare businessType: BusinessType;
+  @ApiPropertyOptional()
+  vatRegistered?: boolean;
+  @ApiPropertyOptional()
+  vatNumber?: string | null;
+  @ApiPropertyOptional({ description: 'Standard VAT rate in percent' })
+  vatRate?: string;
+  @ApiPropertyOptional({ description: 'ISO 4217, e.g. LKR' })
+  currency?: string;
+  @ApiPropertyOptional({ enum: ['none', 'nearest_1', 'nearest_5'] })
+  rounding?: string;
+  @ApiPropertyOptional({ description: 'Set true when onboarding is finished' })
+  onboardingCompleted?: true;
 }
 
 export class CreateRoleDto {

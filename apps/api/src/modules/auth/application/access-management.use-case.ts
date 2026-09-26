@@ -21,6 +21,8 @@ import {
 } from '../infrastructure/access.repository';
 import { AccessService } from '../infrastructure/access.service';
 import { BusinessService } from '../../business/infrastructure/business.service';
+import { isUniqueViolation } from '../../../shared/utils/pg-errors';
+import { isValidSlug, slugify } from '../../../shared/utils/slug';
 
 /**
  * Business, member and role administration on our own tables.
@@ -45,33 +47,154 @@ export class AccessManagementUseCase {
 
   async createBusiness(
     actor: AuthContext,
-    input: { name: string; businessType: BusinessType },
+    input: {
+      name: string;
+      slug?: string;
+      businessType: BusinessType;
+      registeredName?: string | null;
+      registrationNumber?: string | null;
+      phone?: string | null;
+      country?: string;
+      addressLine?: string | null;
+      city?: string | null;
+      postalCode?: string | null;
+    },
   ) {
     const ownerRole = await this.repository.findSystemRole(SystemRole.Owner);
     if (!ownerRole) throw new Error('Owner system role is not initialised');
 
+    const { name, slug: requested, businessType, ...profile } = input;
+    const slug = await this.chooseSlug(name, requested);
     const orgId = `biz_${randomUUID().replaceAll('-', '')}`;
-    await this.repository.createBusinessWithOwner({
-      orgId,
-      name: input.name,
-      businessType: input.businessType,
-      ownerUserId: actor.userId,
-      ownerRoleId: ownerRole.id,
-    });
+
+    try {
+      await this.repository.createBusinessWithOwner({
+        orgId,
+        slug,
+        name,
+        businessType,
+        profile,
+        ownerUserId: actor.userId,
+        ownerRoleId: ownerRole.id,
+      });
+    } catch (error) {
+      // Lost a race for the same address between the check and the insert.
+      if (isUniqueViolation(error)) {
+        throw new ConflictException('That workspace address is already taken.');
+      }
+      throw error;
+    }
     this.access.invalidateMember(orgId, actor.userId);
 
-    return { orgId, ...input };
+    return { orgId, slug, name, businessType };
+  }
+
+  /**
+   * A requested address must be free (or the request fails); with none given
+   * we derive one from the name and add a short suffix until it is free.
+   */
+  private async chooseSlug(name: string, requested?: string) {
+    if (requested) {
+      if (await this.businessService.slugTaken(requested)) {
+        throw new ConflictException('That workspace address is already taken.');
+      }
+      return requested;
+    }
+    const base = slugify(name);
+    const candidates = [
+      base,
+      ...Array.from({ length: 5 }, () => this.suffix(base)),
+    ];
+    for (const candidate of candidates) {
+      if (
+        isValidSlug(candidate) &&
+        !(await this.businessService.slugTaken(candidate))
+      ) {
+        return candidate;
+      }
+    }
+    return `org-${randomUUID().replaceAll('-', '').slice(0, 10)}`;
+  }
+
+  private suffix(base: string) {
+    const tail = randomUUID().replaceAll('-', '').slice(0, 4);
+    return `${base.slice(0, 35)}-${tail}`.replace(/^-+/, '');
+  }
+
+  /** Is this workspace address usable (valid, not reserved, not taken)? */
+  async slugAvailability(slug: string) {
+    const normalized = slug.trim().toLowerCase();
+    if (!isValidSlug(normalized)) {
+      return { slug: normalized, available: false, reason: 'invalid' as const };
+    }
+    const taken = await this.businessService.slugTaken(normalized);
+    return {
+      slug: normalized,
+      available: !taken,
+      reason: taken ? ('taken' as const) : null,
+    };
+  }
+
+  async getBusiness(actor: AuthContext) {
+    const profile = await this.businessService.getProfile(actor.orgId!);
+    if (!profile) throw new NotFoundException('Business not found.');
+    // Internals (id, sale counter) are not part of the profile.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, saleSeq, ...rest } = profile;
+    return rest;
   }
 
   async updateBusiness(
     actor: AuthContext,
-    input: { name?: string; businessType?: BusinessType },
+    input: {
+      name?: string;
+      slug?: string;
+      businessType?: BusinessType;
+      registeredName?: string | null;
+      registrationNumber?: string | null;
+      phone?: string | null;
+      country?: string;
+      addressLine?: string | null;
+      city?: string | null;
+      postalCode?: string | null;
+      vatRegistered?: boolean;
+      vatNumber?: string | null;
+      vatRate?: string;
+      currency?: string;
+      rounding?: string;
+      onboardingCompleted?: true;
+    },
   ) {
-    await this.businessService.updateBusiness({
-      orgId: actor.orgId!,
-      ...input,
-    });
-    return { orgId: actor.orgId!, ...input };
+    const { vatRate, onboardingCompleted, ...fields } = input;
+
+    if (fields.slug) {
+      const current = await this.businessService.getProfile(actor.orgId!);
+      if (
+        current &&
+        current.slug !== fields.slug &&
+        (await this.businessService.slugTaken(fields.slug))
+      ) {
+        throw new ConflictException('That workspace address is already taken.');
+      }
+    }
+
+    try {
+      const updated = await this.businessService.updateProfile(
+        actor.orgId!,
+        {
+          ...fields,
+          ...(onboardingCompleted && { onboardingCompletedAt: new Date() }),
+        },
+        vatRate,
+      );
+      if (!updated) throw new NotFoundException('Business not found.');
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException('That workspace address is already taken.');
+      }
+      throw error;
+    }
+    return this.getBusiness(actor);
   }
 
   async deleteBusiness(actor: AuthContext) {

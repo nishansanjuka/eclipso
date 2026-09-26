@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -46,12 +45,10 @@ export class AccessService implements OnModuleInit {
 
     if (!orgId) {
       const orgIds = await this.repository.listMembershipOrgIds(userId);
-      if (orgIds.length > 1) {
-        throw new BadRequestException(
-          'Multiple businesses found for this user; send the X-Business-Id header.',
-        );
-      }
-      orgId = orgIds[0];
+      // Several businesses and none chosen: a business-less context, so routes
+      // that do not need one (listing businesses, accepting an invitation)
+      // still work. Routes that need a business are refused by the guard.
+      if (orgIds.length === 1) orgId = orgIds[0];
     }
 
     if (!orgId) return new AuthContext({ userId });

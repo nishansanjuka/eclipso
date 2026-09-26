@@ -5,7 +5,9 @@ import { sales } from '../../sale/infrastructure/schema/sale.schema';
 import { orders } from '../../order/infrastructure/schema/order.schema';
 import { products } from '../../product/infrastructure/schema/product.schema';
 import { adjustments } from '../../adjustment/infrastructure/schema/adjustment.schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
+import { taxes } from '../../tax/infrastructure/schema/tax.schema';
+import { TaxType } from '../../tax/enums/tax.types.enum';
 import { BusinessDto } from '../dto/business.dto';
 
 @Injectable()
@@ -17,6 +19,79 @@ export class BusinessRepository {
       .update(businesses)
       .set(updateData)
       .where(eq(businesses.orgId, updateData.orgId!));
+  }
+
+  async findProfile(orgId: string) {
+    const [row] = await this.db
+      .select()
+      .from(businesses)
+      .where(eq(businesses.orgId, orgId));
+    return row;
+  }
+
+  async slugTaken(slug: string) {
+    const [row] = await this.db
+      .select({ id: businesses.id })
+      .from(businesses)
+      .where(eq(businesses.slug, slug));
+    return !!row;
+  }
+
+  /**
+   * Updates the profile / tax settings in one transaction. When the business
+   * is VAT registered the standard rate is kept as the business's "VAT" tax so
+   * the till can apply it; turning VAT off deactivates it (history keeps
+   * pointing at it).
+   */
+  async updateProfile(
+    orgId: string,
+    patch: Partial<BusinessDto>,
+    vatRate?: string,
+  ) {
+    return this.db.transaction(async (tx) => {
+      // A patch with nothing in it (e.g. only a new VAT rate) has no columns to
+      // set; read the row instead of issuing an empty UPDATE.
+      const hasColumns = Object.values(patch).some((v) => v !== undefined);
+      const [business] = hasColumns
+        ? await tx
+            .update(businesses)
+            .set(patch)
+            .where(eq(businesses.orgId, orgId))
+            .returning()
+        : await tx.select().from(businesses).where(eq(businesses.orgId, orgId));
+      if (!business) return undefined;
+
+      const vatRegistered = patch.vatRegistered;
+      if (vatRegistered !== undefined || vatRate !== undefined) {
+        const [existing] = await tx
+          .select()
+          .from(taxes)
+          .where(and(eq(taxes.businessId, business.id), eq(taxes.name, 'VAT')));
+
+        if (business.vatRegistered && vatRate !== undefined) {
+          if (existing) {
+            await tx
+              .update(taxes)
+              .set({ rate: vatRate, isActive: true, updatedAt: new Date() })
+              .where(eq(taxes.id, existing.id));
+          } else {
+            await tx.insert(taxes).values({
+              businessId: business.id,
+              name: 'VAT',
+              rate: vatRate,
+              type: TaxType.PERCENTAGE,
+              isActive: true,
+            });
+          }
+        } else if (!business.vatRegistered && existing) {
+          await tx
+            .update(taxes)
+            .set({ isActive: false, updatedAt: new Date() })
+            .where(eq(taxes.id, existing.id));
+        }
+      }
+      return business;
+    });
   }
 
   /**

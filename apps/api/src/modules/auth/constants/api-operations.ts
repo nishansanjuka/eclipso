@@ -14,10 +14,20 @@ export const AUTH_API_OPERATIONS = {
     description:
       'Creates a new business. The authenticated user becomes its owner.',
   },
+  GET_BUSINESS: {
+    operationId: 'getBusiness',
+    description:
+      'Returns the profile and tax settings of the current business (any member).',
+  },
+  SLUG_AVAILABILITY: {
+    operationId: 'checkWorkspaceAddress',
+    description:
+      'Tells whether a workspace address (the subdomain) is valid and free.',
+  },
   UPDATE_BUSINESS: {
     operationId: 'updateBusiness',
     description:
-      'Updates the name and/or business type of the current business. Requires business:manage.',
+      'Updates the profile, workspace address and tax settings of the current business, and can mark onboarding as finished. Requires business:manage.',
   },
   DELETE_BUSINESS: {
     operationId: 'deleteBusiness',

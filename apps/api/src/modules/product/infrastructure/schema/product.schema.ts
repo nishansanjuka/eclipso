@@ -26,6 +26,8 @@ export const products = pgTable('products', {
   name: text('name').notNull(),
   sku: text('sku').notNull(),
   price: integer('price').notNull().default(0),
+  /** Unit cost in minor units; optional (imports and receiving set it). */
+  costPrice: integer('cost_price'),
   barcode: text('barcode'),
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at').notNull().defaultNow(),

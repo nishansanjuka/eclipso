@@ -41,6 +41,10 @@ export class BranchUseCase {
           name: input.name,
           code: input.code,
           address: input.address ?? null,
+          kind: input.kind,
+          // A warehouse holds stock only: no tills.
+          registerCount:
+            input.kind === 'warehouse' ? 0 : (input.registerCount ?? 1),
         }),
       );
       this.access.invalidateBusiness(actor.orgId!);
@@ -99,6 +103,10 @@ export class BranchUseCase {
             ...(patch.code !== undefined && { code: patch.code }),
             ...(patch.address !== undefined && {
               address: patch.address ?? null,
+            }),
+            ...(patch.registerCount !== undefined && {
+              registerCount:
+                branch.kind === 'warehouse' ? 0 : patch.registerCount,
             }),
             ...(patch.isActive !== undefined && { isActive: patch.isActive }),
             ...(patch.isDefault === true && { isDefault: true }),
