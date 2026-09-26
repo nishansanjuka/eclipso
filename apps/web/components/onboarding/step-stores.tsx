@@ -174,216 +174,226 @@ export function StepStores({
         text="Add every shop that takes money. Stock-only places can be added as a warehouse."
       />
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-bold">Your stores</h2>
-        <ul className="flex flex-col gap-3">
-          {stores.map((s) => (
-            <li
-              key={s.key}
-              className="flex flex-col gap-4 rounded-2xl border bg-surface p-4"
-            >
-              <div className="flex items-start gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-accent-soft text-accent-text">
-                  {s.kind === "warehouse" ? (
-                    <WarehouseIcon className="size-5" />
-                  ) : (
-                    <StoreIcon className="size-5" />
+      <div className="grid items-start gap-8 lg:grid-cols-2">
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-bold">Your stores</h2>
+          <ul className="flex flex-col gap-3">
+            {stores.map((s) => (
+              <li
+                key={s.key}
+                className="flex flex-col gap-4 rounded-2xl border bg-surface p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-accent-soft text-accent-text">
+                    {s.kind === "warehouse" ? (
+                      <WarehouseIcon className="size-5" />
+                    ) : (
+                      <StoreIcon className="size-5" />
+                    )}
+                  </span>
+                  <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
+                    <Field label="Name">
+                      <Input
+                        value={s.name}
+                        onChange={(e) =>
+                          update(s.key, { name: e.target.value })
+                        }
+                      />
+                    </Field>
+                    <Field label="Address">
+                      <Input
+                        value={s.address}
+                        onChange={(e) =>
+                          update(s.key, { address: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  {!s.id && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Remove ${s.name || "store"}`}
+                      onClick={() =>
+                        setStores((all) => all.filter((x) => x.key !== s.key))
+                      }
+                    >
+                      <TrashIcon />
+                    </Button>
                   )}
-                </span>
-                <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
-                  <Field label="Name">
-                    <Input
-                      value={s.name}
-                      onChange={(e) => update(s.key, { name: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="Address">
-                    <Input
-                      value={s.address}
-                      onChange={(e) =>
-                        update(s.key, { address: e.target.value })
-                      }
-                    />
-                  </Field>
                 </div>
-                {!s.id && (
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Remove ${s.name || "store"}`}
-                    onClick={() =>
-                      setStores((all) => all.filter((x) => x.key !== s.key))
-                    }
-                  >
-                    <TrashIcon />
-                  </Button>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-3 pl-[52px]">
-                {s.kind === "warehouse" ? (
-                  <Badge variant="info">Stock only, no register</Badge>
-                ) : (
-                  <label className="flex items-center gap-2 text-[13px] font-semibold">
-                    Registers
-                    <Input
-                      type="number"
-                      min={1}
-                      max={50}
-                      value={s.registers}
-                      onChange={(e) =>
-                        update(s.key, {
-                          registers: Math.max(
-                            1,
-                            Math.min(50, Number(e.target.value) || 1),
-                          ),
-                        })
-                      }
-                      className="h-8 w-20"
-                    />
-                  </label>
-                )}
-                {s.id && business && s === stores[0] && (
-                  <Badge variant="secondary">Default</Badge>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={() =>
-              setStores((all) => [
-                ...all,
-                {
-                  key: nextKey(),
-                  name: "",
-                  address: "",
-                  kind: "store",
-                  registers: 1,
-                },
-              ])
-            }
-          >
-            <PlusIcon />
-            Add another store
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() =>
-              setStores((all) => [
-                ...all,
-                {
-                  key: nextKey(),
-                  name: "",
-                  address: "",
-                  kind: "warehouse",
-                  registers: 0,
-                },
-              ])
-            }
-          >
-            <WarehouseIcon />
-            Add a warehouse
-          </Button>
-        </div>
-        <p className="text-[13px] text-muted-foreground">
-          Each register is one till running at the same time. You can add or
-          remove them whenever you like.
-        </p>
-      </section>
-
-      <section className="flex flex-col gap-4 rounded-2xl border bg-surface p-5">
-        <h2 className="text-lg font-bold">Tax and currency</h2>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-bold">
-              This business is VAT registered
-            </span>
-            <span className="text-[13px] text-muted-foreground">
-              Turn this off and Aperture never shows a tax line, on screen or on
-              a receipt.
-            </span>
+                <div className="flex flex-wrap items-center gap-3 pl-[52px]">
+                  {s.kind === "warehouse" ? (
+                    <Badge variant="info">Stock only, no register</Badge>
+                  ) : (
+                    <label className="flex items-center gap-2 text-[13px] font-semibold">
+                      Registers
+                      <Input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={s.registers}
+                        onChange={(e) =>
+                          update(s.key, {
+                            registers: Math.max(
+                              1,
+                              Math.min(50, Number(e.target.value) || 1),
+                            ),
+                          })
+                        }
+                        className="h-8 w-20"
+                      />
+                    </label>
+                  )}
+                  {s.id && business && s === stores[0] && (
+                    <Badge variant="secondary">Default</Badge>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() =>
+                setStores((all) => [
+                  ...all,
+                  {
+                    key: nextKey(),
+                    name: "",
+                    address: "",
+                    kind: "store",
+                    registers: 1,
+                  },
+                ])
+              }
+            >
+              <PlusIcon />
+              Add another store
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setStores((all) => [
+                  ...all,
+                  {
+                    key: nextKey(),
+                    name: "",
+                    address: "",
+                    kind: "warehouse",
+                    registers: 0,
+                  },
+                ])
+              }
+            >
+              <WarehouseIcon />
+              Add a warehouse
+            </Button>
           </div>
-          <Switch
-            checked={vat}
-            onCheckedChange={setVat}
-            aria-label="VAT registered"
-          />
-        </div>
+          <p className="text-[13px] text-muted-foreground">
+            Each register is one till running at the same time. You can add or
+            remove them whenever you like.
+          </p>
+        </section>
 
-        {vat && (
+        <section className="flex flex-col gap-4 rounded-2xl border bg-surface p-5">
+          <h2 className="text-lg font-bold">Tax and currency</h2>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-bold">
+                This business is VAT registered
+              </span>
+              <span className="text-[13px] text-muted-foreground">
+                Turn this off and Aperture never shows a tax line, on screen or
+                on a receipt.
+              </span>
+            </div>
+            <Switch
+              checked={vat}
+              onCheckedChange={setVat}
+              aria-label="VAT registered"
+            />
+          </div>
+
+          {vat && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="VAT number" htmlFor="vat-number">
+                <Input
+                  id="vat-number"
+                  value={vatNumber}
+                  onChange={(e) => setVatNumber(e.target.value)}
+                />
+              </Field>
+              <Field
+                label="Standard rate (%)"
+                htmlFor="vat-rate"
+                hint="Products can be set to 0% one by one"
+              >
+                <Input
+                  id="vat-rate"
+                  inputMode="decimal"
+                  value={vatRate}
+                  onChange={(e) => setVatRate(e.target.value)}
+                />
+              </Field>
+            </div>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="VAT number" htmlFor="vat-number">
-              <Input
-                id="vat-number"
-                value={vatNumber}
-                onChange={(e) => setVatNumber(e.target.value)}
-              />
+            <Field label="Currency">
+              <Select
+                value={currency}
+                onValueChange={(v) => v && setCurrency(v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {(v: string) =>
+                      CURRENCIES.find((c) => c.code === v)?.label ?? v
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
             <Field
-              label="Standard rate (%)"
-              htmlFor="vat-rate"
-              hint="Products can be set to 0% one by one"
+              label="Rounding"
+              hint={ROUNDING.find((r) => r.value === rounding)?.hint}
             >
-              <Input
-                id="vat-rate"
-                inputMode="decimal"
-                value={vatRate}
-                onChange={(e) => setVatRate(e.target.value)}
-              />
+              <Select
+                value={rounding}
+                onValueChange={(v) => v && setRounding(v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {(v: string) =>
+                      ROUNDING.find((r) => r.value === v)?.label ?? v
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {ROUNDING.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>
+                      {r.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
           </div>
-        )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Currency">
-            <Select value={currency} onValueChange={(v) => v && setCurrency(v)}>
-              <SelectTrigger className="w-full">
-                <SelectValue>
-                  {(v: string) =>
-                    CURRENCIES.find((c) => c.code === v)?.label ?? v
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {CURRENCIES.map((c) => (
-                  <SelectItem key={c.code} value={c.code}>
-                    {c.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field
-            label="Rounding"
-            hint={ROUNDING.find((r) => r.value === rounding)?.hint}
-          >
-            <Select value={rounding} onValueChange={(v) => v && setRounding(v)}>
-              <SelectTrigger className="w-full">
-                <SelectValue>
-                  {(v: string) =>
-                    ROUNDING.find((r) => r.value === v)?.label ?? v
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {ROUNDING.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>
-                    {r.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        </div>
-
-        <p className="flex items-start gap-2 rounded-[10px] bg-info-soft p-3 text-[13px] font-medium text-info">
-          <InfoIcon className="mt-0.5 size-4 shrink-0" />
-          Shelf prices are entered without VAT. The till adds it and breaks it
-          out by rate on the receipt.
-        </p>
-      </section>
+          <p className="flex items-start gap-2 rounded-[10px] bg-info-soft p-3 text-[13px] font-medium text-info">
+            <InfoIcon className="mt-0.5 size-4 shrink-0" />
+            Shelf prices are entered without VAT. The till adds it and breaks it
+            out by rate on the receipt.
+          </p>
+        </section>
+      </div>
 
       {error && (
         <p role="alert" className="text-sm font-semibold text-bad">

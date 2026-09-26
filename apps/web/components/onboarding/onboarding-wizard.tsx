@@ -47,6 +47,7 @@ export function OnboardingWizard({
       organisation={business?.name ?? null}
       step={step}
       onStep={setStep}
+      wide={step === 1}
     >
       {step === 0 && (
         <StepBusiness key={business?.orgId ?? "new"} onNext={next} />
