@@ -25,7 +25,12 @@ export async function workspaceExists(slug: string): Promise<boolean> {
       `${API_BASE_URL}/public/workspaces/${encodeURIComponent(slug)}/exists`,
       { signal: AbortSignal.timeout(3_000), cache: "no-store" },
     );
-    if (!response.ok) return true;
+    if (!response.ok) {
+      console.warn(
+        `workspaceExists: API answered ${response.status} for "${slug}"; treating it as existing`,
+      );
+      return true;
+    }
     const { exists } = (await response.json()) as { exists: boolean };
 
     if (cache.size >= MAX_ENTRIES) {
@@ -34,7 +39,11 @@ export async function workspaceExists(slug: string): Promise<boolean> {
     }
     cache.set(slug, { exists, expires: now + TTL_MS });
     return exists;
-  } catch {
+  } catch (error) {
+    console.warn(
+      "workspaceExists: API unreachable; treating it as existing",
+      error,
+    );
     return true;
   }
 }

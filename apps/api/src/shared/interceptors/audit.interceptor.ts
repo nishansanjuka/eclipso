@@ -39,8 +39,8 @@ export class AuditInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap((response) => {
-        // Only log if user is authenticated
-        if (!user.userId) {
+        // Only log if user is authenticated (public routes have no user)
+        if (!user?.userId) {
           return;
         }
 
@@ -264,6 +264,8 @@ export class AuditInterceptor implements NestInterceptor {
       'creditCard',
       'ssn',
       'cvv',
+      // Invitation links carry a working token.
+      'inviteurl',
     ];
 
     const sanitize = (obj: any): any => {
