@@ -16,6 +16,11 @@ on:
         required: true
         default: true
         type: boolean
+      deploy_web:
+        description: 'Deploy Web'
+        required: true
+        default: true
+        type: boolean
 
 jobs:
   detect-changes:
@@ -24,6 +29,7 @@ jobs:
     outputs:
       nl2sql: ${{ steps.filter.outputs.nl2sql }}
       api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -41,6 +47,11 @@ jobs:
               - 'apps/api/**'
               - 'packages/**'
               - '.github/workflows/deploy-api.yml'
+              - '.github/workflows/deploy-all.yml'
+            web:
+              - 'apps/web/**'
+              - 'packages/**'
+              - '.github/workflows/deploy-web.yml'
               - '.github/workflows/deploy-all.yml'
 
   deploy-nl2sql:
@@ -168,10 +179,67 @@ jobs:
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
+  deploy-web:
+    name: Deploy Web
+    needs: detect-changes
+    if: |
+      (github.event_name == 'workflow_dispatch' && inputs.deploy_web == true) ||
+      (github.event_name == 'push' && needs.detect-changes.outputs.web == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+      STORE_PATH: ""
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application with Turbo
+        run: pnpm turbo run build --filter=web...
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
   summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [detect-changes, deploy-nl2sql, deploy-api]
+    needs: [detect-changes, deploy-nl2sql, deploy-api, deploy-web]
     if: always()
     steps:
       - name: Generate summary
@@ -200,7 +268,15 @@ jobs:
           elif [ "${{ needs.deploy-api.result }}" = "failure" ]; then
             echo "- ❌ **API** → Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
+          if [ "${{ needs.deploy-web.result }}" = "success" ]; then
+            echo "- ✅ **Web** → Vercel" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-web.result }}" = "skipped" ]; then
+            echo "- ⏭️ **Web** → Skipped (no changes)" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.deploy-web.result }}" = "failure" ]; then
+            echo "- ❌ **Web** → Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
