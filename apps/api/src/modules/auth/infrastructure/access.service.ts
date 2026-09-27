@@ -78,6 +78,14 @@ export class AccessService implements OnModuleInit {
       // header can't be used to probe which business ids exist.
       throw new ForbiddenException('You do not have access to this business.');
     }
+    if (membership.isBanned) {
+      // Distinct `code` (not just a message) so the web app can show a banned
+      // screen instead of the generic "no access" / 403 handling.
+      throw new ForbiddenException({
+        message: 'You have been banned from this business.',
+        code: 'MEMBERSHIP_BANNED',
+      });
+    }
 
     return new AuthContext({
       userId,

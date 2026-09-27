@@ -61,17 +61,22 @@ export const backendApiClient = ky.create({
       async ({ response }) => {
         if (response.ok) return;
         let message = `Request failed (${response.status})`;
+        let code = "API_ERROR";
         try {
           const body = (await response.clone().json()) as {
             message?: string | string[];
+            code?: string;
           };
           if (Array.isArray(body.message)) message = body.message.join(", ");
           else if (body.message) message = body.message;
+          // A stable machine-readable code (e.g. "MEMBERSHIP_BANNED") lets the
+          // UI branch on specific server conditions instead of parsing prose.
+          if (body.code) code = body.code;
         } catch {
           // Non-JSON error body: keep the generic message.
         }
         // Surface the API's own message (e.g. "Insufficient stock ...") to the UI.
-        throw new AppError("API_ERROR", response.status, message);
+        throw new AppError(code, response.status, message);
       },
     ],
   },

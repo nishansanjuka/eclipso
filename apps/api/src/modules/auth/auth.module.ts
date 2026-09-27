@@ -15,6 +15,7 @@ import { DatabaseModule } from '../../shared/database/drizzle.module';
 import { ClerkWebhookController } from './presentation/webhook.controller';
 import { WebhookSignatureMiddleware } from '../../shared/middleware/auth.webhook-middleware';
 import { ConfigService } from '../../shared/services/config.service';
+import { S3Service } from '../../shared/services/s3.service';
 import { ClerkWebhookService } from './infrastructure/webhook.service';
 import { ClerkWebhookUseCase } from './application/webhook.use-case';
 import { AdjustmentController } from '../adjustment/presentation/adjustment.controller';
@@ -42,6 +43,7 @@ import { InvitationsController } from '../invitation/presentation/invitation.con
     AccessRepository,
     AccessService,
     ConfigService,
+    S3Service,
     ClerkWebhookService,
     ClerkWebhookUseCase,
   ],

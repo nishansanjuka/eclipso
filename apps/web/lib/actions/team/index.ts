@@ -10,7 +10,9 @@ import type {
   InvitationLookup,
   InvitationResult,
   Member,
+  PermissionCatalogEntry,
   Role,
+  RolePermissionRequest,
 } from "@/lib/types/api";
 
 const API_BASE_URL =
@@ -29,6 +31,109 @@ export const listRoles = actionClient.action(async () =>
 export const listInvitations = actionClient.action(async () =>
   backendApiClient.get("invitations").json<Invitation[]>(),
 );
+
+export const listPermissionCatalog = actionClient.action(async () =>
+  backendApiClient.get("auth/permissions").json<PermissionCatalogEntry[]>(),
+);
+
+export const assignMemberRole = actionClient
+  .inputSchema(z.object({ userId: z.string(), roleId: z.string().uuid() }))
+  .action(async ({ parsedInput }) =>
+    backendApiClient
+      .patch(`auth/members/${parsedInput.userId}/role`, {
+        json: { roleId: parsedInput.roleId },
+      })
+      .json<{ userId: string; roleId: string }>(),
+  );
+
+export const banMember = actionClient
+  .inputSchema(
+    z.object({ userId: z.string(), reason: z.string().trim().max(255).nullish() }),
+  )
+  .action(async ({ parsedInput }) =>
+    backendApiClient
+      .post(`auth/members/${parsedInput.userId}/ban`, {
+        json: { reason: parsedInput.reason ?? null },
+      })
+      .json<{ userId: string; isBanned: boolean }>(),
+  );
+
+export const unbanMember = actionClient
+  .inputSchema(z.object({ userId: z.string() }))
+  .action(async ({ parsedInput }) =>
+    backendApiClient
+      .post(`auth/members/${parsedInput.userId}/unban`)
+      .json<{ userId: string; isBanned: boolean }>(),
+  );
+
+const roleShape = {
+  name: z.string().trim().min(3).max(100),
+  description: z.string().trim().max(255).nullish(),
+  permissions: z.array(z.string()),
+};
+
+export const createRole = actionClient
+  .inputSchema(z.object(roleShape))
+  .action(async ({ parsedInput }) =>
+    backendApiClient.post("auth/roles", { json: parsedInput }).json<
+      Role & { pendingRequest: RolePermissionRequest | null }
+    >(),
+  );
+
+export const updateRole = actionClient
+  .inputSchema(
+    z.object({
+      roleId: z.string().uuid(),
+      name: roleShape.name.optional(),
+      description: roleShape.description,
+      permissions: roleShape.permissions.optional(),
+    }),
+  )
+  .action(async ({ parsedInput: { roleId, ...body } }) =>
+    backendApiClient.put(`auth/roles/${roleId}`, { json: body }).json<
+      Role & { pendingRequest: RolePermissionRequest | null }
+    >(),
+  );
+
+export const deleteRole = actionClient
+  .inputSchema(z.object({ roleId: z.string().uuid() }))
+  .action(async ({ parsedInput }) =>
+    backendApiClient
+      .delete(`auth/roles/${parsedInput.roleId}`)
+      .json<{ id: string }>(),
+  );
+
+export const listPendingRoleRequests = actionClient.action(async () =>
+  backendApiClient
+    .get("auth/role-permission-requests")
+    .json<RolePermissionRequest[]>(),
+);
+
+export const approveRoleRequest = actionClient
+  .inputSchema(z.object({ id: z.string().uuid() }))
+  .action(async ({ parsedInput }) =>
+    backendApiClient
+      .post(`auth/role-permission-requests/${parsedInput.id}/approve`)
+      .json<{ id: string; status: string }>(),
+  );
+
+export const rejectRoleRequest = actionClient
+  .inputSchema(z.object({ id: z.string().uuid() }))
+  .action(async ({ parsedInput }) =>
+    backendApiClient
+      .post(`auth/role-permission-requests/${parsedInput.id}/reject`)
+      .json<{ id: string; status: string }>(),
+  );
+
+export const setPermissionProtected = actionClient
+  .inputSchema(z.object({ permissionId: z.string().uuid(), protected: z.boolean() }))
+  .action(async ({ parsedInput }) =>
+    backendApiClient
+      .patch(`auth/permissions/${parsedInput.permissionId}/protect`, {
+        json: { protected: parsedInput.protected },
+      })
+      .json<{ id: string; protected: boolean }>(),
+  );
 
 export const createInvitations = actionClient
   .inputSchema(

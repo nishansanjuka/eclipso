@@ -87,15 +87,21 @@ import {
 } from '../../modules/return/infrastructure/schema/return.schema';
 
 import {
+  businessProtectedPermissions,
   permissions,
+  rolePermissionRequests,
+  rolePermissionRequestStatusEnum,
   rolePermissions,
   roles,
 } from '../../modules/auth/infrastructure/schema/access.schema';
 
 export const UsersTable = users;
 export const PermissionsTable = permissions;
+export const BusinessProtectedPermissionsTable = businessProtectedPermissions;
 export const RolesTable = roles;
 export const RolePermissionsTable = rolePermissions;
+export const RolePermissionRequestsTable = rolePermissionRequests;
+export const RolePermissionRequestStatusEnum = rolePermissionRequestStatusEnum;
 export const BusinessTable = businesses;
 export const BusinessUsersTable = businessUsers;
 export const BranchesTable = branches;

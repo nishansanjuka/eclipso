@@ -14,6 +14,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
+import { BannedScreen } from "@/components/team/banned-screen";
 import { getAccess } from "@/lib/actions/access";
 import { PERMISSIONS } from "@/lib/access/permissions";
 import { ACCESS_QUERY_KEY } from "@/lib/query-options/access";
@@ -30,7 +31,13 @@ export default async function WorkspaceLayout({
 
   // Resolve who the user is in THIS workspace once, for the whole tree, so the
   // sidebar and every page know `can()` on first paint (no gated-UI flash).
-  const access = (await getAccess())?.data;
+  const result = await getAccess();
+  // A ban is business-specific: the account is fine everywhere else, so this
+  // is a dedicated screen, not the generic "no access" redirect below.
+  if (result?.serverError?.code === "MEMBERSHIP_BANNED") {
+    return <BannedScreen />;
+  }
+  const access = result?.data;
   const business = access?.businesses.find((b) => b.slug === slug);
 
   // Not a member of the workspace named by the address: back to the picker.
@@ -63,7 +70,7 @@ export default async function WorkspaceLayout({
               <DynamicBreadcrumb />
             </div>
             <div className="ml-auto flex items-center gap-2 pr-4">
-              <kbd className="pointer-events-none hidden h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
+              <kbd className="pointer-events-none hidden h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-micro font-medium text-muted-foreground sm:flex">
                 <span className="text-xs">⌘</span>K
               </kbd>
               <ThemeToggle />

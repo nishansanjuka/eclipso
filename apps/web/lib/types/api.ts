@@ -112,6 +112,7 @@ export interface BusinessProfile {
   addressLine: string | null;
   city: string | null;
   postalCode: string | null;
+  imageUrl: string | null;
   vatRegistered: boolean;
   vatNumber: string | null;
   currency: string;
@@ -132,12 +133,34 @@ export interface Role {
 export interface Member {
   userId: string;
   name: string;
+  imageUrl: string | null;
   roleId: string | null;
   roleKey: string | null;
   roleName: string | null;
   joinedAt: string;
   /** Empty = works in every branch. */
   branchIds: string[];
+  isBanned: boolean;
+  bannedAt: string | null;
+  banReason: string | null;
+}
+
+export interface PermissionCatalogEntry {
+  id: string;
+  key: string;
+  label: string;
+  description: string;
+  protected: boolean;
+}
+
+export interface RolePermissionRequest {
+  id: string;
+  roleId: string;
+  roleName: string;
+  requestedPermissionIds: string[];
+  requestedBy: string;
+  requestedByName: string;
+  createdAt: string;
 }
 
 export type InvitationStatus = "pending" | "accepted" | "revoked" | "expired";

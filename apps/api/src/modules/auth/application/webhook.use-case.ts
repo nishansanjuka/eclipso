@@ -19,6 +19,9 @@ export class ClerkWebhookUseCase {
       case 'user.created':
         await this.webhookService.handleUserCreated(event);
         break;
+      case 'user.updated':
+        await this.webhookService.handleUserUpdated(event);
+        break;
       case 'user.deleted':
         await this.webhookService.handleUserDeleted(event);
         break;

@@ -33,7 +33,7 @@ export function AuthShell({
           <h2 className="text-[32px] leading-10 font-extrabold tracking-tight text-balance">
             {headline}
           </h2>
-          <p className="text-[15px] leading-[22px] text-muted-foreground">
+          <p className="text-lede text-muted-foreground">
             {intro}
           </p>
         </div>
@@ -45,7 +45,7 @@ export function AuthShell({
               </span>
               <span className="flex flex-col gap-0.5">
                 <span className="text-sm font-bold">{title}</span>
-                <span className="text-[13px] leading-[19px] text-muted-foreground">
+                <span className="text-sm leading-[19px] text-muted-foreground">
                   {text}
                 </span>
               </span>
@@ -53,7 +53,7 @@ export function AuthShell({
           ))}
         </ul>
         {note && (
-          <p className="mt-auto flex items-center gap-2.5 text-[13px] text-text-3">
+          <p className="mt-auto flex items-center gap-2.5 text-sm text-text-3">
             <CheckIcon className="size-4 text-ok" />
             {note}
           </p>
@@ -72,7 +72,7 @@ export function AuthShell({
 export function AuthHeading({ title, text }: { title: string; text?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <h1 className="text-[28px] leading-[34px] font-extrabold tracking-tight">
+      <h1 className="text-display font-extrabold tracking-tight">
         {title}
       </h1>
       {text && (

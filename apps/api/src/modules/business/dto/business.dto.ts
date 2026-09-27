@@ -12,6 +12,7 @@ export class BusinessDto {
   addressLine?: string | null;
   city?: string | null;
   postalCode?: string | null;
+  imageUrl?: string | null;
   vatRegistered?: boolean;
   vatNumber?: string | null;
   currency?: string;

@@ -43,10 +43,10 @@ export default async function PickerPage({
       </header>
       <main className="mx-auto flex w-full max-w-[640px] flex-1 flex-col gap-6 px-6 py-12">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-[28px] leading-[34px] font-extrabold tracking-tight">
+          <h1 className="text-display font-extrabold tracking-tight">
             Choose an organisation
           </h1>
-          <p className="text-[15px] text-muted-foreground">
+          <p className="text-lede text-muted-foreground">
             Each organisation has its own address. Pick the one you want to work
             in.
           </p>
@@ -55,7 +55,7 @@ export default async function PickerPage({
         {noAccess && (
           <p
             role="alert"
-            className="flex items-start gap-2 rounded-[10px] bg-bad-soft p-3 text-[13px] font-semibold text-bad"
+            className="flex items-start gap-2 rounded-[10px] bg-bad-soft p-3 text-sm font-semibold text-bad"
           >
             <AlertCircleIcon className="mt-0.5 size-4 shrink-0" />
             You do not have access to {noAccess}
@@ -80,7 +80,7 @@ export default async function PickerPage({
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate text-base font-bold">{b.name}</span>
-                  <span className="truncate text-[13px] text-muted-foreground">
+                  <span className="truncate text-sm text-muted-foreground">
                     {b.slug}.{rootDomain || "…"}
                   </span>
                 </span>

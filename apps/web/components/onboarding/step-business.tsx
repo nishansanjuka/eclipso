@@ -33,7 +33,7 @@ export const COUNTRIES = [
   { code: "US", name: "United States" },
 ] as const;
 
-const TYPES = [
+export const TYPES = [
   { value: "retail", label: "General retail" },
   { value: "service", label: "Services" },
   { value: "manufacturing", label: "Manufacturing" },

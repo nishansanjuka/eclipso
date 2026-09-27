@@ -81,8 +81,14 @@ export const updateBusinessSchema = z.object({
   businessType: z.enum(BusinessType).optional(),
   ...profileShape,
   ...taxShape,
+  /** Set after a successful presigned S3 upload. */
+  imageUrl: z.url().nullish(),
   /** Marks onboarding as finished. */
   onboardingCompleted: z.literal(true).optional(),
+});
+
+export const presignLogoUploadSchema = z.object({
+  contentType: z.enum(['image/png', 'image/jpeg', 'image/webp']),
 });
 
 export const createRoleSchema = z.object({
@@ -99,6 +105,14 @@ export const updateRoleSchema = z.object({
 
 export const assignRoleSchema = z.object({
   roleId: z.string().uuid('roleId must be a valid UUID'),
+});
+
+export const banMemberSchema = z.object({
+  reason: z.string().trim().max(255).nullish(),
+});
+
+export const setPermissionProtectedSchema = z.object({
+  protected: z.boolean(),
 });
 
 /** Parses untrusted input, turning zod failures into a 400. */
@@ -157,8 +171,15 @@ export class UpdateBusinessDto extends CreateBusinessDto {
   currency?: string;
   @ApiPropertyOptional({ enum: ['none', 'nearest_1', 'nearest_5'] })
   rounding?: string;
+  @ApiPropertyOptional({ nullable: true })
+  imageUrl?: string | null;
   @ApiPropertyOptional({ description: 'Set true when onboarding is finished' })
   onboardingCompleted?: true;
+}
+
+export class PresignLogoUploadDto {
+  @ApiProperty({ enum: ['image/png', 'image/jpeg', 'image/webp'] })
+  contentType: 'image/png' | 'image/jpeg' | 'image/webp';
 }
 
 export class CreateRoleDto {
@@ -182,4 +203,14 @@ export class UpdateRoleDto {
 export class AssignRoleDto {
   @ApiProperty({ format: 'uuid' })
   roleId: string;
+}
+
+export class BanMemberDto {
+  @ApiPropertyOptional({ nullable: true })
+  reason?: string | null;
+}
+
+export class SetPermissionProtectedDto {
+  @ApiProperty()
+  protected: boolean;
 }

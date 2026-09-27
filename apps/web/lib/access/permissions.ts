@@ -15,6 +15,7 @@ export const PERMISSIONS = {
   ROLE_READ: "role:read",
   ROLE_MANAGE: "role:manage",
   ROLE_ASSIGN: "role:assign",
+  MANAGE_PROTECTIVE_PERMISSIONS: "manage:protective-permissions",
   AUDIT_READ: "audit:read",
 
   PRODUCT_READ: "product:read",

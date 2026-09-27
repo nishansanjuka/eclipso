@@ -50,6 +50,34 @@
       "when": 1790458324738,
       "tag": "0006_orgs_and_invitations",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790529020456,
+      "tag": "0007_deep_rumiko_fujikawa",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790530167876,
+      "tag": "0008_fuzzy_senator_kelly",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790531730441,
+      "tag": "0009_cultured_greymalkin",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790539484718,
+      "tag": "0010_daffy_cloak",
+      "breakpoints": true
     }
   ]
 }

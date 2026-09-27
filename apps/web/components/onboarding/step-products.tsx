@@ -176,7 +176,7 @@ export function StepProducts({
           <span className="text-base font-bold">
             Drop your product CSV here
           </span>
-          <span className="text-[13px] text-muted-foreground">
+          <span className="text-sm text-muted-foreground">
             Or export one from your old system first
           </span>
           <span className="rounded-[10px] border border-input px-4 py-2 text-sm font-bold">
@@ -190,7 +190,7 @@ export function StepProducts({
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold">{fileName}</p>
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {formatNumber(rows.length)} rows ·{" "}
               {Math.max(1, Math.round(fileSize / 1024))} KB
             </p>
@@ -219,7 +219,7 @@ export function StepProducts({
         }}
       />
 
-      <div className="flex flex-wrap items-center gap-4 text-[13px]">
+      <div className="flex flex-wrap items-center gap-4 text-sm">
         <button
           type="button"
           onClick={downloadTemplate}
@@ -236,7 +236,7 @@ export function StepProducts({
           Add products by hand instead
         </button>
       </div>
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Nothing is saved until you press Import. Products you already have (same
         SKU) are left alone, so importing twice is safe.
       </p>
@@ -304,7 +304,7 @@ export function StepProducts({
           </div>
 
           {needsStore && (
-            <div className="flex flex-wrap items-center gap-3 rounded-[10px] bg-info-soft p-3 text-[13px] font-medium text-info">
+            <div className="flex flex-wrap items-center gap-3 rounded-[10px] bg-info-soft p-3 text-sm font-medium text-info">
               Stock on hand goes into
               <Select value={storeId} onValueChange={(v) => v && setStoreId(v)}>
                 <SelectTrigger
@@ -345,10 +345,10 @@ export function StepProducts({
           </p>
           {result.skipped.length > 0 && (
             <>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {formatNumber(result.skipped.length)} rows were left out:
               </p>
-              <ul className="max-h-44 divide-y overflow-y-auto rounded-[10px] border text-[13px]">
+              <ul className="max-h-44 divide-y overflow-y-auto rounded-[10px] border text-sm">
                 {result.skipped.slice(0, 50).map((s) => (
                   <li key={s.row} className="flex gap-3 px-3 py-2">
                     <span className="w-16 shrink-0 font-semibold">

@@ -20,11 +20,17 @@ import { AccessManagementUseCase } from '../application/access-management.use-ca
 import {
   AssignRoleDto,
   assignRoleSchema,
+  BanMemberDto,
+  banMemberSchema,
   CreateBusinessDto,
   createBusinessSchema,
   CreateRoleDto,
   createRoleSchema,
   parseBody,
+  PresignLogoUploadDto,
+  presignLogoUploadSchema,
+  SetPermissionProtectedDto,
+  setPermissionProtectedSchema,
   UpdateBusinessDto,
   updateBusinessSchema,
   UpdateRoleDto,
@@ -134,6 +140,18 @@ export class AuthController {
   }
 
   @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.PRESIGN_LOGO_UPLOAD.operationId,
+    description: AUTH_API_OPERATIONS.PRESIGN_LOGO_UPLOAD.description,
+  })
+  @ApiBody({ type: PresignLogoUploadDto })
+  @RequirePermissions(PermissionType.BUSINESS_MANAGE)
+  @Post('business/logo/presign')
+  presignLogoUpload(@User() user: AuthUserObject, @Body() body: unknown) {
+    const { contentType } = parseBody(presignLogoUploadSchema, body);
+    return this.useCase.presignLogoUpload(user, contentType);
+  }
+
+  @ApiOperation({
     operationId: AUTH_API_OPERATIONS.DELETE_BUSINESS.operationId,
     description: AUTH_API_OPERATIONS.DELETE_BUSINESS.description,
   })
@@ -151,8 +169,75 @@ export class AuthController {
   })
   @RequirePermissions(PermissionType.ROLE_READ)
   @Get('permissions')
-  listPermissions() {
-    return this.useCase.listPermissionCatalog();
+  listPermissions(@User() user: AuthUserObject) {
+    return this.useCase.listPermissionCatalog(user);
+  }
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.SET_PERMISSION_PROTECTED.operationId,
+    description: AUTH_API_OPERATIONS.SET_PERMISSION_PROTECTED.description,
+  })
+  @ApiParam({ name: 'permissionId', type: String })
+  @ApiBody({ type: SetPermissionProtectedDto })
+  @RequirePermissions(PermissionType.MANAGE_PROTECTIVE_PERMISSIONS)
+  @Patch('permissions/:permissionId/protect')
+  setPermissionProtected(
+    @User() user: AuthUserObject,
+    @Param('permissionId', ParseUUIDPipe) permissionId: string,
+    @Body() body: unknown,
+  ) {
+    const { protected: protectedFlag } = parseBody(
+      setPermissionProtectedSchema,
+      body,
+    );
+    return this.useCase.setPermissionProtected(
+      user,
+      permissionId,
+      protectedFlag,
+    );
+  }
+
+  @ApiOperation({
+    operationId:
+      AUTH_API_OPERATIONS.LIST_ROLE_PERMISSION_REQUESTS.operationId,
+    description: AUTH_API_OPERATIONS.LIST_ROLE_PERMISSION_REQUESTS.description,
+  })
+  @RequirePermissions(PermissionType.MANAGE_PROTECTIVE_PERMISSIONS)
+  @Get('role-permission-requests')
+  listRolePermissionRequests(@User() user: AuthUserObject) {
+    return this.useCase.listPendingRequests(user);
+  }
+
+  @ApiOperation({
+    operationId:
+      AUTH_API_OPERATIONS.REVIEW_ROLE_PERMISSION_REQUEST.operationId,
+    description:
+      AUTH_API_OPERATIONS.REVIEW_ROLE_PERMISSION_REQUEST.description,
+  })
+  @ApiParam({ name: 'requestId', type: String })
+  @RequirePermissions(PermissionType.MANAGE_PROTECTIVE_PERMISSIONS)
+  @Post('role-permission-requests/:requestId/approve')
+  approveRolePermissionRequest(
+    @User() user: AuthUserObject,
+    @Param('requestId', ParseUUIDPipe) requestId: string,
+  ) {
+    return this.useCase.reviewPermissionRequest(user, requestId, true);
+  }
+
+  @ApiOperation({
+    operationId:
+      AUTH_API_OPERATIONS.REVIEW_ROLE_PERMISSION_REQUEST.operationId,
+    description:
+      AUTH_API_OPERATIONS.REVIEW_ROLE_PERMISSION_REQUEST.description,
+  })
+  @ApiParam({ name: 'requestId', type: String })
+  @RequirePermissions(PermissionType.MANAGE_PROTECTIVE_PERMISSIONS)
+  @Post('role-permission-requests/:requestId/reject')
+  rejectRolePermissionRequest(
+    @User() user: AuthUserObject,
+    @Param('requestId', ParseUUIDPipe) requestId: string,
+  ) {
+    return this.useCase.reviewPermissionRequest(user, requestId, false);
   }
 
   @ApiOperation({
@@ -265,5 +350,36 @@ export class AuthController {
   @Delete('members/:userId')
   removeMember(@User() user: AuthUserObject, @Param('userId') userId: string) {
     return this.useCase.removeMember(user, userId);
+  }
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.BAN_MEMBER.operationId,
+    description: AUTH_API_OPERATIONS.BAN_MEMBER.description,
+  })
+  @ApiParam({ name: 'userId', type: String })
+  @ApiBody({ type: BanMemberDto })
+  @RequirePermissions(PermissionType.MEMBER_MANAGE)
+  @Post('members/:userId/ban')
+  banMember(
+    @User() user: AuthUserObject,
+    @Param('userId') userId: string,
+    @Body() body: unknown,
+  ) {
+    const { reason } = parseBody(banMemberSchema, body);
+    return this.useCase.banMember(user, userId, reason);
+  }
+
+  @ApiOperation({
+    operationId: AUTH_API_OPERATIONS.UNBAN_MEMBER.operationId,
+    description: AUTH_API_OPERATIONS.UNBAN_MEMBER.description,
+  })
+  @ApiParam({ name: 'userId', type: String })
+  @RequirePermissions(PermissionType.MEMBER_MANAGE)
+  @Post('members/:userId/unban')
+  unbanMember(
+    @User() user: AuthUserObject,
+    @Param('userId') userId: string,
+  ) {
+    return this.useCase.unbanMember(user, userId);
   }
 }

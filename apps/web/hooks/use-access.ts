@@ -25,6 +25,7 @@ export function useAccess() {
   return {
     can,
     isLoading,
+    userId: data?.userId ?? null,
     roleKey: data?.roleKey ?? null,
     businesses: data?.businesses ?? [],
     activeBusinessId: data?.activeBusinessId ?? null,

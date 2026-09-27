@@ -40,7 +40,7 @@ interface StoreDraft {
   registers: number;
 }
 
-const CURRENCIES = [
+export const CURRENCIES = [
   { code: "LKR", label: "Sri Lanka rupee · Rs" },
   { code: "INR", label: "Indian rupee · ₹" },
   { code: "MVR", label: "Maldivian rufiyaa · MVR" },
@@ -50,7 +50,7 @@ const CURRENCIES = [
   { code: "USD", label: "US dollar · $" },
 ] as const;
 
-const ROUNDING = [
+export const ROUNDING = [
   { value: "none", label: "No rounding", hint: "Totals show to the cent" },
   {
     value: "nearest_1",
@@ -226,7 +226,7 @@ export function StepStores({
                   {s.kind === "warehouse" ? (
                     <Badge variant="info">Stock only, no register</Badge>
                   ) : (
-                    <label className="flex items-center gap-2 text-[13px] font-semibold">
+                    <label className="flex items-center gap-2 text-sm font-semibold">
                       Registers
                       <Input
                         type="number"
@@ -290,7 +290,7 @@ export function StepStores({
               Add a warehouse
             </Button>
           </div>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Each register is one till running at the same time. You can add or
             remove them whenever you like.
           </p>
@@ -303,7 +303,7 @@ export function StepStores({
               <span className="text-sm font-bold">
                 This business is VAT registered
               </span>
-              <span className="text-[13px] text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 Turn this off and Aperture never shows a tax line, on screen or
                 on a receipt.
               </span>
@@ -387,7 +387,7 @@ export function StepStores({
             </Field>
           </div>
 
-          <p className="flex items-start gap-2 rounded-[10px] bg-info-soft p-3 text-[13px] font-medium text-info">
+          <p className="flex items-start gap-2 rounded-[10px] bg-info-soft p-3 text-sm font-medium text-info">
             <InfoIcon className="mt-0.5 size-4 shrink-0" />
             Shelf prices are entered without VAT. The till adds it and breaks it
             out by rate on the receipt.

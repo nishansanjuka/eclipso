@@ -263,7 +263,7 @@ export function StepTeam({ onBack }: { onBack: () => void }) {
             </div>
           </section>
 
-          <p className="flex items-start gap-2 rounded-[10px] bg-info-soft p-3 text-[13px] font-medium text-info">
+          <p className="flex items-start gap-2 rounded-[10px] bg-info-soft p-3 text-sm font-medium text-info">
             <InfoIcon className="mt-0.5 size-4 shrink-0" />
             Each person gets an email with a link that works once. It opens your
             workspace, where they create their account.
@@ -273,7 +273,7 @@ export function StepTeam({ onBack }: { onBack: () => void }) {
 
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-bold">What each role can do</h2>
-        <ul className="grid gap-2 text-[13px]">
+        <ul className="grid gap-2 text-sm">
           {roles.map((r) => (
             <li key={r.id} className="flex gap-2">
               <span className="w-28 shrink-0 font-bold">{r.name}</span>
@@ -281,7 +281,7 @@ export function StepTeam({ onBack }: { onBack: () => void }) {
             </li>
           ))}
         </ul>
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Roles can be changed per person later, and a manager can be limited to
           one store.
         </p>

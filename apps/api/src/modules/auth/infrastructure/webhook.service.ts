@@ -16,6 +16,16 @@ export class ClerkWebhookService {
     await this.userService.createUser({
       clerkId: userData.id,
       name: userData.first_name + ' ' + userData.last_name,
+      imageUrl: userData.image_url || null,
+    });
+  }
+
+  async handleUserUpdated(event: UserWebhookEvent) {
+    const userData = event.data as UserJSON;
+
+    await this.userService.updateUser(userData.id, {
+      name: userData.first_name + ' ' + userData.last_name,
+      imageUrl: userData.image_url || null,
     });
   }
 

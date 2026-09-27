@@ -58,7 +58,7 @@ export const createBusiness = actionClient
   .inputSchema(
     z.object({
       name: z.string().trim().min(3).max(100),
-      slug: z.string().trim().toLowerCase(),
+      slug: z.string().trim().toLowerCase().optional(),
       businessType: z.enum(["retail", "service", "manufacturing"]),
       ...profileFields,
     }),

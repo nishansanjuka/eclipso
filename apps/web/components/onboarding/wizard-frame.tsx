@@ -48,7 +48,7 @@ export function WizardFrame({
       {/* Compact bar for small screens */}
       <header className="flex items-center justify-between gap-3 border-b bg-surface px-4 py-3 lg:hidden">
         <Logo />
-        <p className="text-[13px] font-semibold text-muted-foreground">
+        <p className="text-sm font-semibold text-muted-foreground">
           Step {step + 1} of {STEPS.length} · {STEPS[step].label}
         </p>
         <div className="flex items-center gap-1.5">
@@ -61,7 +61,7 @@ export function WizardFrame({
         <Logo />
 
         <div className="flex flex-col gap-1">
-          <p className="text-[13px] font-semibold text-accent-text">
+          <p className="text-sm font-semibold text-accent-text">
             Setting up
           </p>
           <h2 className="text-2xl leading-8 font-extrabold tracking-tight text-balance">
@@ -97,7 +97,7 @@ export function WizardFrame({
                 >
                   <span
                     className={cn(
-                      "z-10 flex size-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold",
+                      "z-10 flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold",
                       done && "bg-ok text-background",
                       current && "bg-primary text-primary-foreground",
                       !done && !current && "border-2 border-input text-text-3",
@@ -113,7 +113,7 @@ export function WizardFrame({
         </ol>
 
         <div className="mt-auto flex flex-col gap-4">
-          <p className="text-[13px] leading-5 text-muted-foreground">
+          <p className="text-sm leading-5 text-muted-foreground">
             Everything here can be changed later in Settings. Nothing is locked
             in.
           </p>
@@ -161,13 +161,13 @@ export function StepHeading({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <p className="text-[13px] font-semibold text-accent-text">
+      <p className="text-sm font-semibold text-accent-text">
         Step {index + 1} of {STEPS.length}
       </p>
-      <h1 className="text-[28px] leading-[34px] font-extrabold tracking-tight text-balance">
+      <h1 className="text-display font-extrabold tracking-tight text-balance">
         {title}
       </h1>
-      <p className="max-w-[62ch] text-[15px] leading-[22px] text-muted-foreground">
+      <p className="max-w-[62ch] text-lede text-muted-foreground">
         {text}
       </p>
     </div>
@@ -202,7 +202,7 @@ export function StepFooter({
 
   return createPortal(
     <div className="mx-auto flex w-full max-w-[1040px] flex-wrap items-center justify-between gap-3">
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Step {index + 1} of {STEPS.length} · about {minutes}{" "}
         {minutes === 1 ? "minute" : "minutes"} left
       </p>

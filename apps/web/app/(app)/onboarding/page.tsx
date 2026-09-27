@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import {
   OnboardingWizard,
   type OnboardingInitial,
@@ -7,7 +8,10 @@ import { getOnboardingState } from "@/lib/actions/onboarding";
 
 /**
  * Resumes an unfinished setup if the user owns one; `?new=1` starts a fresh
- * business instead (how an existing owner adds another one).
+ * business instead (how an existing owner adds another one). A user who is
+ * already fully set up and did not ask for `?new=1` has no reason to be
+ * here — send them to `/`, which knows whether to drop them straight into
+ * their one workspace or show the picker.
  */
 export default async function OnboardingPage({
   searchParams,
@@ -26,6 +30,8 @@ export default async function OnboardingPage({
       const state = (await getOnboardingState({ orgId: unfinished.orgId }))
         ?.data;
       if (state) initial = { orgId: unfinished.orgId, ...state };
+    } else if (access?.businesses.length) {
+      redirect("/");
     }
   }
 

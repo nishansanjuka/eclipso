@@ -1,14 +1,17 @@
 import z from 'zod';
 import databaseConfig, { DatabaseConfig } from './database/databse.config';
 import authConfig, { AuthConfig } from '../modules/auth/auth.config';
+import storageConfig, { StorageConfig } from './services/storage.config';
 export interface Configuration {
   database: DatabaseConfig;
   auth: AuthConfig;
+  storage: StorageConfig;
 }
 
 export const configuration = (): Configuration => ({
   database: databaseConfig(),
   auth: authConfig(),
+  storage: storageConfig(),
 });
 
 export const configSchema = z.object({
@@ -27,6 +30,14 @@ export const configSchema = z.object({
   WEB_PROTOCOL: z.enum(['http', 'https']).default('http'),
   /** How long an invitation link works. */
   INVITATION_TTL_DAYS: z.coerce.number().int().min(1).max(30).default(7),
+
+  /** S3 bucket for logo/image uploads. Unset disables the upload endpoint. */
+  AWS_REGION: z.string().optional(),
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_S3_BUCKET: z.string().optional(),
+  /** Base URL objects are served from; defaults to the bucket's own S3 URL. */
+  AWS_S3_PUBLIC_URL: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof configSchema>;

@@ -1,4 +1,5 @@
 import {
+  boolean,
   foreignKey,
   index,
   pgTable,
@@ -31,6 +32,18 @@ export const businessUsers = pgTable(
       onDelete: 'restrict',
     }),
     joinedAt: timestamp('joined_at').defaultNow().notNull(),
+    /**
+     * Per-business ban, custom to Eclipso (not Clerk's). A banned member keeps
+     * their row and role but every request in this business is refused until
+     * unbanned. An owner can never be banned (see `assertOwnerRemains`-style
+     * guard in `banMember`).
+     */
+    isBanned: boolean('is_banned').notNull().default(false),
+    bannedAt: timestamp('banned_at'),
+    bannedBy: text('banned_by').references(() => users.clerkId, {
+      onDelete: 'set null',
+    }),
+    banReason: text('ban_reason'),
   },
   (t) => [primaryKey({ columns: [t.userClerkId, t.businessId] })],
 );

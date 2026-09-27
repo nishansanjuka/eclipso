@@ -27,7 +27,7 @@ function TrendPill({ percent, label, invert }: KpiTrend) {
   // No baseline to compare against — a "+100%" here would be fiction.
   if (percent === null || !Number.isFinite(percent)) {
     return (
-      <span className="text-[10px] font-medium text-muted-foreground">
+      <span className="text-micro font-medium text-muted-foreground">
         {label ?? "no prior data"}
       </span>
     );
@@ -40,7 +40,7 @@ function TrendPill({ percent, label, invert }: KpiTrend) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
+        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-micro font-semibold tabular-nums",
         flat
           ? "bg-muted text-muted-foreground"
           : good

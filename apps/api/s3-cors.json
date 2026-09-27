@@ -1,0 +1,14 @@
+[
+  {
+    "AllowedOrigins": [
+      "http://dev.local:3000",
+      "http://*.dev.local:3000",
+      "https://eclipso.nishansanjuka.me",
+      "https://*.eclipso.nishansanjuka.me"
+    ],
+    "AllowedMethods": ["PUT"],
+    "AllowedHeaders": ["Content-Type"],
+    "ExposeHeaders": [],
+    "MaxAgeSeconds": 3600
+  }
+]

@@ -23,6 +23,8 @@ export const businesses = pgTable('businesses', {
   addressLine: text('address_line'),
   city: text('city'),
   postalCode: text('postal_code'),
+  /** Logo shown in the workspace switcher and on receipts. */
+  imageUrl: text('image_url'),
 
   // Tax and money (onboarding step 2)
   vatRegistered: boolean('vat_registered').notNull().default(false),

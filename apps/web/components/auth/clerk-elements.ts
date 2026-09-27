@@ -11,7 +11,7 @@ export const clerkFormElements = {
   footer: "bg-transparent",
   socialButtonsBlockButton:
     "h-12 rounded-xl border border-input bg-surface text-sm font-bold shadow-none",
-  formFieldLabel: "text-[13px] font-semibold",
+  formFieldLabel: "text-sm font-semibold",
   formFieldInput:
     "h-12 rounded-xl border border-input bg-surface px-3 text-[15px] shadow-none focus:border-primary focus:ring-4 focus:ring-accent-soft",
   formButtonPrimary:

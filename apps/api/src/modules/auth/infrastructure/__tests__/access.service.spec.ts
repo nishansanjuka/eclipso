@@ -139,6 +139,15 @@ describe('AccessService branch resolution', () => {
     });
   });
 
+  it('refuses a banned member with a distinct, machine-readable code', async () => {
+    const banned = membership({ isBanned: true });
+    await expect(
+      serviceFor(banned).resolve('user_1', 'biz_1'),
+    ).rejects.toMatchObject({
+      response: { code: 'MEMBERSHIP_BANNED' },
+    });
+  });
+
   it('a user in several businesses with no header gets a business-less context', async () => {
     const repository = {
       findMembership: jest.fn(),

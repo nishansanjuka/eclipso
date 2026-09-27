@@ -16,6 +16,7 @@ export enum PermissionType {
   ROLE_READ = 'role:read',
   ROLE_MANAGE = 'role:manage',
   ROLE_ASSIGN = 'role:assign',
+  MANAGE_PROTECTIVE_PERMISSIONS = 'manage:protective-permissions',
   AUDIT_READ = 'audit:read',
 
   // Catalog
@@ -100,6 +101,11 @@ export const PermissionTypeMetaData: Record<
   [PermissionType.ROLE_ASSIGN]: {
     label: 'Assign Roles',
     description: 'Change the role of a member',
+  },
+  [PermissionType.MANAGE_PROTECTIVE_PERMISSIONS]: {
+    label: 'Manage Protected Permissions',
+    description:
+      'Mark permissions as protected, and approve or reject requests to add a protected permission to a role. Owners have this by default.',
   },
   [PermissionType.AUDIT_READ]: {
     label: 'View Audit Logs',

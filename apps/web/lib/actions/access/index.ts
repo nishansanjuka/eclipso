@@ -19,6 +19,7 @@ export interface BusinessSummary {
   slug: string;
   name: string;
   businessType: string;
+  imageUrl: string | null;
   roleKey: string | null;
   /** Null while the owner has not finished onboarding. */
   onboardingCompletedAt: string | null;

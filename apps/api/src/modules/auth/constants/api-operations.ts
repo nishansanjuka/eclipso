@@ -29,6 +29,11 @@ export const AUTH_API_OPERATIONS = {
     description:
       'Updates the profile, workspace address and tax settings of the current business, and can mark onboarding as finished. Requires business:manage.',
   },
+  PRESIGN_LOGO_UPLOAD: {
+    operationId: 'presignLogoUpload',
+    description:
+      'Returns a short-lived S3 URL the browser can upload the business logo to directly, and the public URL it will be served from once uploaded. Requires business:manage.',
+  },
   DELETE_BUSINESS: {
     operationId: 'deleteBusiness',
     description:
@@ -78,5 +83,29 @@ export const AUTH_API_OPERATIONS = {
     operationId: 'removeMember',
     description:
       'Removes a member from the current business. You cannot remove a member who outranks you or the last owner. Requires member:manage.',
+  },
+  BAN_MEMBER: {
+    operationId: 'banMember',
+    description:
+      'Bans a member from this business only (a custom, per-business ban, not a Clerk account ban). An owner can never be banned. Requires member:manage.',
+  },
+  UNBAN_MEMBER: {
+    operationId: 'unbanMember',
+    description: 'Lifts a ban on a member of this business. Requires member:manage.',
+  },
+  LIST_ROLE_PERMISSION_REQUESTS: {
+    operationId: 'listRolePermissionRequests',
+    description:
+      'Lists pending requests to add protected permissions to a custom role. Requires manage:protective-permissions.',
+  },
+  REVIEW_ROLE_PERMISSION_REQUEST: {
+    operationId: 'reviewRolePermissionRequest',
+    description:
+      'Approves or rejects a pending protected-permission request. Requires manage:protective-permissions.',
+  },
+  SET_PERMISSION_PROTECTED: {
+    operationId: 'setPermissionProtected',
+    description:
+      'Marks a permission as protected or unprotected. Adding a protected permission to a role needs approval unless the actor holds manage:protective-permissions. Requires manage:protective-permissions.',
   },
 } as const;

@@ -8,7 +8,13 @@ import {
   memberBranches,
 } from '../../../shared/database/relations/business.user.schema';
 import { users } from '../../users/infrastructure/schema/user.schema';
-import { permissions, rolePermissions, roles } from './schema/access.schema';
+import {
+  businessProtectedPermissions,
+  permissions,
+  rolePermissionRequests,
+  rolePermissions,
+  roles,
+} from './schema/access.schema';
 import {
   ALL_PERMISSIONS,
   PermissionType,
@@ -44,6 +50,7 @@ export interface MembershipRecord {
   roleId: string | null;
   roleKey: string | null;
   permissions: PermissionType[];
+  isBanned: boolean;
   /**
    * Branches the member has been limited to (any status), or null when they
    * may work in every branch.
@@ -150,6 +157,7 @@ export class AccessRepository {
         roleId: roles.id,
         roleKey: roles.key,
         permission: permissions.key,
+        isBanned: businessUsers.isBanned,
       })
       .from(businessUsers)
       .innerJoin(businesses, eq(businesses.orgId, businessUsers.businessId))
@@ -167,7 +175,7 @@ export class AccessRepository {
       // Either not a member, or a member without a role: both mean no access,
       // but the second still needs to be distinguishable for callers.
       const [row] = await db
-        .select({ businessId: businesses.id })
+        .select({ businessId: businesses.id, isBanned: businessUsers.isBanned })
         .from(businessUsers)
         .innerJoin(businesses, eq(businesses.orgId, businessUsers.businessId))
         .where(
@@ -184,6 +192,7 @@ export class AccessRepository {
         roleId: null,
         roleKey: null,
         permissions: [],
+        isBanned: row.isBanned,
         ...(await this.loadBranchAccess(row.businessId, userId, orgId, db)),
       };
     }
@@ -197,6 +206,7 @@ export class AccessRepository {
       permissions: rows
         .map((r) => r.permission)
         .filter((p): p is PermissionType => p !== null),
+      isBanned: rows[0].isBanned,
       ...(await this.loadBranchAccess(rows[0].businessId, userId, orgId, db)),
     };
   }
@@ -266,6 +276,7 @@ export class AccessRepository {
         slug: businesses.slug,
         name: businesses.name,
         businessType: businesses.businessType,
+        imageUrl: businesses.imageUrl,
         onboardingCompletedAt: businesses.onboardingCompletedAt,
         roleKey: roles.key,
       })
@@ -280,10 +291,14 @@ export class AccessRepository {
       .select({
         userId: users.clerkId,
         name: users.name,
+        imageUrl: users.imageUrl,
         roleId: roles.id,
         roleKey: roles.key,
         roleName: roles.name,
         joinedAt: businessUsers.joinedAt,
+        isBanned: businessUsers.isBanned,
+        bannedAt: businessUsers.bannedAt,
+        banReason: businessUsers.banReason,
       })
       .from(businessUsers)
       .innerJoin(users, eq(users.clerkId, businessUsers.userClerkId))
@@ -574,5 +589,199 @@ export class AccessRepository {
     await db
       .insert(rolePermissions)
       .values(rows.map((p) => ({ roleId, permissionId: p.id })));
+  }
+
+  /** Adds permissions (by id) to a role without touching the ones already there. */
+  async addRolePermissionsByIds(
+    roleId: string,
+    permissionIds: string[],
+    db: Executor = this.db,
+  ) {
+    if (permissionIds.length === 0) return;
+    await db
+      .insert(rolePermissions)
+      .values(permissionIds.map((permissionId) => ({ roleId, permissionId })))
+      .onConflictDoNothing();
+  }
+
+  // ── protected permissions (per-business) ────────────────────────────────
+
+  /** The subset of the given keys this business currently marks protected. */
+  async protectedKeysWithin(
+    orgId: string,
+    keys: PermissionType[],
+    db: Executor = this.db,
+  ): Promise<Set<PermissionType>> {
+    if (keys.length === 0) return new Set();
+    const rows = await db
+      .select({ key: permissions.key })
+      .from(permissions)
+      .innerJoin(
+        businessProtectedPermissions,
+        and(
+          eq(businessProtectedPermissions.permissionId, permissions.id),
+          eq(businessProtectedPermissions.businessId, orgId),
+        ),
+      )
+      .where(inArray(permissions.key, keys));
+    return new Set(rows.map((r) => r.key as PermissionType));
+  }
+
+  async setPermissionProtected(
+    orgId: string,
+    permissionId: string,
+    protectedFlag: boolean,
+    db: Executor = this.db,
+  ) {
+    if (protectedFlag) {
+      await db
+        .insert(businessProtectedPermissions)
+        .values({ businessId: orgId, permissionId })
+        .onConflictDoNothing();
+    } else {
+      await db
+        .delete(businessProtectedPermissions)
+        .where(
+          and(
+            eq(businessProtectedPermissions.businessId, orgId),
+            eq(businessProtectedPermissions.permissionId, permissionId),
+          ),
+        );
+    }
+  }
+
+  /** Bare catalog rows (id/key/label/description), no per-business flag. */
+  async listPermissionRows(db: Executor = this.db) {
+    return db.select().from(permissions);
+  }
+
+  /** Catalog rows with `protected` resolved for one business. */
+  async listPermissionCatalogForBusiness(orgId: string, db: Executor = this.db) {
+    const rows = await db
+      .select({
+        id: permissions.id,
+        key: permissions.key,
+        label: permissions.label,
+        description: permissions.description,
+        protected: sql<boolean>`${businessProtectedPermissions.permissionId} is not null`,
+      })
+      .from(permissions)
+      .leftJoin(
+        businessProtectedPermissions,
+        and(
+          eq(businessProtectedPermissions.permissionId, permissions.id),
+          eq(businessProtectedPermissions.businessId, orgId),
+        ),
+      );
+    return rows;
+  }
+
+  async findPermissionById(id: string, db: Executor = this.db) {
+    const [row] = await db
+      .select()
+      .from(permissions)
+      .where(eq(permissions.id, id));
+    return row ?? null;
+  }
+
+  // ── role permission requests ────────────────────────────────────────────
+
+  async createRolePermissionRequest(
+    params: { roleId: string; permissionIds: string[]; requestedBy: string },
+    db: Executor = this.db,
+  ) {
+    const [row] = await db
+      .insert(rolePermissionRequests)
+      .values({
+        roleId: params.roleId,
+        requestedPermissionIds: params.permissionIds,
+        requestedBy: params.requestedBy,
+      })
+      .returning();
+    return row;
+  }
+
+  /** Pending requests against roles owned by this business. */
+  async listPendingRequests(orgId: string, db: Executor = this.db) {
+    return db
+      .select({
+        id: rolePermissionRequests.id,
+        roleId: rolePermissionRequests.roleId,
+        roleName: roles.name,
+        requestedPermissionIds: rolePermissionRequests.requestedPermissionIds,
+        requestedBy: rolePermissionRequests.requestedBy,
+        requestedByName: users.name,
+        createdAt: rolePermissionRequests.createdAt,
+      })
+      .from(rolePermissionRequests)
+      .innerJoin(roles, eq(roles.id, rolePermissionRequests.roleId))
+      .innerJoin(users, eq(users.clerkId, rolePermissionRequests.requestedBy))
+      .where(
+        and(
+          eq(roles.businessId, orgId),
+          eq(rolePermissionRequests.status, 'pending'),
+        ),
+      );
+  }
+
+  async findPendingRequest(id: string, orgId: string, db: Executor = this.db) {
+    const [row] = await db
+      .select({
+        id: rolePermissionRequests.id,
+        roleId: rolePermissionRequests.roleId,
+        requestedPermissionIds: rolePermissionRequests.requestedPermissionIds,
+        status: rolePermissionRequests.status,
+      })
+      .from(rolePermissionRequests)
+      .innerJoin(roles, eq(roles.id, rolePermissionRequests.roleId))
+      .where(
+        and(eq(rolePermissionRequests.id, id), eq(roles.businessId, orgId)),
+      );
+    return row ?? null;
+  }
+
+  async reviewRequest(
+    id: string,
+    status: 'approved' | 'rejected',
+    reviewedBy: string,
+    db: Executor = this.db,
+  ) {
+    await db
+      .update(rolePermissionRequests)
+      .set({ status, reviewedBy, reviewedAt: new Date() })
+      .where(eq(rolePermissionRequests.id, id));
+  }
+
+  // ── bans ─────────────────────────────────────────────────────────────────
+
+  async setMemberBan(
+    orgId: string,
+    userId: string,
+    params: { banned: boolean; bannedBy?: string; reason?: string | null },
+    db: Executor = this.db,
+  ) {
+    await db
+      .update(businessUsers)
+      .set(
+        params.banned
+          ? {
+              isBanned: true,
+              bannedAt: new Date(),
+              bannedBy: params.bannedBy,
+              banReason: params.reason ?? null,
+            }
+          : {
+              isBanned: false,
+              bannedAt: null,
+              bannedBy: null,
+              banReason: null,
+            },
+      )
+      .where(
+        and(
+          eq(businessUsers.businessId, orgId),
+          eq(businessUsers.userClerkId, userId),
+        ),
+      );
   }
 }

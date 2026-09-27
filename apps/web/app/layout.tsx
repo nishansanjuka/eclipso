@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { Raleway } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
@@ -14,7 +14,7 @@ import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/query-provider";
 import "./globals.css";
 
-const manrope = Manrope({
+const manrope = Raleway({
   variable: "--font-manrope",
   weight: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],

@@ -3,16 +3,21 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  BanIcon,
   CheckCircle2Icon,
   ClockIcon,
   CopyIcon,
+  CrownIcon,
+  Loader2Icon,
   MailIcon,
   PlusIcon,
   SendIcon,
+  ShieldCheckIcon,
   XCircleIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DialogWrapper } from "@/components/shared/dialog-wrapper";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,22 +29,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAccess } from "@/hooks/use-access";
 import { PERMISSIONS } from "@/lib/access/permissions";
 import { handleActionResponse } from "@/lib/action-client";
 import {
+  assignMemberRole,
+  banMember,
   createInvitations,
   resendInvitation,
   revokeInvitation,
+  unbanMember,
 } from "@/lib/actions/team";
 import {
   invitationsQueryOptions,
+  membersQueryOptions,
   rolesQueryOptions,
 } from "@/lib/query-options/team";
 import type {
   Invitation,
   InvitationResult,
   InvitationStatus,
+  Member,
 } from "@/lib/types/api";
 import { useDialogStore } from "@/stores";
 
@@ -69,6 +80,15 @@ const date = (iso: string | null) =>
         year: "numeric",
       })
     : "—";
+
+const initials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 
 function InviteForm({ onSent }: { onSent: () => void }) {
   const queryClient = useQueryClient();
@@ -263,6 +283,192 @@ function InviteForm({ onSent }: { onSent: () => void }) {
   );
 }
 
+function MembersTable() {
+  const { can, userId } = useAccess();
+  const queryClient = useQueryClient();
+  const canManage = can(PERMISSIONS.MEMBER_MANAGE);
+  const canAssign = can(PERMISSIONS.ROLE_ASSIGN);
+
+  const members = useQuery(membersQueryOptions);
+  const { data: roles = [] } = useQuery(rolesQueryOptions);
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["team", "members"] });
+
+  const assignRole = useMutation({
+    mutationFn: async (vars: { userId: string; roleId: string }) => {
+      const response = handleActionResponse(await assignMemberRole(vars));
+      if (!response.success) throw new Error(response.error.message);
+      return response.data;
+    },
+    onSuccess: async () => {
+      await invalidate();
+      toast.success("Role updated");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const ban = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = handleActionResponse(await banMember({ userId }));
+      if (!response.success) throw new Error(response.error.message);
+      return response.data;
+    },
+    onSuccess: async () => {
+      await invalidate();
+      toast.success("Member banned from this workspace");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const unban = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = handleActionResponse(await unbanMember({ userId }));
+      if (!response.success) throw new Error(response.error.message);
+      return response.data;
+    },
+    onSuccess: async () => {
+      await invalidate();
+      toast.success("Ban lifted");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const columns: Column<Member>[] = [
+    {
+      header: "Member",
+      accessorKey: "name",
+      cell: (m) => (
+        <span className="flex items-center gap-2 font-semibold">
+          <Avatar size="sm">
+            <AvatarImage src={m.imageUrl ?? undefined} alt={m.name} />
+            <AvatarFallback>{initials(m.name)}</AvatarFallback>
+          </Avatar>
+          {m.roleKey === "owner" && (
+            <CrownIcon className="size-4 text-warn" />
+          )}
+          {m.name}
+        </span>
+      ),
+    },
+    {
+      header: "Role",
+      accessorKey: "roleName",
+      cell: (m) => {
+        const updatingThisRow =
+          assignRole.isPending && assignRole.variables?.userId === m.userId;
+        return canAssign && m.roleKey !== "owner" && m.userId !== userId ? (
+          <Select
+            value={m.roleId ?? ""}
+            disabled={updatingThisRow}
+            onValueChange={(v) =>
+              v && assignRole.mutate({ userId: m.userId, roleId: v })
+            }
+          >
+            <SelectTrigger className="w-[160px]" size="sm">
+              <SelectValue>
+                {() => (
+                  <span className="flex items-center gap-1.5">
+                    {updatingThisRow && (
+                      <Loader2Icon className="size-3.5 animate-spin" />
+                    )}
+                    {updatingThisRow
+                      ? "Updating…"
+                      : (m.roleName ?? "No role")}
+                  </span>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {roles
+                .filter((r) => r.key !== "owner")
+                .map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Badge variant="secondary">{m.roleName ?? "No role"}</Badge>
+        );
+      },
+    },
+    {
+      header: "Status",
+      accessorKey: "isBanned",
+      cell: (m) =>
+        m.isBanned ? (
+          <Badge variant="bad">
+            <BanIcon /> Banned
+          </Badge>
+        ) : (
+          <Badge variant="ok">
+            <ShieldCheckIcon /> Active
+          </Badge>
+        ),
+    },
+    {
+      header: "Joined",
+      accessorKey: "joinedAt",
+      cell: (m) => (
+        <span className="text-muted-foreground">{date(m.joinedAt)}</span>
+      ),
+    },
+    ...(canManage
+      ? [
+          {
+            header: "",
+            accessorKey: "userId",
+            className: "text-right",
+            cell: (m: Member) =>
+              m.roleKey === "owner" ? null : m.isBanned ? (
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={unban.isPending}
+                    onClick={() => unban.mutate(m.userId)}
+                  >
+                    {unban.isPending ? (
+                      <Loader2Icon className="animate-spin" />
+                    ) : null}
+                    {unban.isPending ? "Unbanning…" : "Unban"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    disabled={ban.isPending}
+                    onClick={() => ban.mutate(m.userId)}
+                  >
+                    {ban.isPending ? (
+                      <Loader2Icon className="animate-spin" />
+                    ) : (
+                      <BanIcon />
+                    )}
+                    {ban.isPending ? "Banning…" : "Ban"}
+                  </Button>
+                </div>
+              ),
+          } satisfies Column<Member>,
+        ]
+      : []),
+  ];
+
+  return (
+    <ReusableTable
+      columns={columns}
+      data={members.data ?? []}
+      isLoading={members.isLoading}
+      getRowId={(m) => m.userId}
+      emptyMessage="No members yet."
+    />
+  );
+}
+
 export function TeamPageClient() {
   const { can, branches } = useAccess();
   const queryClient = useQueryClient();
@@ -392,10 +598,9 @@ export function TeamPageClient() {
     <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-extrabold tracking-tight">Invitations</h1>
+          <h1 className="text-xl font-extrabold tracking-tight">Team</h1>
           <p className="text-sm text-muted-foreground">
-            Invite co-workers into this organisation. A link works once and
-            expires after 7 days.
+            Everyone with access to this workspace, and pending invitations.
           </p>
         </div>
         {canManage && (
@@ -406,15 +611,24 @@ export function TeamPageClient() {
         )}
       </div>
 
-      <section className="flex flex-col gap-2">
-        <ReusableTable
-          columns={invitationColumns}
-          data={invitations.data ?? []}
-          isLoading={invitations.isLoading}
-          getRowId={(i) => i.id}
-          emptyMessage="No invitations yet."
-        />
-      </section>
+      <Tabs defaultValue="members">
+        <TabsList>
+          <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="invitations">Invitations</TabsTrigger>
+        </TabsList>
+        <TabsContent value="members">
+          <MembersTable />
+        </TabsContent>
+        <TabsContent value="invitations">
+          <ReusableTable
+            columns={invitationColumns}
+            data={invitations.data ?? []}
+            isLoading={invitations.isLoading}
+            getRowId={(i) => i.id}
+            emptyMessage="No invitations yet."
+          />
+        </TabsContent>
+      </Tabs>
 
       <DialogWrapper
         dialogKey={INVITE_DIALOG}

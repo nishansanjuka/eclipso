@@ -7,11 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AuthContext } from '../domain/auth-context';
-import {
-  ALL_PERMISSIONS,
-  PermissionType,
-  PermissionTypeMetaData,
-} from '../enums/auth-permissions.enum';
+import { PermissionType } from '../enums/auth-permissions.enum';
 import { SystemRole } from '../enums/auth-role.enum';
 import { BusinessType } from '../enums/business-type.enum';
 import {
@@ -23,6 +19,7 @@ import { AccessService } from '../infrastructure/access.service';
 import { BusinessService } from '../../business/infrastructure/business.service';
 import { isUniqueViolation } from '../../../shared/utils/pg-errors';
 import { isValidSlug, slugify } from '../../../shared/utils/slug';
+import { S3Service } from '../../../shared/services/s3.service';
 
 /**
  * Business, member and role administration on our own tables.
@@ -41,6 +38,7 @@ export class AccessManagementUseCase {
     private readonly repository: AccessRepository,
     private readonly access: AccessService,
     private readonly businessService: BusinessService,
+    private readonly s3: S3Service,
   ) {}
 
   // ── business ──────────────────────────────────────────────────────────────
@@ -157,6 +155,7 @@ export class AccessManagementUseCase {
       addressLine?: string | null;
       city?: string | null;
       postalCode?: string | null;
+      imageUrl?: string | null;
       vatRegistered?: boolean;
       vatNumber?: string | null;
       vatRate?: string;
@@ -197,6 +196,19 @@ export class AccessManagementUseCase {
     return this.getBusiness(actor);
   }
 
+  private static readonly LOGO_EXTENSIONS: Record<string, string> = {
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/webp': 'webp',
+  };
+
+  /** A one-time URL the browser uploads the logo to directly; never touches our server. */
+  async presignLogoUpload(actor: AuthContext, contentType: string) {
+    const ext = AccessManagementUseCase.LOGO_EXTENSIONS[contentType];
+    const key = `businesses/${actor.orgId}/logo-${randomUUID()}.${ext}`;
+    return this.s3.presignUpload(key, contentType);
+  }
+
   async deleteBusiness(actor: AuthContext) {
     await this.businessService.deleteBusiness(actor.orgId!);
     this.access.invalidateBusiness(actor.orgId!);
@@ -209,11 +221,25 @@ export class AccessManagementUseCase {
 
   // ── catalog ───────────────────────────────────────────────────────────────
 
-  listPermissionCatalog() {
-    return ALL_PERMISSIONS.map((key) => ({
-      key,
-      ...PermissionTypeMetaData[key],
-    }));
+  listPermissionCatalog(actor: AuthContext) {
+    return this.repository.listPermissionCatalogForBusiness(actor.orgId!);
+  }
+
+  /** Only this business's `manage:protective-permissions` holders may relabel a permission. */
+  async setPermissionProtected(
+    actor: AuthContext,
+    permissionId: string,
+    protectedFlag: boolean,
+  ) {
+    this.requireManageProtective(actor);
+    const permission = await this.repository.findPermissionById(permissionId);
+    if (!permission) throw new NotFoundException('Permission not found.');
+    await this.repository.setPermissionProtected(
+      actor.orgId!,
+      permissionId,
+      protectedFlag,
+    );
+    return { id: permissionId, protected: protectedFlag };
   }
 
   // ── members ───────────────────────────────────────────────────────────────
@@ -222,7 +248,73 @@ export class AccessManagementUseCase {
     return this.repository.listMembers(actor.orgId!);
   }
 
+  /**
+   * A business must always keep the option to reach its owner: banning is
+   * `member:manage`, same as removing a member, but an Owner can never be
+   * banned (mirrors `assertOwnerRemains`, minus the "last one" nuance — no
+   * owner, ever, banned or not, is acceptable).
+   */
+  async banMember(
+    actor: AuthContext,
+    targetUserId: string,
+    reason?: string | null,
+  ) {
+    const orgId = actor.orgId!;
+
+    await this.repository.withBusinessLock(orgId, async (tx) => {
+      const target = await this.repository.findMembership(
+        targetUserId,
+        orgId,
+        tx,
+      );
+      if (!target) throw new NotFoundException('Member not found.');
+      this.assertCanManageBranches(actor, target.restrictedBranchIds);
+      this.assertCanGrant(actor, target.permissions);
+      if (target.roleKey === SystemRole.Owner) {
+        throw new ForbiddenException('An owner cannot be banned.');
+      }
+
+      await this.repository.setMemberBan(
+        orgId,
+        targetUserId,
+        { banned: true, bannedBy: actor.userId, reason },
+        tx,
+      );
+    });
+
+    this.access.invalidateMember(orgId, targetUserId);
+    return { userId: targetUserId, isBanned: true };
+  }
+
+  async unbanMember(actor: AuthContext, targetUserId: string) {
+    const orgId = actor.orgId!;
+
+    await this.repository.withBusinessLock(orgId, async (tx) => {
+      const target = await this.repository.findMembership(
+        targetUserId,
+        orgId,
+        tx,
+      );
+      if (!target) throw new NotFoundException('Member not found.');
+      this.assertCanManageBranches(actor, target.restrictedBranchIds);
+      this.assertCanGrant(actor, target.permissions);
+
+      await this.repository.setMemberBan(
+        orgId,
+        targetUserId,
+        { banned: false },
+        tx,
+      );
+    });
+
+    this.access.invalidateMember(orgId, targetUserId);
+    return { userId: targetUserId, isBanned: false };
+  }
+
   async assignRole(actor: AuthContext, targetUserId: string, roleId: string) {
+    if (targetUserId === actor.userId) {
+      throw new ForbiddenException('You cannot change your own role.');
+    }
     const orgId = actor.orgId!;
 
     await this.repository.withBusinessLock(orgId, async (tx) => {
@@ -334,6 +426,37 @@ export class AccessManagementUseCase {
     return this.repository.listRoles(actor.orgId!);
   }
 
+  /**
+   * Splits a requested permission set into what applies now and what needs a
+   * `manage:protective-permissions` holder's approval first.
+   *
+   * - Holding that permission: everything applies immediately, no request.
+   * - Not holding it: protected permissions the role doesn't already have are
+   *   held back as a pending request; everything else (unprotected, plus any
+   *   protected permission the role already had) applies right away.
+   */
+  private async splitProtected(
+    actor: AuthContext,
+    requested: PermissionType[],
+    currentlyGranted: readonly PermissionType[],
+  ): Promise<{ toApply: PermissionType[]; toRequest: PermissionType[] }> {
+    if (actor.has(PermissionType.MANAGE_PROTECTIVE_PERMISSIONS)) {
+      return { toApply: requested, toRequest: [] };
+    }
+    const protectedKeys = await this.repository.protectedKeysWithin(
+      actor.orgId!,
+      requested,
+    );
+    if (protectedKeys.size === 0) return { toApply: requested, toRequest: [] };
+
+    const currentlyGrantedSet = new Set(currentlyGranted);
+    const toRequest = requested.filter(
+      (p) => protectedKeys.has(p) && !currentlyGrantedSet.has(p),
+    );
+    const toApply = requested.filter((p) => !toRequest.includes(p));
+    return { toApply, toRequest };
+  }
+
   async createRole(
     actor: AuthContext,
     input: {
@@ -343,7 +466,16 @@ export class AccessManagementUseCase {
     },
   ) {
     const orgId = actor.orgId!;
-    this.assertCanGrant(actor, input.permissions);
+    const { toApply, toRequest } = await this.splitProtected(
+      actor,
+      input.permissions,
+      [],
+    );
+    // An actor still needs to hold every permission they are asking to apply
+    // or request — requesting a protected permission is not a way around
+    // "you can't grant what you don't have".
+    this.assertCanGrant(actor, toApply);
+    this.assertCanGrant(actor, toRequest);
 
     return this.repository.withBusinessLock(orgId, async (tx) => {
       const key = this.slugify(input.name);
@@ -351,8 +483,28 @@ export class AccessManagementUseCase {
       if (existing.some((r) => r.key === key)) {
         throw new ConflictException('A role with this name already exists.');
       }
-      const id = await this.repository.createRole({ orgId, key, ...input }, tx);
-      return { id, key, ...input };
+      const id = await this.repository.createRole(
+        { orgId, key, ...input, permissions: toApply },
+        tx,
+      );
+      let request: Awaited<
+        ReturnType<AccessRepository['createRolePermissionRequest']>
+      > | null = null;
+      if (toRequest.length > 0) {
+        const permIds = await this.permissionIdsForKeys(toRequest, tx);
+        request = await this.repository.createRolePermissionRequest(
+          { roleId: id, permissionIds: permIds, requestedBy: actor.userId },
+          tx,
+        );
+      }
+      return {
+        id,
+        key,
+        name: input.name,
+        description: input.description ?? null,
+        permissions: toApply,
+        pendingRequest: request,
+      };
     });
   }
 
@@ -366,19 +518,104 @@ export class AccessManagementUseCase {
     },
   ) {
     const orgId = actor.orgId!;
+    let pendingRequest: Awaited<
+      ReturnType<AccessRepository['createRolePermissionRequest']>
+    > | null = null;
 
     await this.repository.withBusinessLock(orgId, async (tx) => {
       const role = await this.requireCustomRole(orgId, roleId, tx);
       // Can't edit a role that is more powerful than you, nor lift one above you.
       this.assertCanGrant(actor, role.permissions);
-      if (patch.permissions) this.assertCanGrant(actor, patch.permissions);
 
-      await this.repository.updateRole(roleId, patch, tx);
+      let toApply = patch.permissions;
+      if (patch.permissions) {
+        const split = await this.splitProtected(
+          actor,
+          patch.permissions,
+          role.permissions,
+        );
+        this.assertCanGrant(actor, split.toApply);
+        this.assertCanGrant(actor, split.toRequest);
+        toApply = split.toApply;
+        if (split.toRequest.length > 0) {
+          const permIds = await this.permissionIdsForKeys(split.toRequest, tx);
+          pendingRequest = await this.repository.createRolePermissionRequest(
+            { roleId, permissionIds: permIds, requestedBy: actor.userId },
+            tx,
+          );
+        }
+      }
+
+      await this.repository.updateRole(
+        roleId,
+        { ...patch, permissions: toApply },
+        tx,
+      );
     });
 
     // Everyone holding this role sees the change on their next request.
     this.access.invalidateBusiness(orgId);
-    return { id: roleId, ...patch };
+    return { id: roleId, ...patch, pendingRequest };
+  }
+
+  private async permissionIdsForKeys(
+    keys: PermissionType[],
+    tx: Executor,
+  ): Promise<string[]> {
+    const rows = await this.repository.listPermissionRows(tx);
+    const byKey = new Map(rows.map((r) => [r.key, r.id]));
+    return keys.map((k) => byKey.get(k)!).filter(Boolean);
+  }
+
+  // ── protected-permission requests ────────────────────────────────────────
+
+  listPendingRequests(actor: AuthContext) {
+    this.requireManageProtective(actor);
+    return this.repository.listPendingRequests(actor.orgId!);
+  }
+
+  async reviewPermissionRequest(
+    actor: AuthContext,
+    requestId: string,
+    approve: boolean,
+  ) {
+    this.requireManageProtective(actor);
+    const orgId = actor.orgId!;
+
+    const request = await this.repository.findPendingRequest(
+      requestId,
+      orgId,
+    );
+    if (!request || request.status !== 'pending') {
+      throw new NotFoundException('Request not found.');
+    }
+
+    await this.repository.withBusinessLock(orgId, async (tx) => {
+      if (approve) {
+        await this.repository.addRolePermissionsByIds(
+          request.roleId,
+          request.requestedPermissionIds,
+          tx,
+        );
+      }
+      await this.repository.reviewRequest(
+        requestId,
+        approve ? 'approved' : 'rejected',
+        actor.userId,
+        tx,
+      );
+    });
+
+    this.access.invalidateBusiness(orgId);
+    return { id: requestId, status: approve ? 'approved' : 'rejected' };
+  }
+
+  private requireManageProtective(actor: AuthContext) {
+    if (!actor.has(PermissionType.MANAGE_PROTECTIVE_PERMISSIONS)) {
+      throw new ForbiddenException(
+        'You do not have permission to manage protected permissions.',
+      );
+    }
   }
 
   async deleteRole(actor: AuthContext, roleId: string) {

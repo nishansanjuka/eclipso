@@ -55,7 +55,7 @@ function Notice({
         </span>
         <div className="flex flex-col gap-1">
           <h2 className="text-base font-bold">{title}</h2>
-          <p className="text-[13px] leading-5 text-muted-foreground">{text}</p>
+          <p className="text-sm leading-5 text-muted-foreground">{text}</p>
         </div>
       </div>
       {children}
@@ -120,7 +120,7 @@ export default async function InvitePage({
             : `${invitation.invitedByName ?? "The person who invited you"} withdrew this invitation. Ask them to send a new one if it was a mistake.`
         }
       >
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Already joined?{" "}
           <Link href="/sign-in" className="font-bold">
             Sign in instead
@@ -162,7 +162,7 @@ export default async function InvitePage({
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold">{org}</p>
-          <p className="truncate text-[13px] text-muted-foreground">
+          <p className="truncate text-sm text-muted-foreground">
             Invited by {invitation.invitedByName ?? "a colleague"}
           </p>
         </div>
@@ -190,7 +190,7 @@ export default async function InvitePage({
             signInForceRedirectUrl={back}
             signInUrl={`/sign-in?redirect_url=${encodeURIComponent(back)}`}
           />
-          <p className="text-center text-[13px] text-muted-foreground">
+          <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link
               href={`/sign-in?redirect_url=${encodeURIComponent(back)}`}
