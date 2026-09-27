@@ -9,6 +9,8 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/invite(.*)",
   "/api/public(.*)",
+  "/icon(.*)",
+  "/apple-icon(.*)",
 ]);
 
 /** Paths that exist once, at the app root, and are never workspace pages. */
